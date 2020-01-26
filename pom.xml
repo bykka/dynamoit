@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>ua.org.java</groupId>
@@ -15,8 +14,8 @@
         Repository hosting NetBeans modules, especially APIs.
         Versions are based on IDE releases, e.g.: RELEASE691
         To create your own repository, use: nbm:populate-repository
-        
-        If you use Apache NetBeans starting with Apache NetBeans 9.0 
+
+        If you use Apache NetBeans starting with Apache NetBeans 9.0
         you can remove the netbeans repository section
         -->
         <repository>
@@ -61,7 +60,8 @@
     <modules>
         <module>branding</module>
         <module>application</module>
-    </modules>
+        <module>tables-list</module>
+  </modules>
 
     <properties>
         <netbeans.version>RELEASE110</netbeans.version>
