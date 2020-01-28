@@ -1,20 +1,16 @@
 package ua.org.java.dynamoit.tables;
 
 import org.openide.explorer.ExplorerManager;
+import org.openide.explorer.ExplorerUtils;
 import org.openide.explorer.view.BeanTreeView;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
 import org.openide.util.NbBundle;
 import org.openide.windows.TopComponent;
-import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
-import software.amazon.awssdk.core.internal.http.loader.DefaultSdkHttpClientBuilder;
-import software.amazon.awssdk.http.SdkHttpClient;
-import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.ListTablesResponse;
 
+import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
 
 @TopComponent.Description(
         preferredID = "TablesTopComponent"
@@ -36,16 +32,20 @@ public class TablesTopComponent extends TopComponent implements ExplorerManager.
         setToolTipText(Bundle.HINT_TablesTopComponent());
 
         setLayout(new BorderLayout());
-        add(new BeanTreeView(), BorderLayout.CENTER);
+        add(new JButton("hello"), BorderLayout.NORTH);
+        BeanTreeView beanTreeView = new BeanTreeView();
+        beanTreeView.setRootVisible(false);
+        add(beanTreeView, BorderLayout.CENTER);
 
         DynamoDbClient dynamoDbClient = DynamoDbClient.create();
 
-        ListTablesResponse listTablesResponse = dynamoDbClient.listTables();
-
-        AbstractNode rootNode = new AbstractNode(Children.create(new TableChildFactory(listTablesResponse.tableNames()), true));
+        AbstractNode rootNode = new AbstractNode(Children.create(new TableChildFactory(dynamoDbClient), true));
         rootNode.setName("tables");
         rootNode.setDisplayName("All tables");
         manager.setRootContext(rootNode);
+
+        // sync tree and properties views
+        associateLookup(ExplorerUtils.createLookup(manager, getActionMap()));
     }
 
     @Override
