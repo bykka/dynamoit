@@ -1,6 +1,5 @@
 package ua.org.java.dynamoit.tables;
 
-import org.openide.nodes.BeanNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
 import org.openide.util.Exceptions;
@@ -30,7 +29,7 @@ public class TableChildFactory extends ChildFactory<String> {
     @Override
     protected Node createNodeForKey(String key) {
         try {
-            return new BeanNode<>(new Table(key));
+            return new TableFilterNode(key);
         } catch (IntrospectionException e) {
             Exceptions.printStackTrace(e);
             return null;
