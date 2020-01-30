@@ -10,6 +10,7 @@ import org.openide.windows.TopComponent;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import javax.swing.*;
+import javax.swing.tree.TreeSelectionModel;
 import java.awt.*;
 
 @TopComponent.Description(
@@ -31,18 +32,20 @@ public class TablesTopComponent extends TopComponent implements ExplorerManager.
         setName(Bundle.CTL_TablesTopComponent());
         setToolTipText(Bundle.HINT_TablesTopComponent());
 
-        setLayout(new BorderLayout());
-        add(new JButton("hello"), BorderLayout.NORTH);
-        BeanTreeView beanTreeView = new BeanTreeView();
-        beanTreeView.setRootVisible(false);
-        add(beanTreeView, BorderLayout.CENTER);
 
         DynamoDbClient dynamoDbClient = DynamoDbClient.create();
 
-        AbstractNode rootNode = new AbstractNode(Children.create(new TableChildFactory(dynamoDbClient), true));
-        rootNode.setName("tables");
-        rootNode.setDisplayName("All tables");
-        manager.setRootContext(rootNode);
+        TableChildFactory tableChildFactory = new TableChildFactory(dynamoDbClient);
+        manager.setRootContext(new AbstractNode(Children.create(tableChildFactory, true)));
+
+        setLayout(new BorderLayout());
+        JButton refresh = new JButton("Refresh");
+        refresh.addActionListener(actionEvent -> tableChildFactory.refresh());
+        add(refresh, BorderLayout.NORTH);
+        BeanTreeView beanTreeView = new BeanTreeView();
+        beanTreeView.setRootVisible(false);
+        beanTreeView.setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+        add(beanTreeView, BorderLayout.CENTER);
 
         // sync tree and properties views
         associateLookup(ExplorerUtils.createLookup(manager, getActionMap()));
@@ -51,5 +54,15 @@ public class TablesTopComponent extends TopComponent implements ExplorerManager.
     @Override
     public ExplorerManager getExplorerManager() {
         return this.manager;
+    }
+
+    @Override
+    protected void componentActivated() {
+        ExplorerUtils.activateActions(manager, true);
+    }
+
+    @Override
+    protected void componentDeactivated() {
+        ExplorerUtils.activateActions(manager, false);
     }
 }

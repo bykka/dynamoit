@@ -35,4 +35,8 @@ public class TableChildFactory extends ChildFactory<String> {
             return null;
         }
     }
+
+    public void refresh(){
+        this.refresh(false);
+    }
 }

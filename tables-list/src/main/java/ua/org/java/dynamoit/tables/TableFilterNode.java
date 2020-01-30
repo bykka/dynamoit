@@ -18,6 +18,7 @@ public class TableFilterNode extends FilterNode {
 
     public TableFilterNode(String tableName) throws IntrospectionException {
         super(new BeanNode<>(new Table(tableName)), org.openide.nodes.Children.LEAF, Lookups.fixed(new TableOpenCookie(tableName)));
+        ((BeanNode)this.getOriginal()).setIconBaseWithExtension("ua/org/java/dynamoit/tables/table.png");
         this.tableName = tableName;
     }
 
@@ -35,6 +36,13 @@ public class TableFilterNode extends FilterNode {
     public Action getPreferredAction() {
         return getActions(false)[0];
     }
+
+//    @Override
+//    public Image getIcon(int type) {
+//        return ImageUtilities.loadImage(
+//                "org/netbeans/examples/modules/povproject/resources/scenes.gif");
+//    }
+
 
     public static class TableOpenCookie implements OpenCookie {
 
