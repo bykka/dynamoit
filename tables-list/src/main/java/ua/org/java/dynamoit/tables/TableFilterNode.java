@@ -65,10 +65,22 @@ public class TableFilterNode extends FilterNode {
         public TableGridView(String tableName) {
             setName(tableName);
             setLayout(new BorderLayout());
-            JEditorPane editorPane = new JEditorPane();
-            editorPane.setEditable(false);
-            editorPane.setText(tableName);
-            add(new JScrollPane(editorPane), BorderLayout.CENTER);
+
+            String[] columns = new String[] {
+                    "Id", "Name", "Hourly Rate", "Part Time"
+            };
+
+            //actual data for the table in a 2d array
+            Object[][] data = new Object[][] {
+                    {1, "John", 40.0, false },
+                    {2, "Rambo", 70.0, false },
+                    {3, "Zorro", 60.0, true },
+            };
+
+            JTable grid = new JTable(data, columns);
+            add(new JScrollPane(grid), BorderLayout.CENTER);
+
+
         }
     }
 }
