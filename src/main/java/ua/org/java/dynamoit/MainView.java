@@ -14,6 +14,11 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import ua.org.java.dynamoit.table.DaggerTableComponent;
+import ua.org.java.dynamoit.table.TableComponent;
+import ua.org.java.dynamoit.table.TableContext;
+import ua.org.java.dynamoit.table.TableModule;
+import ua.org.java.dynamoit.utils.DX;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -111,7 +116,11 @@ public class MainView extends VBox {
     private void onTableSelect(MouseEvent event, TreeItem<String> selectedItem) {
         if (event.getClickCount() == 2) {
 
-            Tab tab = new Tab(selectedItem.getValue(), new TableItemsView());
+            TableComponent tableComponent = DaggerTableComponent.builder()
+                    .tableModule(new TableModule(new TableContext(selectedProfile.get(), selectedItem.getValue())))
+                    .build();
+
+            Tab tab = new Tab(selectedItem.getValue(), tableComponent.view());
             tabPane.getTabs().add(tab);
             tabPane.getSelectionModel().select(tab);
         }

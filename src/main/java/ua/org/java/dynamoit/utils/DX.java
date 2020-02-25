@@ -1,4 +1,4 @@
-package ua.org.java.dynamoit;
+package ua.org.java.dynamoit.utils;
 
 import javafx.scene.Node;
 import javafx.scene.Parent;

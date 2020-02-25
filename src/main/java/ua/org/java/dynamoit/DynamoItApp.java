@@ -3,8 +3,9 @@ package ua.org.java.dynamoit;
 import javafx.application.Application;
 import javafx.scene.layout.Region;
 import javafx.stage.Stage;
+import ua.org.java.dynamoit.utils.DX;
 
-public class DApp extends Application {
+public class DynamoItApp extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -22,7 +23,7 @@ public class DApp extends Application {
     }
 
     public static void main(String[] args) {
-        launch(DApp.class);
+        launch(DynamoItApp.class);
     }
 
 }
