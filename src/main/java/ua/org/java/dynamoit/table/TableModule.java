@@ -2,6 +2,7 @@ package ua.org.java.dynamoit.table;
 
 import dagger.Module;
 import dagger.Provides;
+import ua.org.java.dynamoit.db.DynamoDBService;
 
 @Module
 public class TableModule {
@@ -18,8 +19,13 @@ public class TableModule {
     }
 
     @Provides
-    public TableItemsView view(TableContext tableContext){
-        return new TableItemsView(tableContext);
+    public TableItemsView view(TableController controller){
+        return new TableItemsView(controller);
+    }
+
+    @Provides
+    public TableController controller(TableContext tableContext, DynamoDBService dynamoDBService){
+        return new TableController(tableContext, dynamoDBService);
     }
 
 }

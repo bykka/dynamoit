@@ -1,4 +1,4 @@
-package ua.org.java.dynamoit;
+package ua.org.java.dynamoit.db;
 
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.auth.profile.ProfilesConfigFile;
@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
-public class MainController {
+public class DynamoDBService {
 
     private ProfilesConfigFile profilesConfigFile = new ProfilesConfigFile();
     private Map<String, AmazonDynamoDB> profileDynamoDBClientMap = new HashMap<>();
@@ -28,7 +28,7 @@ public class MainController {
         return CompletableFuture.supplyAsync(() -> dynamoDB.listTables().getTableNames());
     }
 
-    private AmazonDynamoDB getOrCreateDynamoDBClient(String profileName) {
+    public AmazonDynamoDB getOrCreateDynamoDBClient(String profileName) {
         AmazonDynamoDB dynamoDB = profileDynamoDBClientMap.get(profileName);
         if (dynamoDB == null) {
             dynamoDB = AmazonDynamoDBClientBuilder.standard().withCredentials(new ProfileCredentialsProvider(profileName)).build();
@@ -37,7 +37,7 @@ public class MainController {
         return dynamoDB;
     }
 
-    private DynamoDB getOrCreateDocumentClient(String profileName) {
+    public DynamoDB getOrCreateDocumentClient(String profileName) {
         DynamoDB dynamoDB = profileDocumentClientMap.get(profileName);
         if (dynamoDB == null) {
             dynamoDB = new DynamoDB(getOrCreateDynamoDBClient(profileName));
@@ -45,14 +45,5 @@ public class MainController {
         }
         return dynamoDB;
     }
-//
-//    fun scanItems(tableName: String): ItemCollection<ScanOutcome>? {
-//        val table = documentClient.getTable(tableName)
-//        return table.scan(ScanSpec().withMaxPageSize(100))
-//    }
-//
-//    fun describeTable(tableName: String): DescribeTableResult? {
-//        return dynamoDbClient.describeTable(tableName)
-//    }
 
 }

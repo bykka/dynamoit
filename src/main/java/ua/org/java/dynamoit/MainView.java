@@ -14,6 +14,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import ua.org.java.dynamoit.db.DynamoDBService;
 import ua.org.java.dynamoit.table.DaggerTableComponent;
 import ua.org.java.dynamoit.table.TableComponent;
 import ua.org.java.dynamoit.table.TableContext;
@@ -28,7 +29,7 @@ import java.util.stream.Collectors;
 
 public class MainView extends VBox {
 
-    private MainController mainController;
+    private DynamoDBService dynamoDBService;
 
     private ObservableList<String> availableProfiles = FXCollections.observableArrayList();
     private List<String> availableTables = new ArrayList<>();
@@ -39,8 +40,8 @@ public class MainView extends VBox {
     private TabPane tabPane;
 
     @Inject
-    public MainView(MainController mainController) {
-        this.mainController = mainController;
+    public MainView(DynamoDBService dynamoDBService) {
+        this.dynamoDBService = dynamoDBService;
         this.getChildren().addAll(
                 List.of(
                         DX.splitPane(splitPane -> {
@@ -89,12 +90,12 @@ public class MainView extends VBox {
                 )
         );
 
-        this.mainController.getAvailableProfiles().thenAccept(profiles -> Platform.runLater(() -> this.availableProfiles.addAll(profiles)));
+        this.dynamoDBService.getAvailableProfiles().thenAccept(profiles -> Platform.runLater(() -> this.availableProfiles.addAll(profiles)));
 
         this.selectedProfile.addListener((observable, oldValue, newValue) -> {
             this.availableTables.clear();
             if (!StringUtils.isNullOrEmpty(newValue)) {
-                this.mainController.getListOfTables(newValue).thenAccept(tables -> Platform.runLater(() -> {
+                this.dynamoDBService.getListOfTables(newValue).thenAccept(tables -> Platform.runLater(() -> {
                     this.availableTables.addAll(tables);
                     buildTablesTree();
                 }));
