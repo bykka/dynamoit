@@ -23,9 +23,7 @@ public class DynamoDBService {
     }
 
     public CompletableFuture<List<String>> getListOfTables(String profile) {
-        AmazonDynamoDB dynamoDB = getOrCreateDynamoDBClient(profile);
-
-        return CompletableFuture.supplyAsync(() -> dynamoDB.listTables().getTableNames());
+        return CompletableFuture.supplyAsync(() -> getOrCreateDynamoDBClient(profile).listTables().getTableNames());
     }
 
     public AmazonDynamoDB getOrCreateDynamoDBClient(String profileName) {

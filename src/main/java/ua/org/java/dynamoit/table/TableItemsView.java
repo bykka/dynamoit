@@ -18,7 +18,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
-import java.util.stream.StreamSupport;
+
+import static ua.org.java.dynamoit.utils.Utils.asStream;
 
 public class TableItemsView extends VBox {
 
@@ -49,26 +50,29 @@ public class TableItemsView extends VBox {
             Iterator<Page<Item, ScanOutcome>> pageIterator = items.pages().iterator();
             if (pageIterator.hasNext()) {
                 Page<Item, ScanOutcome> page = pageIterator.next();
-                Platform.runLater(() -> {
-                    StreamSupport.stream(page.spliterator(), false)
-                            .flatMap(item -> StreamSupport.stream(item.attributes().spliterator(), false).map(Map.Entry::getKey))
-                            .sorted()
-                            .distinct()
-                            .map(attrName -> {
-                                TableColumn<Map<String, Object>, String> column = new TableColumn<>(attrName);
-                                column.setCellValueFactory(param -> {
-                                    Object value = param.getValue().get(attrName);
-                                    return new SimpleStringProperty(value != null ? value.toString() : "");
-                                });
-                                return column;
-                            })
-                            .forEach(tableColumn -> tableView.getColumns().add(tableColumn));
-
-                    StreamSupport.stream(page.spliterator(), false).map(Item::asMap).forEach(map -> rows.add(map));
-                });
+                showPage(page);
             }
         });
     }
 
+    private void showPage(Page<Item, ScanOutcome> page){
+        Platform.runLater(() -> {
+            asStream(page)
+                    .flatMap(item -> asStream(item.attributes()).map(Map.Entry::getKey))
+                    .sorted()
+                    .distinct()
+                    .map(attrName -> {
+                        TableColumn<Map<String, Object>, String> column = new TableColumn<>(attrName);
+                        column.setCellValueFactory(param -> {
+                            Object value = param.getValue().get(attrName);
+                            return new SimpleStringProperty(value != null ? value.toString() : "");
+                        });
+                        return column;
+                    })
+                    .forEach(tableColumn -> tableView.getColumns().add(tableColumn));
+
+            asStream(page).map(Item::asMap).forEach(map -> rows.add(map));
+        });
+    }
 
 }
