@@ -5,6 +5,8 @@ import com.amazonaws.services.dynamodbv2.document.Page;
 import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
+import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
+import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.IntegerBinding;
@@ -48,7 +50,10 @@ public class TableItemsView extends VBox {
         this.getChildren().addAll(
                 List.of(
                         DX.toolBar(toolBar -> List.of(
-                                DX.create(Button::new, t -> { }),
+                                DX.create(Button::new, button -> {
+                                    button.setTooltip(new Tooltip("Delete selected rows"));
+                                    button.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.TRASH));
+                                }),
                                 DX.spacer(),
                                 DX.create(Label::new, t -> {
                                     t.textProperty().bind(Bindings.concat("Count [", rowsSize, " of ~", totalCount, "]"));
