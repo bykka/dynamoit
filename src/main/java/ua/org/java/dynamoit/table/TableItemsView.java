@@ -8,6 +8,7 @@ import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.IntegerBinding;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -96,6 +97,11 @@ public class TableItemsView extends VBox {
     }
 
     private void buildTableHeaders(Page<Item, ScanOutcome> page) {
+        TableColumn<Item, Number> indexColumn = new TableColumn<>();
+        indexColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(rows.indexOf(param.getValue())));
+
+        tableView.getColumns().add(indexColumn);
+
         asStream(page)
                 .flatMap(item -> asStream(item.attributes()).map(Map.Entry::getKey))
                 .distinct()
