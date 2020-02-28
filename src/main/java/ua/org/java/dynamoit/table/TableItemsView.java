@@ -6,10 +6,13 @@ import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.IntegerBinding;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.*;
+import javafx.scene.control.skin.TableViewSkin;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
@@ -18,6 +21,7 @@ import ua.org.java.dynamoit.utils.DX;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -31,20 +35,29 @@ public class TableItemsView extends VBox {
     private TableController controller;
     private TableView<Item> tableView;
     private ObservableList<Item> rows = FXCollections.observableArrayList();
+    private IntegerBinding rowsSize = Bindings.createIntegerBinding(() -> rows.size(), rows);
     private TableDescription tableDescription;
     private Map<String, String> keyTypeMap;
+    private Page<Item, ScanOutcome> currentPage;
+    private SimpleStringProperty totalCount = new SimpleStringProperty();
 
     public TableItemsView(TableController controller) {
         this.controller = controller;
 
         this.getChildren().addAll(
                 List.of(
-                        DX.toolBar(toolBar -> List.of(DX.create(Button::new, t -> {
-                        }))),
+                        DX.toolBar(toolBar -> List.of(
+                                DX.create(Button::new, t -> { }),
+                                DX.spacer(),
+                                DX.create(Label::new, t -> {
+                                    t.textProperty().bind(Bindings.concat("Count [", rowsSize, " of ~", totalCount, "]"));
+                                })
+                        )),
                         DX.create((Supplier<TableView<Item>>) TableView::new, tableView -> {
                             this.tableView = tableView;
                             VBox.setVgrow(tableView, Priority.ALWAYS);
                             tableView.setItems(rows);
+                            tableView.setSkin(new MyTableViewSkin<>(tableView));
                             tableView.setRowFactory(param -> {
                                 TableRow<Item> tableRow = new TableRow<>();
                                 tableRow.setOnMouseClicked(event -> {
@@ -66,15 +79,16 @@ public class TableItemsView extends VBox {
 
         controller.describeTable().thenAccept(describeTableResult -> Platform.runLater(() -> {
             tableDescription = describeTableResult.getTable();
+            totalCount.set(tableDescription.getItemCount().toString());
             keyTypeMap = tableDescription.getKeySchema().stream().collect(Collectors.toMap(KeySchemaElement::getAttributeName, KeySchemaElement::getKeyType));
         })).thenRunAsync(() -> {
             controller.scanItems().thenAccept(items -> {
                 Iterator<Page<Item, ScanOutcome>> pageIterator = items.pages().iterator();
                 if (pageIterator.hasNext()) {
-                    Page<Item, ScanOutcome> page = pageIterator.next();
+                    currentPage = pageIterator.next();
                     Platform.runLater(() -> {
-                        buildTableHeaders(page);
-                        showPage(page);
+                        buildTableHeaders(currentPage);
+                        showPage(currentPage);
                     });
                 }
             });
@@ -120,7 +134,28 @@ public class TableItemsView extends VBox {
     }
 
     private void showPage(Page<Item, ScanOutcome> page) {
+        int count = rows.size();
         asStream(page).forEach(item -> rows.add(item));
+        tableView.scrollTo(count);
+    }
+
+    private class MyTableViewSkin<T> extends TableViewSkin<T> {
+
+        public MyTableViewSkin(TableView<T> control) {
+            super(control);
+
+            getVirtualFlow().positionProperty().addListener((observable, oldValue, newValue) -> {
+                if (newValue.doubleValue() == 1.0) {
+                    if (currentPage.hasNextPage()) {
+                        CompletableFuture.runAsync(() -> {
+                            currentPage = currentPage.nextPage();
+                        }).thenRun(() -> Platform.runLater(() -> {
+                            showPage(currentPage);
+                        }));
+                    }
+                }
+            });
+        }
     }
 
 }
