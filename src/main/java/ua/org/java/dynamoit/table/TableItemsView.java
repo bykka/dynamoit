@@ -9,11 +9,10 @@ import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.scene.control.Button;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 import ua.org.java.dynamoit.utils.DX;
 
 import java.util.Iterator;
@@ -30,8 +29,8 @@ public class TableItemsView extends VBox {
     private static final String RANGE = "RANGE";
 
     private TableController controller;
-    private TableView<Map<String, Object>> tableView;
-    private ObservableList<Map<String, Object>> rows = FXCollections.observableArrayList();
+    private TableView<Item> tableView;
+    private ObservableList<Item> rows = FXCollections.observableArrayList();
     private TableDescription tableDescription;
     private Map<String, String> keyTypeMap;
 
@@ -42,10 +41,25 @@ public class TableItemsView extends VBox {
                 List.of(
                         DX.toolBar(toolBar -> List.of(DX.create(Button::new, t -> {
                         }))),
-                        DX.create((Supplier<TableView<Map<String, Object>>>) TableView::new, tableView -> {
+                        DX.create((Supplier<TableView<Item>>) TableView::new, tableView -> {
                             this.tableView = tableView;
                             VBox.setVgrow(tableView, Priority.ALWAYS);
                             tableView.setItems(rows);
+                            tableView.setRowFactory(param -> {
+                                TableRow<Item> tableRow = new TableRow<>();
+                                tableRow.setOnMouseClicked(event -> {
+                                    if (event.getClickCount() == 2) {
+                                        Item item = tableRow.getItem();
+                                        Dialog<String> dialog = new Dialog<>();
+                                        dialog.getDialogPane().getButtonTypes().add(ButtonType.OK);
+                                        dialog.getDialogPane().setContent(new TextArea(item.toJSONPretty()));
+                                        dialog.initModality(Modality.NONE);
+                                        dialog.setResizable(true);
+                                        dialog.show();
+                                    }
+                                });
+                                return tableRow;
+                            });
                         })
                 )
         );
@@ -58,52 +72,55 @@ public class TableItemsView extends VBox {
                 Iterator<Page<Item, ScanOutcome>> pageIterator = items.pages().iterator();
                 if (pageIterator.hasNext()) {
                     Page<Item, ScanOutcome> page = pageIterator.next();
-                    showPage(page);
+                    Platform.runLater(() -> {
+                        buildTableHeaders(page);
+                        showPage(page);
+                    });
                 }
             });
         });
     }
 
-    private void showPage(Page<Item, ScanOutcome> page) {
-        Platform.runLater(() -> {
-            asStream(page)
-                    .flatMap(item -> asStream(item.attributes()).map(Map.Entry::getKey))
-                    .distinct()
-                    .sorted((o1, o2) -> {
-                        if (HASH.equalsIgnoreCase(keyTypeMap.get(o1))) {
-                            return -1;
-                        }
-                        if (HASH.equalsIgnoreCase(keyTypeMap.get(o2))) {
-                            return 1;
-                        }
-                        if (RANGE.equalsIgnoreCase(keyTypeMap.get(o1))) {
-                            return -1;
-                        }
-                        if (RANGE.equalsIgnoreCase(keyTypeMap.get(o2))) {
-                            return 1;
-                        }
-                        return o1.compareTo(o2);
-                    })
-                    .map(attrName -> {
-                        String text = attrName;
-                        if (HASH.equalsIgnoreCase(keyTypeMap.get(attrName))) {
-                            text = "#" + attrName;
-                        }
-                        if (RANGE.equalsIgnoreCase(keyTypeMap.get(attrName))) {
-                            text = "$" + attrName;
-                        }
-                        TableColumn<Map<String, Object>, String> column = new TableColumn<>(text);
-                        column.setPrefWidth(200);
-                        column.setCellValueFactory(param -> {
-                            Object value = param.getValue().get(attrName);
-                            return new SimpleStringProperty(value != null ? value.toString() : "");
-                        });
-                        return column;
-                    })
-                    .forEach(tableColumn -> tableView.getColumns().add(tableColumn));
+    private void buildTableHeaders(Page<Item, ScanOutcome> page) {
+        asStream(page)
+                .flatMap(item -> asStream(item.attributes()).map(Map.Entry::getKey))
+                .distinct()
+                .sorted((o1, o2) -> {
+                    if (HASH.equalsIgnoreCase(keyTypeMap.get(o1))) {
+                        return -1;
+                    }
+                    if (HASH.equalsIgnoreCase(keyTypeMap.get(o2))) {
+                        return 1;
+                    }
+                    if (RANGE.equalsIgnoreCase(keyTypeMap.get(o1))) {
+                        return -1;
+                    }
+                    if (RANGE.equalsIgnoreCase(keyTypeMap.get(o2))) {
+                        return 1;
+                    }
+                    return o1.compareTo(o2);
+                })
+                .map(attrName -> {
+                    String text = attrName;
+                    if (HASH.equalsIgnoreCase(keyTypeMap.get(attrName))) {
+                        text = "#" + attrName;
+                    }
+                    if (RANGE.equalsIgnoreCase(keyTypeMap.get(attrName))) {
+                        text = "$" + attrName;
+                    }
+                    TableColumn<Item, String> column = new TableColumn<>(text);
+                    column.setPrefWidth(200);
+                    column.setCellValueFactory(param -> {
+                        Object value = param.getValue().get(attrName);
+                        return new SimpleStringProperty(value != null ? value.toString() : "");
+                    });
+                    return column;
+                })
+                .forEach(tableColumn -> tableView.getColumns().add(tableColumn));
+    }
 
-            asStream(page).map(Item::asMap).forEach(map -> rows.add(map));
-        });
+    private void showPage(Page<Item, ScanOutcome> page) {
+        asStream(page).forEach(item -> rows.add(item));
     }
 
 }
