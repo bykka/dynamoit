@@ -16,6 +16,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.*;
 import javafx.scene.control.skin.TableViewSkin;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
@@ -139,9 +141,40 @@ public class TableItemsView extends VBox {
                         Object value = param.getValue().get(attrName);
                         return new SimpleStringProperty(value != null ? value.toString() : "");
                     });
+                    buildCellContextMenu(column);
                     return column;
                 })
                 .forEach(tableColumn -> tableView.getColumns().add(tableColumn));
+    }
+
+    private void buildCellContextMenu(TableColumn<Item, String> column) {
+        column.setCellFactory(param -> {
+            TableCell<Item, String> cell = new TableCell<>();
+            cell.textProperty().bind(cell.itemProperty());
+
+            cell.textProperty().addListener((observable, oldValue, newValue) -> {
+                if (newValue == null || newValue.trim().length() == 0) {
+                    cell.setContextMenu(null);
+                } else {
+                    cell.setContextMenu(
+                            DX.contextMenu(contextMenu -> List.of(
+                                    DX.create((Supplier<MenuItem>) MenuItem::new, menuItem -> {
+                                        menuItem.textProperty().bind(Bindings.concat("Copy '", cell.textProperty(), "'"));
+                                        menuItem.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
+                                        menuItem.setOnAction(event -> {
+                                            ClipboardContent content = new ClipboardContent();
+                                            content.putString(cell.textProperty().get());
+                                            Clipboard clipboard = Clipboard.getSystemClipboard();
+                                            clipboard.setContent(content);
+                                        });
+                                    })
+                            ))
+                    );
+                }
+            });
+
+            return cell;
+        });
     }
 
     private void showPage(Page<Item, ScanOutcome> page) {

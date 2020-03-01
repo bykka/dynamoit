@@ -3,9 +3,7 @@ package ua.org.java.dynamoit.utils;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Control;
-import javafx.scene.control.SplitPane;
-import javafx.scene.control.ToolBar;
+import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -42,13 +40,19 @@ public class DX {
         return toolBar;
     }
 
+    public static ContextMenu contextMenu(Function<ContextMenu, List<MenuItem>> builder) {
+        ContextMenu contextMenu = new ContextMenu();
+        contextMenu.getItems().addAll(builder.apply(contextMenu));
+        return contextMenu;
+    }
+
     public static Node spacer() {
         Region spring = new Region();
         HBox.setHgrow(spring, Priority.ALWAYS);
         return spring;
     }
 
-    public static <T extends Control> T create(Supplier<T> creator, Consumer<T> builder){
+    public static <T> T create(Supplier<T> creator, Consumer<T> builder){
         T component = creator.get();
         builder.accept(component);
         return component;
