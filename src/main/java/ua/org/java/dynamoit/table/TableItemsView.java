@@ -18,6 +18,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.skin.TableViewSkin;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
@@ -142,7 +143,16 @@ public class TableItemsView extends VBox {
                         return new SimpleStringProperty(value != null ? value.toString() : "");
                     });
                     buildCellContextMenu(column);
-                    return column;
+
+                    HBox hBox = new HBox();
+                    hBox.getChildren().add(new ComboBox<>(FXCollections.observableArrayList("=", "<", ">", "<>")));
+                    TextField textField = new TextField();
+                    HBox.setHgrow(textField, Priority.ALWAYS);
+                    hBox.getChildren().add(textField);
+                    TableColumn<Item, String> filter = new TableColumn<>();
+                    filter.setGraphic(hBox);
+                    filter.getColumns().add(column);
+                    return filter;
                 })
                 .forEach(tableColumn -> tableView.getColumns().add(tableColumn));
     }
