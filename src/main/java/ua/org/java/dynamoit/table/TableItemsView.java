@@ -110,7 +110,7 @@ public class TableItemsView extends VBox {
         });
     }
 
-    private void buildTableHeaders(Page<Item, ScanOutcome> page) {
+    private void buildTableHeaders(Page<Item, ?> page) {
         TableColumn<Item, Number> indexColumn = new TableColumn<>();
         indexColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(rows.indexOf(param.getValue())));
 
@@ -135,30 +135,31 @@ public class TableItemsView extends VBox {
                     return o1.compareTo(o2);
                 })
                 .map(attrName -> {
-                    String text = attrName;
-                    if (HASH.equalsIgnoreCase(keyTypeMap.get(attrName))) {
-                        text = "#" + attrName;
-                    }
-                    if (RANGE.equalsIgnoreCase(keyTypeMap.get(attrName))) {
-                        text = "$" + attrName;
-                    }
-                    TableColumn<Item, String> column = new TableColumn<>(text);
-                    column.setPrefWidth(200);
-                    column.setCellValueFactory(param -> {
-                        Object value = param.getValue().get(attrName);
-                        return new SimpleStringProperty(value != null ? value.toString() : "");
-                    });
-                    buildCellContextMenu(column);
-
-
                     SimpleStringProperty filterProperty = new SimpleStringProperty();
                     attributeFilterMap.put(attrName, filterProperty);
-                    TableColumn<Item, String> filter = new TableColumn<>();
-                    TextField textField = new TextField();
-                    textField.textProperty().bindBidirectional(filterProperty);
-                    filter.setGraphic(textField);
-                    filter.getColumns().add(column);
-                    return filter;
+
+                    return DX.create((Supplier<TableColumn<Item, String>>) TableColumn::new, filter -> {
+                        TextField textField = new TextField();
+                        textField.textProperty().bindBidirectional(filterProperty);
+                        filter.setGraphic(textField);
+                        filter.getColumns().add(DX.create((Supplier<TableColumn<Item, String>>) TableColumn::new, column -> {
+                            String text = attrName;
+                            if (HASH.equalsIgnoreCase(keyTypeMap.get(attrName))) {
+                                text = "#" + attrName;
+                            }
+                            if (RANGE.equalsIgnoreCase(keyTypeMap.get(attrName))) {
+                                text = "$" + attrName;
+                            }
+                            column.setText(text);
+                            column.setId(attrName);
+                            column.setPrefWidth(200);
+                            column.setCellValueFactory(param -> {
+                                Object value = param.getValue().get(attrName);
+                                return new SimpleStringProperty(value != null ? value.toString() : "");
+                            });
+                            buildCellContextMenu(column);
+                        }));
+                    });
                 })
                 .forEach(tableColumn -> tableView.getColumns().add(tableColumn));
     }
@@ -174,7 +175,7 @@ public class TableItemsView extends VBox {
                 } else {
                     cell.setContextMenu(
                             DX.contextMenu(contextMenu -> List.of(
-                                    DX.create((Supplier<MenuItem>) MenuItem::new, menuItem -> {
+                                    DX.create(MenuItem::new, menuItem -> {
                                         menuItem.textProperty().bind(Bindings.concat("Copy '", cell.textProperty(), "'"));
                                         menuItem.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
                                         menuItem.setOnAction(event -> {
@@ -182,6 +183,14 @@ public class TableItemsView extends VBox {
                                             content.putString(cell.textProperty().get());
                                             Clipboard clipboard = Clipboard.getSystemClipboard();
                                             clipboard.setContent(content);
+                                        });
+                                    }),
+                                    DX.create(MenuItem::new, menuItem -> {
+                                        menuItem.textProperty().bind(Bindings.concat("Filter '", cell.textProperty(), "'"));
+                                        menuItem.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
+                                        menuItem.setOnAction(event -> {
+                                            SimpleStringProperty property = this.attributeFilterMap.getOrDefault(column.getId(), new SimpleStringProperty());
+                                            property.set(cell.getText());
                                         });
                                     })
                             ))
@@ -193,13 +202,14 @@ public class TableItemsView extends VBox {
         });
     }
 
-    private void showPage(Page<Item, ScanOutcome> page) {
+    private void showPage(Page<Item, ?> page) {
         int count = rows.size();
         asStream(page).forEach(item -> rows.add(item));
         tableView.scrollTo(count);
     }
 
-    private void clearFilter(){
+
+    private void clearFilter() {
         attributeFilterMap.values().forEach(simpleStringProperty -> simpleStringProperty.set(null));
     }
 
