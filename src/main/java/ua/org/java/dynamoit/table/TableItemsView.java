@@ -97,7 +97,7 @@ public class TableItemsView extends VBox {
             totalCount.set(tableDescription.getItemCount().toString());
             keyTypeMap = tableDescription.getKeySchema().stream().collect(Collectors.toMap(KeySchemaElement::getAttributeName, KeySchemaElement::getKeyType));
         })).thenRunAsync(() -> {
-            controller.scanItems().thenAccept(items -> {
+            controller.scanItems(attributeFilterMap).thenAccept(items -> {
                 Iterator<Page<Item, ScanOutcome>> pageIterator = items.pages().iterator();
                 if (pageIterator.hasNext()) {
                     currentPage = pageIterator.next();
@@ -141,6 +141,7 @@ public class TableItemsView extends VBox {
                     return DX.create((Supplier<TableColumn<Item, String>>) TableColumn::new, filter -> {
                         TextField textField = new TextField();
                         textField.textProperty().bindBidirectional(filterProperty);
+                        textField.setOnAction(event -> applyFilter());
                         filter.setGraphic(textField);
                         filter.getColumns().add(DX.create((Supplier<TableColumn<Item, String>>) TableColumn::new, column -> {
                             String text = attrName;
@@ -189,8 +190,11 @@ public class TableItemsView extends VBox {
                                         menuItem.textProperty().bind(Bindings.concat("Filter '", cell.textProperty(), "'"));
                                         menuItem.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
                                         menuItem.setOnAction(event -> {
-                                            SimpleStringProperty property = this.attributeFilterMap.getOrDefault(column.getId(), new SimpleStringProperty());
-                                            property.set(cell.getText());
+                                            SimpleStringProperty property = this.attributeFilterMap.get(column.getId());
+                                            if(property!=null) {
+                                                property.set(cell.getText());
+                                                applyFilter();
+                                            }
                                         });
                                     })
                             ))
@@ -211,6 +215,20 @@ public class TableItemsView extends VBox {
 
     private void clearFilter() {
         attributeFilterMap.values().forEach(simpleStringProperty -> simpleStringProperty.set(null));
+    }
+
+    private void applyFilter() {
+        rows.clear();
+        controller.scanItems(attributeFilterMap).thenAccept(items -> {
+            Iterator<Page<Item, ScanOutcome>> pageIterator = items.pages().iterator();
+            if (pageIterator.hasNext()) {
+                currentPage = pageIterator.next();
+                Platform.runLater(() -> {
+//                    buildTableHeaders(currentPage);
+                    showPage(currentPage);
+                });
+            }
+        });
     }
 
     private class MyTableViewSkin<T> extends TableViewSkin<T> {
