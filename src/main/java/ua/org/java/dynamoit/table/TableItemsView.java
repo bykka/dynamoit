@@ -18,12 +18,12 @@ import javafx.scene.control.*;
 import javafx.scene.control.skin.TableViewSkin;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import ua.org.java.dynamoit.utils.DX;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +46,7 @@ public class TableItemsView extends VBox {
     private Map<String, String> keyTypeMap;
     private Page<Item, ScanOutcome> currentPage;
     private SimpleStringProperty totalCount = new SimpleStringProperty();
+    private Map<String, SimpleStringProperty> attributeFilterMap = new HashMap<>();
 
     public TableItemsView(TableController controller) {
         this.controller = controller;
@@ -53,6 +54,11 @@ public class TableItemsView extends VBox {
         this.getChildren().addAll(
                 List.of(
                         DX.toolBar(toolBar -> List.of(
+                                DX.create(Button::new, button -> {
+                                    button.setTooltip(new Tooltip("Clear filter"));
+                                    button.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.FILTER));
+                                    button.setOnAction(event -> clearFilter());
+                                }),
                                 DX.create(Button::new, button -> {
                                     button.setTooltip(new Tooltip("Delete selected rows"));
                                     button.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.TRASH));
@@ -144,13 +150,13 @@ public class TableItemsView extends VBox {
                     });
                     buildCellContextMenu(column);
 
-                    HBox hBox = new HBox();
-                    hBox.getChildren().add(new ComboBox<>(FXCollections.observableArrayList("=", "<", ">", "<>")));
-                    TextField textField = new TextField();
-                    HBox.setHgrow(textField, Priority.ALWAYS);
-                    hBox.getChildren().add(textField);
+
+                    SimpleStringProperty filterProperty = new SimpleStringProperty();
+                    attributeFilterMap.put(attrName, filterProperty);
                     TableColumn<Item, String> filter = new TableColumn<>();
-                    filter.setGraphic(hBox);
+                    TextField textField = new TextField();
+                    textField.textProperty().bindBidirectional(filterProperty);
+                    filter.setGraphic(textField);
                     filter.getColumns().add(column);
                     return filter;
                 })
@@ -191,6 +197,10 @@ public class TableItemsView extends VBox {
         int count = rows.size();
         asStream(page).forEach(item -> rows.add(item));
         tableView.scrollTo(count);
+    }
+
+    private void clearFilter(){
+        attributeFilterMap.values().forEach(simpleStringProperty -> simpleStringProperty.set(null));
     }
 
     private class MyTableViewSkin<T> extends TableViewSkin<T> {
