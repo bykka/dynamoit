@@ -2,7 +2,6 @@ package ua.org.java.dynamoit.table;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Page;
-import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
@@ -24,7 +23,6 @@ import javafx.stage.Modality;
 import ua.org.java.dynamoit.utils.DX;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -44,7 +42,7 @@ public class TableItemsView extends VBox {
     private IntegerBinding rowsSize = Bindings.createIntegerBinding(() -> rows.size(), rows);
     private TableDescription tableDescription;
     private Map<String, String> keyTypeMap;
-    private Page<Item, ScanOutcome> currentPage;
+    private Page<Item, ?> currentPage;
     private SimpleStringProperty totalCount = new SimpleStringProperty();
     private Map<String, SimpleStringProperty> attributeFilterMap = new HashMap<>();
 
@@ -97,15 +95,12 @@ public class TableItemsView extends VBox {
             totalCount.set(tableDescription.getItemCount().toString());
             keyTypeMap = tableDescription.getKeySchema().stream().collect(Collectors.toMap(KeySchemaElement::getAttributeName, KeySchemaElement::getKeyType));
         })).thenRunAsync(() -> {
-            controller.scanItems(attributeFilterMap).thenAccept(items -> {
-                Iterator<Page<Item, ScanOutcome>> pageIterator = items.pages().iterator();
-                if (pageIterator.hasNext()) {
-                    currentPage = pageIterator.next();
-                    Platform.runLater(() -> {
-                        buildTableHeaders(currentPage);
-                        showPage(currentPage);
-                    });
-                }
+            controller.queryPageItems(attributeFilterMap).thenAccept(page -> {
+                currentPage = page;
+                Platform.runLater(() -> {
+                    buildTableHeaders(currentPage);
+                    showPage(currentPage);
+                });
             });
         });
     }
@@ -191,7 +186,7 @@ public class TableItemsView extends VBox {
                                         menuItem.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
                                         menuItem.setOnAction(event -> {
                                             SimpleStringProperty property = this.attributeFilterMap.get(column.getId());
-                                            if(property!=null) {
+                                            if (property != null) {
                                                 property.set(cell.getText());
                                                 applyFilter();
                                             }
@@ -219,15 +214,13 @@ public class TableItemsView extends VBox {
 
     private void applyFilter() {
         rows.clear();
-        controller.scanItems(attributeFilterMap).thenAccept(items -> {
-            Iterator<Page<Item, ScanOutcome>> pageIterator = items.pages().iterator();
-            if (pageIterator.hasNext()) {
-                currentPage = pageIterator.next();
-                Platform.runLater(() -> {
+        controller.queryPageItems(attributeFilterMap).thenAccept(page -> {
+
+            currentPage = page;
+            Platform.runLater(() -> {
 //                    buildTableHeaders(currentPage);
-                    showPage(currentPage);
-                });
-            }
+                showPage(currentPage);
+            });
         });
     }
 
@@ -239,11 +232,9 @@ public class TableItemsView extends VBox {
             getVirtualFlow().positionProperty().addListener((observable, oldValue, newValue) -> {
                 if (newValue.doubleValue() == 1.0) {
                     if (currentPage.hasNextPage()) {
-                        CompletableFuture.runAsync(() -> {
-                            currentPage = currentPage.nextPage();
-                        }).thenRun(() -> Platform.runLater(() -> {
-                            showPage(currentPage);
-                        }));
+                        CompletableFuture
+                                .runAsync(() -> currentPage = currentPage.nextPage())
+                                .thenRun(() -> Platform.runLater(() -> showPage(currentPage)));
                     }
                 }
             });

@@ -19,14 +19,17 @@ public class TableController {
     private AmazonDynamoDB dbClient;
     private DynamoDB documentClient;
     private TableContext context;
+    private CompletableFuture<DescribeTableResult> describeTableResult;
 
     public TableController(TableContext context, DynamoDBService dynamoDBService) {
         this.context = context;
         dbClient = dynamoDBService.getOrCreateDynamoDBClient(context.getProfileName());
         documentClient = dynamoDBService.getOrCreateDocumentClient(context.getProfileName());
+
+        describeTableResult = CompletableFuture.supplyAsync(() -> dbClient.describeTable(context.getTableName()));
     }
 
-    public CompletableFuture<ItemCollection<ScanOutcome>> scanItems(Map<String, SimpleStringProperty> attributeFilterMap) {
+    private CompletableFuture<ItemCollection<ScanOutcome>> scanItems(Map<String, SimpleStringProperty> attributeFilterMap) {
         Table table = documentClient.getTable(context.getTableName());
         return CompletableFuture.supplyAsync(() -> {
             ScanSpec scanSpec = new ScanSpec();
@@ -41,13 +44,40 @@ public class TableController {
         });
     }
 
-    public CompletableFuture<ItemCollection<QueryOutcome>> queryItems() {
+    public CompletableFuture<Page<Item, ?>> queryPageItems(Map<String, SimpleStringProperty> attributeFilterMap) {
         Table table = documentClient.getTable(context.getTableName());
-        return CompletableFuture.supplyAsync(() -> table.query(new QuerySpec().withMaxPageSize(100)));
+
+        return CompletableFuture.supplyAsync(() -> {
+            ScanSpec scanSpec = new ScanSpec();
+            List<ScanFilter> filters = attributeFilterMap.entrySet().stream()
+                    .filter(entry -> Objects.nonNull(entry.getValue().get()) && entry.getValue().get().trim().length() > 0)
+                    .map(entry -> new ScanFilter(entry.getKey()).eq(entry.getValue().get()))
+                    .collect(Collectors.toList());
+            if (!filters.isEmpty()) {
+                scanSpec.withScanFilters(filters.toArray(new ScanFilter[]{}));
+            }
+            ItemCollection<ScanOutcome> scan = table.scan(scanSpec.withMaxPageSize(100));
+            return scan.firstPage();
+        });
+    }
+
+    private CompletableFuture<ItemCollection<QueryOutcome>> queryItems(Map<String, SimpleStringProperty> attributeFilterMap) {
+        Table table = documentClient.getTable(context.getTableName());
+        return CompletableFuture.supplyAsync(() -> {
+            QuerySpec querySpec = new QuerySpec();
+            List<QueryFilter> filters = attributeFilterMap.entrySet().stream()
+                    .filter(entry -> Objects.nonNull(entry.getValue().get()) && entry.getValue().get().trim().length() > 0)
+                    .map(entry -> new QueryFilter(entry.getKey()).eq(entry.getValue().get()))
+                    .collect(Collectors.toList());
+            if (!filters.isEmpty()) {
+                querySpec.withQueryFilters(filters.toArray(new QueryFilter[]{}));
+            }
+            return table.query(querySpec.withMaxPageSize(100));
+        });
     }
 
     public CompletableFuture<DescribeTableResult> describeTable() {
-        return CompletableFuture.supplyAsync(() -> dbClient.describeTable(context.getTableName()));
+        return describeTableResult;
     }
 
 
