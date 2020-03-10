@@ -50,6 +50,11 @@ public class TableController {
         return CompletableFuture.runAsync(() -> table.putItem(Item.fromJSON(json)));
     }
 
+    public CompletableFuture<Void> updateItem(String json) {
+        Table table = documentClient.getTable(context.getTableName());
+        return CompletableFuture.runAsync(() -> table.putItem(Item.fromJSON(json)));
+    }
+
     private CompletableFuture<Page<Item, ?>> scanItems(Map<String, SimpleStringProperty> attributeFilterMap) {
         Table table = documentClient.getTable(context.getTableName());
         return CompletableFuture.supplyAsync(() -> {

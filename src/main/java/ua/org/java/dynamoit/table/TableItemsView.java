@@ -66,6 +66,11 @@ public class TableItemsView extends VBox {
                                     button.setTooltip(new Tooltip("Delete selected rows"));
                                     button.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.TRASH));
                                 }),
+                                DX.create(Button::new, button -> {
+                                    button.setTooltip(new Tooltip("Refresh rows"));
+                                    button.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.REFRESH));
+                                    button.setOnAction(event -> applyFilter());
+                                }),
                                 DX.spacer(),
                                 DX.create(Label::new, t -> {
                                     t.textProperty().bind(Bindings.concat("Count [", rowsSize, " of ~", totalCount, "]"));
@@ -80,13 +85,7 @@ public class TableItemsView extends VBox {
                                 TableRow<Item> tableRow = new TableRow<>();
                                 tableRow.setOnMouseClicked(event -> {
                                     if (event.getClickCount() == 2) {
-                                        Item item = tableRow.getItem();
-                                        Dialog<String> dialog = new Dialog<>();
-                                        dialog.getDialogPane().getButtonTypes().add(ButtonType.OK);
-                                        dialog.getDialogPane().setContent(new TextArea(item.toJSONPretty()));
-                                        dialog.initModality(Modality.NONE);
-                                        dialog.setResizable(true);
-                                        dialog.show();
+                                        showUpdateDialog(tableRow.getItem());
                                     }
                                 });
                                 return tableRow;
@@ -245,6 +244,25 @@ public class TableItemsView extends VBox {
         });
         dialog.showAndWait().ifPresent(text -> {
             controller.createItem(text).thenRun(() -> Platform.runLater(this::applyFilter));
+        });
+    }
+
+    private void showUpdateDialog(Item item){
+        TextArea textArea = new TextArea(item.toJSONPretty());
+        textArea.setPromptText("Document in JSON format");
+        Dialog<String> dialog = new Dialog<>();
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        dialog.getDialogPane().setContent(textArea);
+        dialog.initModality(Modality.NONE);
+        dialog.setResizable(true);
+        dialog.setResultConverter(param -> {
+            if(param == ButtonType.OK){
+                return textArea.getText();
+            }
+            return null;
+        });
+        dialog.showAndWait().ifPresent(text -> {
+            controller.updateItem(text).thenRun(() -> Platform.runLater(this::applyFilter));
         });
     }
 
