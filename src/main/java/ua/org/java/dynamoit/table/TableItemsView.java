@@ -53,6 +53,11 @@ public class TableItemsView extends VBox {
                 List.of(
                         DX.toolBar(toolBar -> List.of(
                                 DX.create(Button::new, button -> {
+                                    button.setTooltip(new Tooltip("Create a new item"));
+                                    button.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.PLUS));
+                                    button.setOnAction(event -> showCreateDialog());
+                                }),
+                                DX.create(Button::new, button -> {
                                     button.setTooltip(new Tooltip("Clear filter"));
                                     button.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.FILTER));
                                     button.setOnAction(event -> clearFilter());
@@ -221,6 +226,25 @@ public class TableItemsView extends VBox {
 //                    buildTableHeaders(currentPage);
                 showPage(currentPage);
             });
+        });
+    }
+
+    private void showCreateDialog(){
+        TextArea textArea = new TextArea();
+        textArea.setPromptText("New document in JSON format");
+        Dialog<String> dialog = new Dialog<>();
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        dialog.getDialogPane().setContent(textArea);
+        dialog.initModality(Modality.NONE);
+        dialog.setResizable(true);
+        dialog.setResultConverter(param -> {
+            if(param == ButtonType.OK){
+                return textArea.getText();
+            }
+            return null;
+        });
+        dialog.showAndWait().ifPresent(text -> {
+            controller.createItem(text).thenRun(() -> Platform.runLater(this::applyFilter));
         });
     }
 

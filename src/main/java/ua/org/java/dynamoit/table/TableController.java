@@ -37,6 +37,19 @@ public class TableController {
         });
     }
 
+    public CompletableFuture<Page<Item, ?>> queryPageItems(Map<String, SimpleStringProperty> attributeFilterMap) {
+        SimpleStringProperty hashValueProperty = attributeFilterMap.get(hashAttribute);
+        if (hashValueProperty != null && !StringUtils.isNullOrEmpty(hashValueProperty.get())) {
+            return queryItems(attributeFilterMap);
+        }
+        return scanItems(attributeFilterMap);
+    }
+
+    public CompletableFuture<Void> createItem(String json) {
+        Table table = documentClient.getTable(context.getTableName());
+        return CompletableFuture.runAsync(() -> table.putItem(Item.fromJSON(json)));
+    }
+
     private CompletableFuture<Page<Item, ?>> scanItems(Map<String, SimpleStringProperty> attributeFilterMap) {
         Table table = documentClient.getTable(context.getTableName());
         return CompletableFuture.supplyAsync(() -> {
@@ -50,14 +63,6 @@ public class TableController {
             }
             return table.scan(scanSpec.withMaxPageSize(100)).firstPage();
         });
-    }
-
-    public CompletableFuture<Page<Item, ?>> queryPageItems(Map<String, SimpleStringProperty> attributeFilterMap) {
-        SimpleStringProperty hashValueProperty = attributeFilterMap.get(hashAttribute);
-        if (hashValueProperty != null && !StringUtils.isNullOrEmpty(hashValueProperty.get())) {
-            return queryItems(attributeFilterMap);
-        }
-        return scanItems(attributeFilterMap);
     }
 
     private CompletableFuture<Page<Item, ?>> queryItems(Map<String, SimpleStringProperty> attributeFilterMap) {
