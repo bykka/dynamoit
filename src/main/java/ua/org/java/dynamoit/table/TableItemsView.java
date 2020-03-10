@@ -22,9 +22,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import ua.org.java.dynamoit.utils.DX;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -78,6 +76,11 @@ public class TableItemsView extends VBox {
                         )),
                         DX.create((Supplier<TableView<Item>>) TableView::new, tableView -> {
                             this.tableView = tableView;
+
+                            tableView.getColumns().add(DX.create((Supplier<TableColumn<Item, Number>>) TableColumn::new, column -> {
+                                column.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(rows.indexOf(param.getValue())));
+                            }));
+
                             VBox.setVgrow(tableView, Priority.ALWAYS);
                             tableView.setItems(rows);
                             tableView.setSkin(new MyTableViewSkin<>(tableView));
@@ -110,10 +113,7 @@ public class TableItemsView extends VBox {
     }
 
     private void buildTableHeaders(Page<Item, ?> page) {
-        TableColumn<Item, Number> indexColumn = new TableColumn<>();
-        indexColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(rows.indexOf(param.getValue())));
-
-        tableView.getColumns().add(indexColumn);
+        List<String> availableAttributes = tableView.getColumns().stream().map(TableColumnBase::getColumns).filter(Objects::nonNull).flatMap(Collection::stream).map(TableColumnBase::getId).collect(Collectors.toList());
 
         asStream(page)
                 .flatMap(item -> asStream(item.attributes()).map(Map.Entry::getKey))
@@ -133,6 +133,7 @@ public class TableItemsView extends VBox {
                     }
                     return o1.compareTo(o2);
                 })
+                .filter(attrName -> !availableAttributes.contains(attrName))
                 .map(attrName -> {
                     SimpleStringProperty filterProperty = new SimpleStringProperty();
                     attributeFilterMap.put(attrName, filterProperty);
@@ -222,13 +223,13 @@ public class TableItemsView extends VBox {
 
             currentPage = page;
             Platform.runLater(() -> {
-//                    buildTableHeaders(currentPage);
+                buildTableHeaders(currentPage);
                 showPage(currentPage);
             });
         });
     }
 
-    private void showCreateDialog(){
+    private void showCreateDialog() {
         TextArea textArea = new TextArea();
         textArea.setPromptText("New document in JSON format");
         Dialog<String> dialog = new Dialog<>();
@@ -237,7 +238,7 @@ public class TableItemsView extends VBox {
         dialog.initModality(Modality.NONE);
         dialog.setResizable(true);
         dialog.setResultConverter(param -> {
-            if(param == ButtonType.OK){
+            if (param == ButtonType.OK) {
                 return textArea.getText();
             }
             return null;
@@ -247,7 +248,7 @@ public class TableItemsView extends VBox {
         });
     }
 
-    private void showUpdateDialog(Item item){
+    private void showUpdateDialog(Item item) {
         TextArea textArea = new TextArea(item.toJSONPretty());
         textArea.setPromptText("Document in JSON format");
         Dialog<String> dialog = new Dialog<>();
@@ -256,7 +257,7 @@ public class TableItemsView extends VBox {
         dialog.initModality(Modality.NONE);
         dialog.setResizable(true);
         dialog.setResultConverter(param -> {
-            if(param == ButtonType.OK){
+            if (param == ButtonType.OK) {
                 return textArea.getText();
             }
             return null;
