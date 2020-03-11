@@ -20,6 +20,7 @@ public class TableController {
 
     private AmazonDynamoDB dbClient;
     private DynamoDB documentClient;
+    private Table table;
     private TableContext context;
     private CompletableFuture<DescribeTableResult> describeTableResult;
     private String hashAttribute;
@@ -29,11 +30,12 @@ public class TableController {
         this.context = context;
         dbClient = dynamoDBService.getOrCreateDynamoDBClient(context.getProfileName());
         documentClient = dynamoDBService.getOrCreateDocumentClient(context.getProfileName());
+        table = documentClient.getTable(context.getTableName());
 
         describeTableResult = CompletableFuture.supplyAsync(() -> dbClient.describeTable(context.getTableName()));
         describeTableResult.thenAccept(describeTable -> {
             Utils.getHashKey(describeTable).ifPresent(s -> hashAttribute = s);
-            Utils.getHashKey(describeTable).ifPresent(s -> rangeAttribute = s);
+            Utils.getRangeKey(describeTable).ifPresent(s -> rangeAttribute = s);
         });
     }
 
@@ -46,17 +48,14 @@ public class TableController {
     }
 
     public CompletableFuture<Void> createItem(String json) {
-        Table table = documentClient.getTable(context.getTableName());
         return CompletableFuture.runAsync(() -> table.putItem(Item.fromJSON(json)));
     }
 
     public CompletableFuture<Void> updateItem(String json) {
-        Table table = documentClient.getTable(context.getTableName());
         return CompletableFuture.runAsync(() -> table.putItem(Item.fromJSON(json)));
     }
 
     private CompletableFuture<Page<Item, ?>> scanItems(Map<String, SimpleStringProperty> attributeFilterMap) {
-        Table table = documentClient.getTable(context.getTableName());
         return CompletableFuture.supplyAsync(() -> {
             ScanSpec scanSpec = new ScanSpec();
             List<ScanFilter> filters = attributeFilterMap.entrySet().stream()
@@ -71,7 +70,6 @@ public class TableController {
     }
 
     private CompletableFuture<Page<Item, ?>> queryItems(Map<String, SimpleStringProperty> attributeFilterMap) {
-        Table table = documentClient.getTable(context.getTableName());
         return CompletableFuture.supplyAsync(() -> {
             QuerySpec querySpec = new QuerySpec();
             querySpec.withHashKey(hashAttribute, attributeFilterMap.get(hashAttribute).get());
@@ -95,4 +93,13 @@ public class TableController {
     }
 
 
+    public CompletableFuture<Void> delete(Item item) {
+        return CompletableFuture.runAsync(() -> {
+            if (rangeAttribute == null) {
+                table.deleteItem(hashAttribute, item.get(hashAttribute));
+            } else {
+                table.deleteItem(hashAttribute, item.get(hashAttribute), rangeAttribute, item.get(rangeAttribute));
+            }
+        });
+    }
 }

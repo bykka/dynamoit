@@ -35,6 +35,7 @@ public class TableItemsView extends VBox {
     private static final String RANGE = "RANGE";
 
     private TableController controller;
+    private Button deleteSelectedButton;
     private TableView<Item> tableView;
     private ObservableList<Item> rows = FXCollections.observableArrayList();
     private IntegerBinding rowsSize = Bindings.createIntegerBinding(() -> rows.size(), rows);
@@ -61,8 +62,10 @@ public class TableItemsView extends VBox {
                                     button.setOnAction(event -> clearFilter());
                                 }),
                                 DX.create(Button::new, button -> {
+                                    deleteSelectedButton = button;
                                     button.setTooltip(new Tooltip("Delete selected rows"));
                                     button.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.TRASH));
+                                    button.setOnAction(event -> deleteSelectedItem());
                                 }),
                                 DX.create(Button::new, button -> {
                                     button.setTooltip(new Tooltip("Refresh rows"));
@@ -78,6 +81,7 @@ public class TableItemsView extends VBox {
                             this.tableView = tableView;
 
                             tableView.getColumns().add(DX.create((Supplier<TableColumn<Item, Number>>) TableColumn::new, column -> {
+                                column.setPrefWidth(35);
                                 column.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(rows.indexOf(param.getValue())));
                             }));
 
@@ -93,6 +97,8 @@ public class TableItemsView extends VBox {
                                 });
                                 return tableRow;
                             });
+
+                            deleteSelectedButton.disableProperty().bind(tableView.getSelectionModel().selectedItemProperty().isNull());
                         })
                 )
         );
@@ -265,6 +271,11 @@ public class TableItemsView extends VBox {
         dialog.showAndWait().ifPresent(text -> {
             controller.updateItem(text).thenRun(() -> Platform.runLater(this::applyFilter));
         });
+    }
+
+    private void deleteSelectedItem() {
+        Item item = tableView.getSelectionModel().getSelectedItem();
+        controller.delete(item).thenRun(() -> Platform.runLater(this::applyFilter));
     }
 
     private class MyTableViewSkin<T> extends TableViewSkin<T> {
