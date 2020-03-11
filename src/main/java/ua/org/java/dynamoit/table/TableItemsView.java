@@ -107,15 +107,14 @@ public class TableItemsView extends VBox {
             tableDescription = describeTableResult.getTable();
             totalCount.set(tableDescription.getItemCount().toString());
             keyTypeMap = tableDescription.getKeySchema().stream().collect(Collectors.toMap(KeySchemaElement::getAttributeName, KeySchemaElement::getKeyType));
-        })).thenRunAsync(() -> {
-            controller.queryPageItems(attributeFilterMap).thenAccept(page -> {
-                currentPage = page;
-                Platform.runLater(() -> {
-                    buildTableHeaders(currentPage);
-                    showPage(currentPage);
-                });
-            });
-        });
+        })).thenRunAsync(() -> controller.queryPageItems(attributeFilterMap)
+                .thenAccept(page -> {
+                    currentPage = page;
+                    Platform.runLater(() -> {
+                        buildTableHeaders(currentPage);
+                        showPage(currentPage);
+                    });
+                }));
     }
 
     private void buildTableHeaders(Page<Item, ?> page) {
@@ -184,6 +183,7 @@ public class TableItemsView extends VBox {
                             DX.contextMenu(contextMenu -> List.of(
                                     DX.create(MenuItem::new, menuItem -> {
                                         menuItem.textProperty().bind(Bindings.concat("Copy '", cell.textProperty(), "'"));
+                                        menuItem.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.COPY));
                                         menuItem.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
                                         menuItem.setOnAction(event -> {
                                             ClipboardContent content = new ClipboardContent();
@@ -194,6 +194,7 @@ public class TableItemsView extends VBox {
                                     }),
                                     DX.create(MenuItem::new, menuItem -> {
                                         menuItem.textProperty().bind(Bindings.concat("Filter '", cell.textProperty(), "'"));
+                                        menuItem.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.FILTER));
                                         menuItem.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
                                         menuItem.setOnAction(event -> {
                                             SimpleStringProperty property = this.attributeFilterMap.get(column.getId());
@@ -221,6 +222,7 @@ public class TableItemsView extends VBox {
 
     private void clearFilter() {
         attributeFilterMap.values().forEach(simpleStringProperty -> simpleStringProperty.set(null));
+        applyFilter();
     }
 
     private void applyFilter() {
@@ -249,9 +251,7 @@ public class TableItemsView extends VBox {
             }
             return null;
         });
-        dialog.showAndWait().ifPresent(text -> {
-            controller.createItem(text).thenRun(() -> Platform.runLater(this::applyFilter));
-        });
+        dialog.showAndWait().ifPresent(text -> controller.createItem(text).thenRun(() -> Platform.runLater(this::applyFilter)));
     }
 
     private void showUpdateDialog(Item item) {
@@ -268,9 +268,7 @@ public class TableItemsView extends VBox {
             }
             return null;
         });
-        dialog.showAndWait().ifPresent(text -> {
-            controller.updateItem(text).thenRun(() -> Platform.runLater(this::applyFilter));
-        });
+        dialog.showAndWait().ifPresent(text -> controller.updateItem(text).thenRun(() -> Platform.runLater(this::applyFilter)));
     }
 
     private void deleteSelectedItem() {
