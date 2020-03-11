@@ -6,13 +6,11 @@ import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import ua.org.java.dynamoit.utils.DX;
 
-import java.util.Objects;
-
 public class DynamoItApp extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        primaryStage.getIcons().add(new Image(Objects.requireNonNull(DynamoItApp.class.getClassLoader().getResourceAsStream("dynamite.png"))));
+        primaryStage.getIcons().add(new Image("dynamite.png"));
         primaryStage.setTitle("DynamoIt");
         primaryStage.setScene(
                 DX.scene(() -> {
