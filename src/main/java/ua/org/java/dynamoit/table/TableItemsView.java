@@ -240,6 +240,8 @@ public class TableItemsView extends VBox {
     private void showCreateDialog() {
         TextArea textArea = new TextArea();
         textArea.setPromptText("New document in JSON format");
+        textArea.setPrefWidth(800);
+        textArea.setPrefHeight(800);
         Dialog<String> dialog = new Dialog<>();
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
         dialog.getDialogPane().setContent(textArea);
@@ -257,6 +259,8 @@ public class TableItemsView extends VBox {
     private void showUpdateDialog(Item item) {
         TextArea textArea = new TextArea(item.toJSONPretty());
         textArea.setPromptText("Document in JSON format");
+        textArea.setPrefWidth(800);
+        textArea.setPrefHeight(800);
         Dialog<String> dialog = new Dialog<>();
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
         dialog.getDialogPane().setContent(textArea);
