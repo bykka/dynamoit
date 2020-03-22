@@ -24,6 +24,7 @@ import ua.org.java.dynamoit.utils.DX;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -54,7 +55,7 @@ public class TableItemsView extends VBox {
                                 DX.create(Button::new, button -> {
                                     button.setTooltip(new Tooltip("Create a new item"));
                                     button.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.PLUS));
-                                    button.setOnAction(event -> showCreateDialog());
+                                    button.setOnAction(event -> showItemDialog("Create a new item", "New document in JSON format", "", json -> controller.createItem(json).thenRun(() -> Platform.runLater(this::applyFilter))));
                                 }),
                                 DX.create(Button::new, button -> {
                                     button.setTooltip(new Tooltip("Clear filter"));
@@ -92,7 +93,7 @@ public class TableItemsView extends VBox {
                                 TableRow<Item> tableRow = new TableRow<>();
                                 tableRow.setOnMouseClicked(event -> {
                                     if (event.getClickCount() == 2) {
-                                        showUpdateDialog(tableRow.getItem());
+                                        showItemDialog("Edit the item", "Document in JSON format", tableRow.getItem().toJSONPretty(), json -> controller.updateItem(json).thenRun(() -> Platform.runLater(this::applyFilter)));
                                     }
                                 });
                                 return tableRow;
@@ -237,42 +238,25 @@ public class TableItemsView extends VBox {
         });
     }
 
-    private void showCreateDialog() {
-        TextArea textArea = new TextArea();
-        textArea.setPromptText("New document in JSON format");
+    private void showItemDialog(String title, String promptText, String json, Consumer<String> onSaveConsumer) {
+        TextArea textArea = new TextArea(json);
+        textArea.setPromptText(promptText);
         textArea.setPrefWidth(800);
         textArea.setPrefHeight(800);
         Dialog<String> dialog = new Dialog<>();
-        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        dialog.setTitle(title);
+        ButtonType saveButton = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(saveButton, ButtonType.CLOSE);
         dialog.getDialogPane().setContent(textArea);
         dialog.initModality(Modality.NONE);
         dialog.setResizable(true);
         dialog.setResultConverter(param -> {
-            if (param == ButtonType.OK) {
+            if (param == saveButton) {
                 return textArea.getText();
             }
             return null;
         });
-        dialog.showAndWait().ifPresent(text -> controller.createItem(text).thenRun(() -> Platform.runLater(this::applyFilter)));
-    }
-
-    private void showUpdateDialog(Item item) {
-        TextArea textArea = new TextArea(item.toJSONPretty());
-        textArea.setPromptText("Document in JSON format");
-        textArea.setPrefWidth(800);
-        textArea.setPrefHeight(800);
-        Dialog<String> dialog = new Dialog<>();
-        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-        dialog.getDialogPane().setContent(textArea);
-        dialog.initModality(Modality.NONE);
-        dialog.setResizable(true);
-        dialog.setResultConverter(param -> {
-            if (param == ButtonType.OK) {
-                return textArea.getText();
-            }
-            return null;
-        });
-        dialog.showAndWait().ifPresent(text -> controller.updateItem(text).thenRun(() -> Platform.runLater(this::applyFilter)));
+        dialog.showAndWait().ifPresent(onSaveConsumer);
     }
 
     private void deleteSelectedItem() {
