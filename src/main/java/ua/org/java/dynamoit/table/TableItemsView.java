@@ -182,28 +182,45 @@ public class TableItemsView extends VBox {
                 } else {
                     cell.setContextMenu(
                             DX.contextMenu(contextMenu -> List.of(
-                                    DX.create(MenuItem::new, menuItem -> {
-                                        menuItem.textProperty().bind(Bindings.concat("Copy '", cell.textProperty(), "'"));
-                                        menuItem.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.COPY));
-                                        menuItem.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
-                                        menuItem.setOnAction(event -> {
+                                    DX.create(MenuItem::new, menuCopy -> {
+                                        menuCopy.textProperty().bind(Bindings.concat("Copy '", cell.textProperty(), "'"));
+                                        menuCopy.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.COPY));
+                                        menuCopy.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
+                                        menuCopy.setOnAction(event -> {
                                             ClipboardContent content = new ClipboardContent();
                                             content.putString(cell.textProperty().get());
                                             Clipboard clipboard = Clipboard.getSystemClipboard();
                                             clipboard.setContent(content);
                                         });
                                     }),
-                                    DX.create(MenuItem::new, menuItem -> {
-                                        menuItem.textProperty().bind(Bindings.concat("Filter '", cell.textProperty(), "'"));
-                                        menuItem.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.FILTER));
-                                        menuItem.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
-                                        menuItem.setOnAction(event -> {
+                                    DX.create(MenuItem::new, menuFilter -> {
+                                        menuFilter.textProperty().bind(Bindings.concat("Filter '", cell.textProperty(), "'"));
+                                        menuFilter.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.FILTER));
+                                        menuFilter.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
+                                        menuFilter.setOnAction(event -> {
                                             SimpleStringProperty property = this.attributeFilterMap.get(column.getId());
                                             if (property != null) {
                                                 property.set(cell.getText());
                                                 applyFilter();
                                             }
                                         });
+                                    }),
+                                    DX.create(Menu::new, menuSearch -> {
+                                        menuSearch.textProperty().bind(Bindings.concat("Search '", cell.textProperty(), "' in"));
+                                        menuSearch.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.SEARCH));
+                                        menuSearch.getItems().addAll(
+                                                DX.create((Supplier<MenuItem>) MenuItem::new, menuItem -> {
+                                                    menuItem.textProperty().bind(Bindings.concat("Search '", cell.textProperty(), "' in"));
+                                                    menuItem.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
+                                                    menuItem.setOnAction(event -> {
+                                            /*SimpleStringProperty property = this.attributeFilterMap.get(column.getId());
+                                            if (property != null) {
+                                                property.set(cell.getText());
+                                                applyFilter();
+                                            }*/
+                                                    });
+                                                })
+                                        );
                                     })
                             ))
                     );
