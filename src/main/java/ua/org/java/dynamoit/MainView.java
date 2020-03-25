@@ -9,6 +9,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
@@ -37,6 +38,7 @@ public class MainView extends VBox {
     private SimpleStringProperty filter = new SimpleStringProperty("");
     private ObjectProperty<TreeItem<String>> rootTreeItem = new SimpleObjectProperty<>();
 
+    private TreeItem<String> allTables = new AllTreeItem();
     private TabPane tabPane;
 
     @Inject
@@ -62,6 +64,7 @@ public class MainView extends VBox {
                                                                     button.setTooltip(new Tooltip("Save current filter"));
                                                                     button.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.SAVE));
                                                                     button.disableProperty().bind(selectedProfile.isEmpty());
+                                                                    button.setOnAction(this::onFilterSave);
                                                                 }),
                                                                 DX.create((Supplier<ComboBox<String>>) ComboBox::new, comboBox -> {
                                                                     comboBox.setItems(availableProfiles);
@@ -103,19 +106,34 @@ public class MainView extends VBox {
         });
 
         this.filter.addListener((observable, oldValue, newValue) -> {
-            buildTablesTree();
+            allTables.getChildren().clear();
+            allTables.getChildren().addAll(availableTables.stream().filter(tableName -> tableName.contains(filter.get())).map(TreeItem::new).collect(Collectors.toList()));
         });
 
     }
 
+    private void onFilterSave(ActionEvent actionEvent) {
+        FilterTreeItem filterTables = new FilterTreeItem(filter.get());
+        filterTables.getChildren().addAll(availableTables.stream().filter(tableName -> tableName.contains(filter.get())).map(TreeItem::new).collect(Collectors.toList()));
+        filterTables.setExpanded(true);
+
+        this.rootTreeItem.get().getChildren().add(filterTables);
+    }
+
     private void buildTablesTree() {
-        TreeItem<String> rootItem = new TreeItem<>("All tables");
-        rootItem.getChildren().addAll(availableTables.stream().filter(tableName -> tableName.contains(filter.get())).map(TreeItem::new).collect(Collectors.toList()));
-        this.rootTreeItem.set(rootItem);
+        allTables.getChildren().addAll(availableTables.stream().map(TreeItem::new).collect(Collectors.toList()));
+        allTables.setExpanded(true);
+
+        this.rootTreeItem.set(DX.create(TreeItem::new, root -> {
+            root.getChildren().addAll(allTables);
+        }));
     }
 
     private void onTableSelect(MouseEvent event, TreeItem<String> selectedItem) {
-        if (event.getClickCount() == 2) {
+        if (event.getClickCount() == 2 && selectedItem != null) {
+            if (selectedItem instanceof AllTreeItem || selectedItem instanceof FilterTreeItem) {
+                return;
+            }
 
             TableComponent tableComponent = DaggerTableComponent.builder()
                     .tableModule(new TableModule(new TableContext(selectedProfile.get(), selectedItem.getValue())))
@@ -124,6 +142,21 @@ public class MainView extends VBox {
             Tab tab = new Tab(selectedItem.getValue(), tableComponent.view());
             tabPane.getTabs().add(tab);
             tabPane.getSelectionModel().select(tab);
+        }
+    }
+
+    private static class AllTreeItem extends TreeItem<String> {
+
+        public AllTreeItem() {
+            super("All tables");
+        }
+
+    }
+
+    private static class FilterTreeItem extends TreeItem<String> {
+
+        public FilterTreeItem(String filter) {
+            super("Contains: " + filter);
         }
     }
 
