@@ -8,6 +8,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.scene.control.*;
@@ -23,7 +24,6 @@ import ua.org.java.dynamoit.table.TableModule;
 import ua.org.java.dynamoit.utils.DX;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -32,18 +32,19 @@ public class MainView extends VBox {
 
     private DynamoDBService dynamoDBService;
 
+    private MainModel mainModel;
+
     private ObservableList<String> availableProfiles = FXCollections.observableArrayList();
-    private List<String> availableTables = new ArrayList<>();
     private SimpleStringProperty selectedProfile = new SimpleStringProperty();
-    private SimpleStringProperty filter = new SimpleStringProperty("");
     private ObjectProperty<TreeItem<String>> rootTreeItem = new SimpleObjectProperty<>();
 
     private TreeItem<String> allTables = new AllTreeItem();
     private TabPane tabPane;
 
     @Inject
-    public MainView(DynamoDBService dynamoDBService) {
+    public MainView(DynamoDBService dynamoDBService, MainModel mainModel) {
         this.dynamoDBService = dynamoDBService;
+        this.mainModel = mainModel;
         this.getChildren().addAll(
                 List.of(
                         DX.splitPane(splitPane -> {
@@ -57,7 +58,7 @@ public class MainView extends VBox {
                                                                 DX.create(TextField::new, textField -> {
                                                                     HBox.setHgrow(textField, Priority.ALWAYS);
                                                                     textField.setPromptText("Table name contains");
-                                                                    textField.textProperty().bindBidirectional(filter);
+                                                                    textField.textProperty().bindBidirectional(mainModel.filterProperty());
                                                                     textField.disableProperty().bind(selectedProfile.isEmpty());
                                                                 }),
                                                                 DX.create(Button::new, button -> {
@@ -96,32 +97,33 @@ public class MainView extends VBox {
         this.dynamoDBService.getAvailableProfiles().thenAccept(profiles -> Platform.runLater(() -> this.availableProfiles.addAll(profiles)));
 
         this.selectedProfile.addListener((observable, oldValue, newValue) -> {
-            this.availableTables.clear();
+            this.mainModel.getAvailableTables().clear();
             if (!StringUtils.isNullOrEmpty(newValue)) {
                 this.dynamoDBService.getListOfTables(newValue).thenAccept(tables -> Platform.runLater(() -> {
-                    this.availableTables.addAll(tables);
+                    this.mainModel.getAvailableTables().addAll(tables);
                     buildTablesTree();
                 }));
             }
         });
 
-        this.filter.addListener((observable, oldValue, newValue) -> {
-            allTables.getChildren().clear();
-            allTables.getChildren().addAll(availableTables.stream().filter(tableName -> tableName.contains(filter.get())).map(TreeItem::new).collect(Collectors.toList()));
+        mainModel.getFilteredTables().addListener((ListChangeListener<String>) c -> {
+            allTables.getChildren().setAll(mainModel.getFilteredTables().stream().map(TreeItem::new).collect(Collectors.toList()));
         });
 
     }
 
     private void onFilterSave(ActionEvent actionEvent) {
-        FilterTreeItem filterTables = new FilterTreeItem(filter.get());
-        filterTables.getChildren().addAll(availableTables.stream().filter(tableName -> tableName.contains(filter.get())).map(TreeItem::new).collect(Collectors.toList()));
+        FilterTreeItem filterTables = new FilterTreeItem(mainModel.getFilter());
+        filterTables.getChildren().addAll(mainModel.getAvailableTables().stream().filter(tableName -> tableName.contains(mainModel.getFilter())).map(TreeItem::new).collect(Collectors.toList()));
         filterTables.setExpanded(true);
+
+        this.mainModel.getSavedFilters().add(mainModel.getFilter());
 
         this.rootTreeItem.get().getChildren().add(filterTables);
     }
 
     private void buildTablesTree() {
-        allTables.getChildren().addAll(availableTables.stream().map(TreeItem::new).collect(Collectors.toList()));
+        allTables.getChildren().addAll(mainModel.getAvailableTables().stream().map(TreeItem::new).collect(Collectors.toList()));
         allTables.setExpanded(true);
 
         this.rootTreeItem.set(DX.create(TreeItem::new, root -> {
@@ -136,7 +138,7 @@ public class MainView extends VBox {
             }
 
             TableComponent tableComponent = DaggerTableComponent.builder()
-                    .tableModule(new TableModule(new TableContext(selectedProfile.get(), selectedItem.getValue())))
+                    .tableModule(new TableModule(new TableContext(selectedProfile.get(), selectedItem.getValue()), mainModel))
                     .build();
 
             Tab tab = new Tab(selectedItem.getValue(), tableComponent.view());

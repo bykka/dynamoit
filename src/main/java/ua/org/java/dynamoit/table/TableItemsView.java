@@ -20,6 +20,7 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
+import ua.org.java.dynamoit.MainModel;
 import ua.org.java.dynamoit.utils.DX;
 
 import java.util.*;
@@ -35,6 +36,8 @@ public class TableItemsView extends VBox {
     private static final String HASH = "HASH";
     private static final String RANGE = "RANGE";
 
+    private MainModel mainModel;
+
     private TableController controller;
     private Button deleteSelectedButton;
     private TableView<Item> tableView;
@@ -46,8 +49,9 @@ public class TableItemsView extends VBox {
     private SimpleStringProperty totalCount = new SimpleStringProperty();
     private Map<String, SimpleStringProperty> attributeFilterMap = new HashMap<>();
 
-    public TableItemsView(TableController controller) {
+    public TableItemsView(TableController controller, MainModel mainModel) {
         this.controller = controller;
+        this.mainModel = mainModel;
 
         this.getChildren().addAll(
                 List.of(
