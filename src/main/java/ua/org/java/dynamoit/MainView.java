@@ -101,13 +101,17 @@ public class MainView extends VBox {
             if (!StringUtils.isNullOrEmpty(newValue)) {
                 this.dynamoDBService.getListOfTables(newValue).thenAccept(tables -> Platform.runLater(() -> {
                     this.mainModel.getAvailableTables().addAll(tables);
-                    buildTablesTree();
+                    this.rootTreeItem.set(DX.create(TreeItem::new, root -> {
+                        root.getChildren().add(allTables);
+                    }));
                 }));
             }
         });
 
         mainModel.getFilteredTables().addListener((ListChangeListener<String>) c -> {
+            System.out.println("1");
             allTables.getChildren().setAll(mainModel.getFilteredTables().stream().map(TreeItem::new).collect(Collectors.toList()));
+            allTables.setExpanded(true);
         });
 
         mainModel.getSavedFilters().addListener((ListChangeListener<String>) c -> {
@@ -130,15 +134,6 @@ public class MainView extends VBox {
 
     private void onFilterSave(ActionEvent actionEvent) {
         this.mainModel.getSavedFilters().add(mainModel.getFilter());
-    }
-
-    private void buildTablesTree() {
-        allTables.getChildren().addAll(mainModel.getAvailableTables().stream().map(TreeItem::new).collect(Collectors.toList()));
-        allTables.setExpanded(true);
-
-        this.rootTreeItem.set(DX.create(TreeItem::new, root -> {
-            root.getChildren().addAll(allTables);
-        }));
     }
 
     private void onTableSelect(MouseEvent event, TreeItem<String> selectedItem) {
