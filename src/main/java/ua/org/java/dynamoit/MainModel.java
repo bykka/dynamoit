@@ -16,9 +16,7 @@ public class MainModel {
     private ObservableList<String> savedFilters = FXCollections.observableArrayList();
 
     public MainModel() {
-        filter.addListener((observable, oldValue, newValue) -> {
-            filteredTables.setPredicate(value -> value.contains(filter.get()));
-        });
+        filter.addListener((observable, oldValue, newValue) -> filteredTables.setPredicate(value -> value.contains(filter.get())));
     }
 
     public List<String> getAvailableTables() {

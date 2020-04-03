@@ -110,16 +110,26 @@ public class MainView extends VBox {
             allTables.getChildren().setAll(mainModel.getFilteredTables().stream().map(TreeItem::new).collect(Collectors.toList()));
         });
 
+        mainModel.getSavedFilters().addListener((ListChangeListener<String>) c -> {
+            while (c.next()) {
+                if (c.wasAdded()) {
+                    this.rootTreeItem.get().getChildren().addAll(
+                            c.getAddedSubList()
+                                    .stream()
+                                    .map(filter -> {
+                                        FilterTreeItem filterTables = new FilterTreeItem(filter);
+                                        filterTables.getChildren().addAll(mainModel.getAvailableTables().stream().filter(tableName -> tableName.contains(filter)).map(TreeItem::new).collect(Collectors.toList()));
+                                        filterTables.setExpanded(true);
+                                        return filterTables;
+                                    }).collect(Collectors.toList())
+                    );
+                }
+            }
+        });
     }
 
     private void onFilterSave(ActionEvent actionEvent) {
-        FilterTreeItem filterTables = new FilterTreeItem(mainModel.getFilter());
-        filterTables.getChildren().addAll(mainModel.getAvailableTables().stream().filter(tableName -> tableName.contains(mainModel.getFilter())).map(TreeItem::new).collect(Collectors.toList()));
-        filterTables.setExpanded(true);
-
         this.mainModel.getSavedFilters().add(mainModel.getFilter());
-
-        this.rootTreeItem.get().getChildren().add(filterTables);
     }
 
     private void buildTablesTree() {
