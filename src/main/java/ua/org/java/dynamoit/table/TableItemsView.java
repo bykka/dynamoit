@@ -227,16 +227,18 @@ public class TableItemsView extends VBox {
                                         );
                                         menuSearch.getItems().addAll(
                                                 mainModel.getSavedFilters().stream().map(filter ->
-                                                    DX.create((Supplier<Menu>) Menu::new, filterMenuItem -> {
-                                                        filterMenuItem.textProperty().bind(Bindings.concat("Contains: " + filter));
-                                                        filterMenuItem.getItems().addAll(
-//                                                                mainModel.getAvailableTables().stream().map(tableName ->
-//                                                                        DX.create(MenuItem::new, menuItem -> {
-//                                                                            menuItem.setText(tableName);
-//                                                                        })
-//                                                                ).collect(Collectors.toList())
-                                                        );
-                                                    })
+                                                        DX.create(Menu::new, filterMenuItem -> {
+                                                            filterMenuItem.textProperty().bind(Bindings.concat("Contains: " + filter));
+                                                            filterMenuItem.getItems().addAll(
+                                                                    mainModel.getAvailableTables().stream()
+                                                                            .filter(tableName -> tableName.contains(filter))
+                                                                            .map(tableName ->
+                                                                                    DX.create(MenuItem::new, menuItem -> {
+                                                                                        menuItem.setText(tableName);
+                                                                                    })
+                                                                            ).collect(Collectors.toList())
+                                                            );
+                                                        })
                                                 ).collect(Collectors.toList())
                                         );
                                     })
