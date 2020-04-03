@@ -212,18 +212,32 @@ public class TableItemsView extends VBox {
                                     DX.create(Menu::new, menuSearch -> {
                                         menuSearch.textProperty().bind(Bindings.concat("Search '", cell.textProperty(), "' in"));
                                         menuSearch.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.SEARCH));
-                                        menuSearch.getItems().addAll(
-                                                DX.create((Supplier<MenuItem>) MenuItem::new, menuItem -> {
-                                                    menuItem.textProperty().bind(Bindings.concat("Search '", cell.textProperty(), "' in"));
-                                                    menuItem.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
-                                                    menuItem.setOnAction(event -> {
-                                            /*SimpleStringProperty property = this.attributeFilterMap.get(column.getId());
-                                            if (property != null) {
-                                                property.set(cell.getText());
-                                                applyFilter();
-                                            }*/
-                                                    });
+                                        menuSearch.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
+                                        menuSearch.getItems().add(
+                                                DX.create(Menu::new, allTablesMenuItem -> {
+                                                    allTablesMenuItem.textProperty().bind(Bindings.concat("All tables"));
+                                                    allTablesMenuItem.getItems().addAll(
+                                                            mainModel.getAvailableTables().stream().map(tableName ->
+                                                                    DX.create(MenuItem::new, menuItem -> {
+                                                                        menuItem.setText(tableName);
+                                                                    })
+                                                            ).collect(Collectors.toList())
+                                                    );
                                                 })
+                                        );
+                                        menuSearch.getItems().addAll(
+                                                mainModel.getSavedFilters().stream().map(filter ->
+                                                    DX.create((Supplier<Menu>) Menu::new, filterMenuItem -> {
+                                                        filterMenuItem.textProperty().bind(Bindings.concat("Contains: " + filter));
+                                                        filterMenuItem.getItems().addAll(
+//                                                                mainModel.getAvailableTables().stream().map(tableName ->
+//                                                                        DX.create(MenuItem::new, menuItem -> {
+//                                                                            menuItem.setText(tableName);
+//                                                                        })
+//                                                                ).collect(Collectors.toList())
+                                                        );
+                                                    })
+                                                ).collect(Collectors.toList())
                                         );
                                     })
                             ))
