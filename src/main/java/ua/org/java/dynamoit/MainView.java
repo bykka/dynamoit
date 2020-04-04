@@ -6,7 +6,6 @@ import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -17,10 +16,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import ua.org.java.dynamoit.db.DynamoDBService;
-import ua.org.java.dynamoit.table.DaggerTableComponent;
-import ua.org.java.dynamoit.table.TableComponent;
-import ua.org.java.dynamoit.table.TableContext;
-import ua.org.java.dynamoit.table.TableModule;
+import ua.org.java.dynamoit.table.*;
 import ua.org.java.dynamoit.utils.DX;
 
 import javax.inject.Inject;
@@ -35,7 +31,6 @@ public class MainView extends VBox {
     private MainModel mainModel;
 
     private ObservableList<String> availableProfiles = FXCollections.observableArrayList();
-    private SimpleStringProperty selectedProfile = new SimpleStringProperty();
     private ObjectProperty<TreeItem<String>> rootTreeItem = new SimpleObjectProperty<>();
 
     private TreeItem<String> allTables = new AllTreeItem();
@@ -59,22 +54,22 @@ public class MainView extends VBox {
                                                                     HBox.setHgrow(textField, Priority.ALWAYS);
                                                                     textField.setPromptText("Table name contains");
                                                                     textField.textProperty().bindBidirectional(mainModel.filterProperty());
-                                                                    textField.disableProperty().bind(selectedProfile.isEmpty());
+                                                                    textField.disableProperty().bind(mainModel.selectedProfileProperty().isEmpty());
                                                                 }),
                                                                 DX.create(Button::new, button -> {
                                                                     button.setTooltip(new Tooltip("Save current filter"));
                                                                     button.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.SAVE));
-                                                                    button.disableProperty().bind(selectedProfile.isEmpty());
+                                                                    button.disableProperty().bind(mainModel.selectedProfileProperty().isEmpty());
                                                                     button.setOnAction(this::onFilterSave);
                                                                 }),
                                                                 DX.create((Supplier<ComboBox<String>>) ComboBox::new, comboBox -> {
                                                                     comboBox.setItems(availableProfiles);
-                                                                    comboBox.valueProperty().bindBidirectional(selectedProfile);
+                                                                    comboBox.valueProperty().bindBidirectional(mainModel.selectedProfileProperty());
                                                                 }),
                                                                 DX.create(Button::new, button -> {
                                                                     button.setTooltip(new Tooltip("Reload list of tables"));
                                                                     button.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.REFRESH));
-                                                                    button.disableProperty().bind(selectedProfile.isEmpty());
+                                                                    button.disableProperty().bind(mainModel.selectedProfileProperty().isEmpty());
                                                                 })
                                                         )),
                                                         DX.create((Supplier<TreeView<String>>) TreeView::new, treeView -> {
@@ -96,7 +91,7 @@ public class MainView extends VBox {
 
         this.dynamoDBService.getAvailableProfiles().thenAccept(profiles -> Platform.runLater(() -> this.availableProfiles.addAll(profiles)));
 
-        this.selectedProfile.addListener((observable, oldValue, newValue) -> {
+        this.mainModel.selectedProfileProperty().addListener((observable, oldValue, newValue) -> {
             this.mainModel.getAvailableTables().clear();
             if (!StringUtils.isNullOrEmpty(newValue)) {
                 this.dynamoDBService.getListOfTables(newValue).thenAccept(tables -> Platform.runLater(() -> {
@@ -109,7 +104,6 @@ public class MainView extends VBox {
         });
 
         mainModel.getFilteredTables().addListener((ListChangeListener<String>) c -> {
-            System.out.println("1");
             allTables.getChildren().setAll(mainModel.getFilteredTables().stream().map(TreeItem::new).collect(Collectors.toList()));
             allTables.setExpanded(true);
         });
@@ -142,14 +136,21 @@ public class MainView extends VBox {
                 return;
             }
 
-            TableComponent tableComponent = DaggerTableComponent.builder()
-                    .tableModule(new TableModule(new TableContext(selectedProfile.get(), selectedItem.getValue()), mainModel))
-                    .build();
-
-            Tab tab = new Tab(selectedItem.getValue(), tableComponent.view());
-            tabPane.getTabs().add(tab);
-            tabPane.getSelectionModel().select(tab);
+            createAndOpenTab(selectedItem.getValue());
         }
+    }
+
+    private void createAndOpenTab(String tableName){
+        TableComponent tableComponent = DaggerTableComponent.builder()
+                .tableModule(new TableModule(new TableContext(mainModel.getSelectedProfile(), tableName), mainModel))
+                .build();
+
+        TableItemsView tableItemsView = tableComponent.view();
+        tableItemsView.setOnSearchInTable(tableSearchContext -> createAndOpenTab(tableSearchContext.getTableName()));
+
+        Tab tab = new Tab(tableName, tableItemsView);
+        tabPane.getTabs().add(tab);
+        tabPane.getSelectionModel().select(tab);
     }
 
     private static class AllTreeItem extends TreeItem<String> {

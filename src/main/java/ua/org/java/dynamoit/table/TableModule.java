@@ -27,8 +27,8 @@ public class TableModule {
     }
 
     @Provides
-    public TableItemsView view(TableController controller, MainModel mainModel){
-        return new TableItemsView(controller, mainModel);
+    public TableItemsView view(TableContext context, TableController controller, MainModel mainModel){
+        return new TableItemsView(context, controller, mainModel);
     }
 
     @Provides

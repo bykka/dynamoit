@@ -49,9 +49,12 @@ public class TableItemsView extends VBox {
     private SimpleStringProperty totalCount = new SimpleStringProperty();
     private Map<String, SimpleStringProperty> attributeFilterMap = new HashMap<>();
 
-    public TableItemsView(TableController controller, MainModel mainModel) {
+    private Consumer<TableContext> onSearchInTable;
+
+    public TableItemsView(TableContext context, TableController controller, MainModel mainModel) {
         this.controller = controller;
         this.mainModel = mainModel;
+
 
         this.getChildren().addAll(
                 List.of(
@@ -220,6 +223,11 @@ public class TableItemsView extends VBox {
                                                             mainModel.getAvailableTables().stream().map(tableName ->
                                                                     DX.create(MenuItem::new, menuItem -> {
                                                                         menuItem.setText(tableName);
+                                                                        menuItem.setOnAction(event -> {
+                                                                            if (onSearchInTable != null) {
+                                                                                onSearchInTable.accept(new TableContext(mainModel.getSelectedProfile(), tableName, column.getId(), cell.getText()));
+                                                                            }
+                                                                        });
                                                                     })
                                                             ).collect(Collectors.toList())
                                                     );
@@ -235,6 +243,11 @@ public class TableItemsView extends VBox {
                                                                             .map(tableName ->
                                                                                     DX.create(MenuItem::new, menuItem -> {
                                                                                         menuItem.setText(tableName);
+                                                                                        menuItem.setOnAction(event -> {
+                                                                                            if (onSearchInTable != null) {
+                                                                                                onSearchInTable.accept(new TableContext(mainModel.getSelectedProfile(), tableName, column.getId(), cell.getText()));
+                                                                                            }
+                                                                                        });
                                                                                     })
                                                                             ).collect(Collectors.toList())
                                                             );
@@ -318,4 +331,7 @@ public class TableItemsView extends VBox {
         }
     }
 
+    public void setOnSearchInTable(Consumer<TableContext> onSearchInTable) {
+        this.onSearchInTable = onSearchInTable;
+    }
 }

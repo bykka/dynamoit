@@ -14,6 +14,7 @@ public class MainModel {
     private SimpleStringProperty filter = new SimpleStringProperty("");
     private FilteredList<String> filteredTables = availableTables.filtered(Objects::nonNull);
     private ObservableList<String> savedFilters = FXCollections.observableArrayList();
+    private SimpleStringProperty selectedProfile = new SimpleStringProperty();
 
     public MainModel() {
         filter.addListener((observable, oldValue, newValue) -> filteredTables.setPredicate(value -> value.contains(filter.get())));
@@ -37,5 +38,13 @@ public class MainModel {
 
     public ObservableList<String> getSavedFilters() {
         return savedFilters;
+    }
+
+    public String getSelectedProfile() {
+        return selectedProfile.get();
+    }
+
+    public SimpleStringProperty selectedProfileProperty() {
+        return selectedProfile;
     }
 }
