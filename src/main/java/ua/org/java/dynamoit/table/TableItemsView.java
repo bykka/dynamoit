@@ -55,7 +55,6 @@ public class TableItemsView extends VBox {
         this.controller = controller;
         this.mainModel = mainModel;
 
-
         this.getChildren().addAll(
                 List.of(
                         DX.toolBar(toolBar -> List.of(
@@ -115,6 +114,14 @@ public class TableItemsView extends VBox {
             tableDescription = describeTableResult.getTable();
             totalCount.set(tableDescription.getItemCount().toString());
             keyTypeMap = tableDescription.getKeySchema().stream().collect(Collectors.toMap(KeySchemaElement::getAttributeName, KeySchemaElement::getKeyType));
+
+            if (context.getPropertyName() != null) {
+                keyTypeMap.entrySet().stream()
+                        .filter(entry -> entry.getValue().equals(HASH))
+                        .map(Map.Entry::getKey)
+                        .findFirst()
+                        .ifPresent(key -> attributeFilterMap.put(key, new SimpleStringProperty(context.getPropertyValue())));
+            }
         })).thenRunAsync(() -> controller.queryPageItems(attributeFilterMap)
                 .thenAccept(page -> {
                     currentPage = page;
@@ -148,8 +155,7 @@ public class TableItemsView extends VBox {
                 })
                 .filter(attrName -> !availableAttributes.contains(attrName))
                 .map(attrName -> {
-                    SimpleStringProperty filterProperty = new SimpleStringProperty();
-                    attributeFilterMap.put(attrName, filterProperty);
+                    SimpleStringProperty filterProperty = attributeFilterMap.computeIfAbsent(attrName, s -> new SimpleStringProperty());
 
                     return DX.create((Supplier<TableColumn<Item, String>>) TableColumn::new, filter -> {
                         TextField textField = new TextField();

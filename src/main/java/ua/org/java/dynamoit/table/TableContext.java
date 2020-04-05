@@ -35,4 +35,13 @@ public class TableContext {
         return propertyValue;
     }
 
+    @Override
+    public String toString() {
+        return "TableContext{" +
+                "profileName='" + profileName + '\'' +
+                ", tableName='" + tableName + '\'' +
+                ", propertyName='" + propertyName + '\'' +
+                ", propertyValue='" + propertyValue + '\'' +
+                '}';
+    }
 }

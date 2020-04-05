@@ -136,19 +136,19 @@ public class MainView extends VBox {
                 return;
             }
 
-            createAndOpenTab(selectedItem.getValue());
+            createAndOpenTab(new TableContext(mainModel.getSelectedProfile(), selectedItem.getValue()));
         }
     }
 
-    private void createAndOpenTab(String tableName){
+    private void createAndOpenTab(TableContext tableContext){
         TableComponent tableComponent = DaggerTableComponent.builder()
-                .tableModule(new TableModule(new TableContext(mainModel.getSelectedProfile(), tableName), mainModel))
+                .tableModule(new TableModule(tableContext, mainModel))
                 .build();
 
         TableItemsView tableItemsView = tableComponent.view();
-        tableItemsView.setOnSearchInTable(tableSearchContext -> createAndOpenTab(tableSearchContext.getTableName()));
+        tableItemsView.setOnSearchInTable(this::createAndOpenTab);
 
-        Tab tab = new Tab(tableName, tableItemsView);
+        Tab tab = new Tab(tableContext.getTableName(), tableItemsView);
         tabPane.getTabs().add(tab);
         tabPane.getSelectionModel().select(tab);
     }
