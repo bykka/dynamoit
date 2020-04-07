@@ -20,7 +20,6 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
-import ua.org.java.dynamoit.MainModel;
 import ua.org.java.dynamoit.utils.DX;
 
 import java.util.*;
@@ -36,7 +35,7 @@ public class TableView extends VBox {
     private static final String HASH = "HASH";
     private static final String RANGE = "RANGE";
 
-    private MainModel mainModel;
+    private TableModel tableModel;
 
     private TableController controller;
     private Button deleteSelectedButton;
@@ -51,9 +50,9 @@ public class TableView extends VBox {
 
     private Consumer<TableContext> onSearchInTable;
 
-    public TableView(TableContext context, TableController controller, MainModel mainModel) {
+    public TableView(TableContext context, TableController controller, TableModel tableModel) {
         this.controller = controller;
-        this.mainModel = mainModel;
+        this.tableModel = tableModel;
 
         this.getChildren().addAll(
                 List.of(
@@ -226,12 +225,12 @@ public class TableView extends VBox {
                                                 DX.create(Menu::new, allTablesMenuItem -> {
                                                     allTablesMenuItem.textProperty().bind(Bindings.concat("All tables"));
                                                     allTablesMenuItem.getItems().addAll(
-                                                            mainModel.getAvailableTables().stream().map(tableName ->
+                                                            tableModel.getMainModel().getAvailableTables().stream().map(tableName ->
                                                                     DX.create(MenuItem::new, menuItem -> {
                                                                         menuItem.setText(tableName);
                                                                         menuItem.setOnAction(event -> {
                                                                             if (onSearchInTable != null) {
-                                                                                onSearchInTable.accept(new TableContext(mainModel.getSelectedProfile(), tableName, column.getId(), cell.getText()));
+                                                                                onSearchInTable.accept(new TableContext(tableModel.getMainModel().getSelectedProfile(), tableName, column.getId(), cell.getText()));
                                                                             }
                                                                         });
                                                                     })
@@ -240,18 +239,18 @@ public class TableView extends VBox {
                                                 })
                                         );
                                         menuSearch.getItems().addAll(
-                                                mainModel.getSavedFilters().stream().map(filter ->
+                                                tableModel.getMainModel().getSavedFilters().stream().map(filter ->
                                                         DX.create(Menu::new, filterMenuItem -> {
                                                             filterMenuItem.textProperty().bind(Bindings.concat("Contains: " + filter));
                                                             filterMenuItem.getItems().addAll(
-                                                                    mainModel.getAvailableTables().stream()
+                                                                    tableModel.getMainModel().getAvailableTables().stream()
                                                                             .filter(tableName -> tableName.contains(filter))
                                                                             .map(tableName ->
                                                                                     DX.create(MenuItem::new, menuItem -> {
                                                                                         menuItem.setText(tableName);
                                                                                         menuItem.setOnAction(event -> {
                                                                                             if (onSearchInTable != null) {
-                                                                                                onSearchInTable.accept(new TableContext(mainModel.getSelectedProfile(), tableName, column.getId(), cell.getText()));
+                                                                                                onSearchInTable.accept(new TableContext(tableModel.getMainModel().getSelectedProfile(), tableName, column.getId(), cell.getText()));
                                                                                             }
                                                                                         });
                                                                                     })
