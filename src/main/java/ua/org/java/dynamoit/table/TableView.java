@@ -8,11 +8,8 @@ import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
-import javafx.beans.binding.IntegerBinding;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.scene.control.*;
 import javafx.scene.control.skin.TableViewSkin;
 import javafx.scene.input.Clipboard;
@@ -40,12 +37,9 @@ public class TableView extends VBox {
     private TableController controller;
     private Button deleteSelectedButton;
     private javafx.scene.control.TableView<Item> tableView;
-    private ObservableList<Item> rows = FXCollections.observableArrayList();
-    private IntegerBinding rowsSize = Bindings.createIntegerBinding(() -> rows.size(), rows);
     private TableDescription tableDescription;
     private Map<String, String> keyTypeMap;
     private Page<Item, ?> currentPage;
-    private SimpleStringProperty totalCount = new SimpleStringProperty();
     private Map<String, SimpleStringProperty> attributeFilterMap = new HashMap<>();
 
     private Consumer<TableContext> onSearchInTable;
@@ -80,7 +74,7 @@ public class TableView extends VBox {
                                 }),
                                 DX.spacer(),
                                 DX.create(Label::new, t -> {
-                                    t.textProperty().bind(Bindings.concat("Count [", rowsSize, " of ~", totalCount, "]"));
+                                    t.textProperty().bind(Bindings.concat("Count [", tableModel.rowsSizeProperty(), " of ~", tableModel.totalCountProperty(), "]"));
                                 })
                         )),
                         DX.create((Supplier<javafx.scene.control.TableView<Item>>) javafx.scene.control.TableView::new, tableView -> {
@@ -88,11 +82,11 @@ public class TableView extends VBox {
 
                             tableView.getColumns().add(DX.create((Supplier<TableColumn<Item, Number>>) TableColumn::new, column -> {
                                 column.setPrefWidth(35);
-                                column.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(rows.indexOf(param.getValue())));
+                                column.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(tableModel.getRows().indexOf(param.getValue())));
                             }));
 
                             VBox.setVgrow(tableView, Priority.ALWAYS);
-                            tableView.setItems(rows);
+                            tableView.setItems(tableModel.getRows());
                             tableView.setSkin(new MyTableViewSkin<>(tableView));
                             tableView.setRowFactory(param -> {
                                 TableRow<Item> tableRow = new TableRow<>();
@@ -111,7 +105,7 @@ public class TableView extends VBox {
 
         controller.describeTable().thenAccept(describeTableResult -> Platform.runLater(() -> {
             tableDescription = describeTableResult.getTable();
-            totalCount.set(tableDescription.getItemCount().toString());
+            tableModel.setTotalCount(tableDescription.getItemCount().toString());
             keyTypeMap = tableDescription.getKeySchema().stream().collect(Collectors.toMap(KeySchemaElement::getAttributeName, KeySchemaElement::getKeyType));
 
             if (context.getPropertyName() != null) {
@@ -270,8 +264,8 @@ public class TableView extends VBox {
     }
 
     private void showPage(Page<Item, ?> page) {
-        int count = rows.size();
-        asStream(page).forEach(item -> rows.add(item));
+        int count = tableModel.getRows().size();
+        asStream(page).forEach(item -> tableModel.getRows().add(item));
         tableView.scrollTo(count);
     }
 
@@ -282,7 +276,7 @@ public class TableView extends VBox {
     }
 
     private void applyFilter() {
-        rows.clear();
+        tableModel.getRows().clear();
         controller.queryPageItems(attributeFilterMap).thenAccept(page -> {
 
             currentPage = page;
