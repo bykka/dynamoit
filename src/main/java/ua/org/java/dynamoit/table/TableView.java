@@ -39,8 +39,6 @@ public class TableView extends VBox {
     private javafx.scene.control.TableView<Item> tableView;
     private TableDescription tableDescription;
     private Map<String, String> keyTypeMap;
-    private Page<Item, ?> currentPage;
-    private Map<String, SimpleStringProperty> attributeFilterMap = new HashMap<>();
 
     private Consumer<TableContext> onSearchInTable;
 
@@ -113,14 +111,14 @@ public class TableView extends VBox {
                         .filter(entry -> entry.getValue().equals(HASH))
                         .map(Map.Entry::getKey)
                         .findFirst()
-                        .ifPresent(key -> attributeFilterMap.put(key, new SimpleStringProperty(context.getPropertyValue())));
+                        .ifPresent(key -> tableModel.getAttributeFilterMap().put(key, new SimpleStringProperty(context.getPropertyValue())));
             }
-        })).thenRunAsync(() -> controller.queryPageItems(attributeFilterMap)
+        })).thenRunAsync(() -> controller.queryPageItems(tableModel.getAttributeFilterMap())
                 .thenAccept(page -> {
-                    currentPage = page;
+                    tableModel.setCurrentPage(page);
                     Platform.runLater(() -> {
-                        buildTableHeaders(currentPage);
-                        showPage(currentPage);
+                        buildTableHeaders(tableModel.getCurrentPage());
+                        showPage(tableModel.getCurrentPage());
                     });
                 }));
     }
@@ -148,7 +146,7 @@ public class TableView extends VBox {
                 })
                 .filter(attrName -> !availableAttributes.contains(attrName))
                 .map(attrName -> {
-                    SimpleStringProperty filterProperty = attributeFilterMap.computeIfAbsent(attrName, s -> new SimpleStringProperty());
+                    SimpleStringProperty filterProperty = tableModel.getAttributeFilterMap().computeIfAbsent(attrName, s -> new SimpleStringProperty());
 
                     return DX.create((Supplier<TableColumn<Item, String>>) TableColumn::new, filter -> {
                         TextField textField = new TextField();
@@ -204,7 +202,7 @@ public class TableView extends VBox {
                                         menuFilter.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.FILTER));
                                         menuFilter.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
                                         menuFilter.setOnAction(event -> {
-                                            SimpleStringProperty property = this.attributeFilterMap.get(column.getId());
+                                            SimpleStringProperty property = this.tableModel.getAttributeFilterMap().get(column.getId());
                                             if (property != null) {
                                                 property.set(cell.getText());
                                                 applyFilter();
@@ -271,18 +269,18 @@ public class TableView extends VBox {
 
 
     private void clearFilter() {
-        attributeFilterMap.values().forEach(simpleStringProperty -> simpleStringProperty.set(null));
+        tableModel.getAttributeFilterMap().values().forEach(simpleStringProperty -> simpleStringProperty.set(null));
         applyFilter();
     }
 
     private void applyFilter() {
         tableModel.getRows().clear();
-        controller.queryPageItems(attributeFilterMap).thenAccept(page -> {
+        controller.queryPageItems(tableModel.getAttributeFilterMap()).thenAccept(page -> {
 
-            currentPage = page;
+            tableModel.setCurrentPage(page);
             Platform.runLater(() -> {
-                buildTableHeaders(currentPage);
-                showPage(currentPage);
+                buildTableHeaders(tableModel.getCurrentPage());
+                showPage(tableModel.getCurrentPage());
             });
         });
     }
@@ -320,10 +318,10 @@ public class TableView extends VBox {
 
             getVirtualFlow().positionProperty().addListener((observable, oldValue, newValue) -> {
                 if (newValue.doubleValue() == 1.0) {
-                    if (currentPage.hasNextPage()) {
+                    if (tableModel.getCurrentPage().hasNextPage()) {
                         CompletableFuture
-                                .runAsync(() -> currentPage = currentPage.nextPage())
-                                .thenRun(() -> Platform.runLater(() -> showPage(currentPage)));
+                                .runAsync(() -> tableModel.setCurrentPage(tableModel.getCurrentPage().nextPage()))
+                                .thenRun(() -> Platform.runLater(() -> showPage(tableModel.getCurrentPage())));
                     }
                 }
             });
