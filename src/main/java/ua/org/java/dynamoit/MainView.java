@@ -17,6 +17,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import ua.org.java.dynamoit.db.DynamoDBService;
 import ua.org.java.dynamoit.table.*;
+import ua.org.java.dynamoit.table.TableView;
 import ua.org.java.dynamoit.utils.DX;
 
 import javax.inject.Inject;
@@ -145,7 +146,7 @@ public class MainView extends VBox {
                 .tableModule(new TableModule(tableContext, mainModel))
                 .build();
 
-        TableItemsView tableItemsView = tableComponent.view();
+        TableView tableItemsView = tableComponent.view();
         tableItemsView.setOnSearchInTable(this::createAndOpenTab);
 
         Tab tab = new Tab(tableContext.getTableName(), tableItemsView);

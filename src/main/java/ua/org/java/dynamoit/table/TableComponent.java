@@ -9,6 +9,6 @@ import javax.inject.Singleton;
 @Singleton
 public interface TableComponent {
 
-    TableItemsView view();
+    TableView view();
 
 }

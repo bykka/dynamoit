@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 
 import static ua.org.java.dynamoit.utils.Utils.asStream;
 
-public class TableItemsView extends VBox {
+public class TableView extends VBox {
 
     private static final String HASH = "HASH";
     private static final String RANGE = "RANGE";
@@ -40,7 +40,7 @@ public class TableItemsView extends VBox {
 
     private TableController controller;
     private Button deleteSelectedButton;
-    private TableView<Item> tableView;
+    private javafx.scene.control.TableView<Item> tableView;
     private ObservableList<Item> rows = FXCollections.observableArrayList();
     private IntegerBinding rowsSize = Bindings.createIntegerBinding(() -> rows.size(), rows);
     private TableDescription tableDescription;
@@ -51,7 +51,7 @@ public class TableItemsView extends VBox {
 
     private Consumer<TableContext> onSearchInTable;
 
-    public TableItemsView(TableContext context, TableController controller, MainModel mainModel) {
+    public TableView(TableContext context, TableController controller, MainModel mainModel) {
         this.controller = controller;
         this.mainModel = mainModel;
 
@@ -84,7 +84,7 @@ public class TableItemsView extends VBox {
                                     t.textProperty().bind(Bindings.concat("Count [", rowsSize, " of ~", totalCount, "]"));
                                 })
                         )),
-                        DX.create((Supplier<TableView<Item>>) TableView::new, tableView -> {
+                        DX.create((Supplier<javafx.scene.control.TableView<Item>>) javafx.scene.control.TableView::new, tableView -> {
                             this.tableView = tableView;
 
                             tableView.getColumns().add(DX.create((Supplier<TableColumn<Item, Number>>) TableColumn::new, column -> {
@@ -322,7 +322,7 @@ public class TableItemsView extends VBox {
 
     private class MyTableViewSkin<T> extends TableViewSkin<T> {
 
-        public MyTableViewSkin(TableView<T> control) {
+        public MyTableViewSkin(javafx.scene.control.TableView<T> control) {
             super(control);
 
             getVirtualFlow().positionProperty().addListener((observable, oldValue, newValue) -> {
