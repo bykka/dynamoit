@@ -67,12 +67,14 @@ public class TableController {
         }));
     }
 
-    public void onDeleteItem(Item item){
+    public void onDeleteItem(Item item) {
 //        delete(item).thenRun(() -> Platform.runLater(this::applyFilter));
     }
 
     // fixme DynamoDB methods
     public CompletableFuture<Page<Item, ?>> queryPageItems() {
+        System.out.println(tableModel.getAttributeFilterMap());
+
         SimpleStringProperty hashValueProperty = tableModel.getAttributeFilterMap().get(tableModel.getHashAttribute());
         if (hashValueProperty != null && !StringUtils.isNullOrEmpty(hashValueProperty.get())) {
             return queryItems(tableModel.getAttributeFilterMap());
@@ -106,7 +108,7 @@ public class TableController {
         return CompletableFuture.supplyAsync(() -> {
             QuerySpec querySpec = new QuerySpec();
             querySpec.withHashKey(tableModel.getHashAttribute(), attributeFilterMap.get(tableModel.getHashAttribute()).get());
-            if (!StringUtils.isNullOrEmpty(attributeFilterMap.get(tableModel.getRangeAttribute()).get())) {
+            if (tableModel.getRangeAttribute() != null && !StringUtils.isNullOrEmpty(attributeFilterMap.get(tableModel.getRangeAttribute()).get())) {
                 querySpec.withRangeKeyCondition(new RangeKeyCondition(tableModel.getRangeAttribute()).eq(attributeFilterMap.get(tableModel.getRangeAttribute()).get()));
             }
             List<QueryFilter> filters = attributeFilterMap.entrySet().stream()
