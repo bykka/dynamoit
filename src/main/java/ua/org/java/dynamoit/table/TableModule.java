@@ -37,8 +37,8 @@ public class TableModule {
     }
 
     @Provides
-    public TableController controller(TableContext tableContext, DynamoDBService dynamoDBService){
-        return new TableController(tableContext, dynamoDBService);
+    public TableController controller(TableContext tableContext, TableModel tableModel, DynamoDBService dynamoDBService){
+        return new TableController(tableContext, tableModel, dynamoDBService);
     }
 
 }

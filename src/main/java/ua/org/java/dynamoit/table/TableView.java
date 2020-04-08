@@ -2,7 +2,6 @@ package ua.org.java.dynamoit.table;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Page;
-import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
@@ -19,7 +18,10 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import ua.org.java.dynamoit.utils.DX;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -46,6 +48,33 @@ public class TableView extends VBox {
         this.controller = controller;
         this.tableModel = tableModel;
 
+        buildUI();
+        addModelListeners();
+
+
+//        controller.describeTable().thenAccept(describeTableResult -> Platform.runLater(() -> {
+//            tableDescription = describeTableResult.getTable();
+//            tableModel.setTotalCount(tableDescription.getItemCount().toString());
+//            keyTypeMap = tableDescription.getKeySchema().stream().collect(Collectors.toMap(KeySchemaElement::getAttributeName, KeySchemaElement::getKeyType));
+//
+//            if (context.getPropertyName() != null) {
+//                keyTypeMap.entrySet().stream()
+//                        .filter(entry -> entry.getValue().equals(HASH))
+//                        .map(Map.Entry::getKey)
+//                        .findFirst()
+//                        .ifPresent(key -> tableModel.getAttributeFilterMap().put(key, new SimpleStringProperty(context.getPropertyValue())));
+//            }
+//        })).thenRunAsync(() -> controller.queryPageItems(tableModel.getAttributeFilterMap())
+//                .thenAccept(page -> {
+//                    tableModel.setCurrentPage(page);
+//                    Platform.runLater(() -> {
+//                        buildTableHeaders(tableModel.getCurrentPage());
+//                        showPage(tableModel.getCurrentPage());
+//                    });
+//                }));
+    }
+
+    private void buildUI() {
         this.getChildren().addAll(
                 List.of(
                         DX.toolBar(toolBar -> List.of(
@@ -100,27 +129,12 @@ public class TableView extends VBox {
                         })
                 )
         );
+    }
 
-        controller.describeTable().thenAccept(describeTableResult -> Platform.runLater(() -> {
-            tableDescription = describeTableResult.getTable();
-            tableModel.setTotalCount(tableDescription.getItemCount().toString());
-            keyTypeMap = tableDescription.getKeySchema().stream().collect(Collectors.toMap(KeySchemaElement::getAttributeName, KeySchemaElement::getKeyType));
+    private void addModelListeners(){
+        tableModel.describeTableResultProperty().addListener((observable, oldValue, newValue) -> {
 
-            if (context.getPropertyName() != null) {
-                keyTypeMap.entrySet().stream()
-                        .filter(entry -> entry.getValue().equals(HASH))
-                        .map(Map.Entry::getKey)
-                        .findFirst()
-                        .ifPresent(key -> tableModel.getAttributeFilterMap().put(key, new SimpleStringProperty(context.getPropertyValue())));
-            }
-        })).thenRunAsync(() -> controller.queryPageItems(tableModel.getAttributeFilterMap())
-                .thenAccept(page -> {
-                    tableModel.setCurrentPage(page);
-                    Platform.runLater(() -> {
-                        buildTableHeaders(tableModel.getCurrentPage());
-                        showPage(tableModel.getCurrentPage());
-                    });
-                }));
+        });
     }
 
     private void buildTableHeaders(Page<Item, ?> page) {

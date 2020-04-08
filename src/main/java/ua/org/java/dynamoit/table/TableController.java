@@ -4,8 +4,8 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.document.*;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
-import com.amazonaws.services.dynamodbv2.model.DescribeTableResult;
 import com.amazonaws.util.StringUtils;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import ua.org.java.dynamoit.db.DynamoDBService;
 import ua.org.java.dynamoit.utils.Utils;
@@ -22,21 +22,26 @@ public class TableController {
     private DynamoDB documentClient;
     private Table table;
     private TableContext context;
-    private CompletableFuture<DescribeTableResult> describeTableResult;
+    private TableModel tableModel;
     private String hashAttribute;
     private String rangeAttribute;
 
-    public TableController(TableContext context, DynamoDBService dynamoDBService) {
+    public TableController(TableContext context, TableModel tableModel, DynamoDBService dynamoDBService) {
         this.context = context;
+        this.tableModel = tableModel;
+
         dbClient = dynamoDBService.getOrCreateDynamoDBClient(context.getProfileName());
         documentClient = dynamoDBService.getOrCreateDocumentClient(context.getProfileName());
         table = documentClient.getTable(context.getTableName());
 
-        describeTableResult = CompletableFuture.supplyAsync(() -> dbClient.describeTable(context.getTableName()));
-        describeTableResult.thenAccept(describeTable -> {
-            Utils.getHashKey(describeTable).ifPresent(s -> hashAttribute = s);
-            Utils.getRangeKey(describeTable).ifPresent(s -> rangeAttribute = s);
-        });
+        CompletableFuture.supplyAsync(() -> dbClient.describeTable(context.getTableName()))
+                .thenAccept(describeTable -> {
+                    Utils.getHashKey(describeTable).ifPresent(s -> hashAttribute = s);
+                    Utils.getRangeKey(describeTable).ifPresent(s -> rangeAttribute = s);
+                    Platform.runLater(() -> {
+                        tableModel.setDescribeTableResult(describeTable);
+                    });
+                });
     }
 
     public CompletableFuture<Page<Item, ?>> queryPageItems(Map<String, SimpleStringProperty> attributeFilterMap) {
@@ -87,11 +92,6 @@ public class TableController {
             return table.query(querySpec.withMaxPageSize(100)).firstPage();
         });
     }
-
-    public CompletableFuture<DescribeTableResult> describeTable() {
-        return describeTableResult;
-    }
-
 
     public CompletableFuture<Void> delete(Item item) {
         return CompletableFuture.runAsync(() -> {
