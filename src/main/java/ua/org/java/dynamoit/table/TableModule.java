@@ -5,6 +5,8 @@ import dagger.Provides;
 import ua.org.java.dynamoit.MainModel;
 import ua.org.java.dynamoit.db.DynamoDBService;
 
+import javax.inject.Singleton;
+
 @Module
 public class TableModule {
 
@@ -17,27 +19,28 @@ public class TableModule {
     }
 
     @Provides
-    public TableContext context(){
+    public TableContext context() {
         return this.context;
     }
 
     @Provides
-    public MainModel mainModel(){
+    public MainModel mainModel() {
         return this.mainModel;
     }
 
     @Provides
-    public TableModel model(MainModel mainModel){
+    @Singleton
+    public TableModel model(MainModel mainModel) {
         return new TableModel(mainModel);
     }
 
     @Provides
-    public TableView view(TableContext context, TableController controller, TableModel tableModel){
-        return new TableView(context, controller, tableModel);
+    public TableView view(TableController controller, TableModel tableModel) {
+        return new TableView(controller, tableModel);
     }
 
     @Provides
-    public TableController controller(TableContext tableContext, TableModel tableModel, DynamoDBService dynamoDBService){
+    public TableController controller(TableContext tableContext, TableModel tableModel, DynamoDBService dynamoDBService) {
         return new TableController(tableContext, tableModel, dynamoDBService);
     }
 

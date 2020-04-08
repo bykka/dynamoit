@@ -16,15 +16,16 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+import static ua.org.java.dynamoit.utils.Utils.asStream;
+
 public class TableController {
 
+    public static final int PAGE_SIZE = 100;
     private AmazonDynamoDB dbClient;
     private DynamoDB documentClient;
     private Table table;
     private TableContext context;
     private TableModel tableModel;
-    private String hashAttribute;
-    private String rangeAttribute;
 
     public TableController(TableContext context, TableModel tableModel, DynamoDBService dynamoDBService) {
         this.context = context;
@@ -35,21 +36,48 @@ public class TableController {
         table = documentClient.getTable(context.getTableName());
 
         CompletableFuture.supplyAsync(() -> dbClient.describeTable(context.getTableName()))
-                .thenAccept(describeTable -> {
-                    Utils.getHashKey(describeTable).ifPresent(s -> hashAttribute = s);
-                    Utils.getRangeKey(describeTable).ifPresent(s -> rangeAttribute = s);
-                    Platform.runLater(() -> {
-                        tableModel.setDescribeTableResult(describeTable);
-                    });
-                });
+                .thenAccept(describeTable -> Platform.runLater(() -> {
+                    Utils.getHashKey(describeTable).ifPresent(tableModel::setHashAttribute);
+                    Utils.getRangeKey(describeTable).ifPresent(tableModel::setRangeAttribute);
+                    tableModel.setDescribeTableResult(describeTable);
+                }))
+                .thenCompose(aVoid -> queryPageItems())
+                .thenAccept(page -> Platform.runLater(() -> {
+                    tableModel.setCurrentPage(page);
+                    tableModel.getRows().addAll(asStream(page).collect(Collectors.toList()));
+                }));
     }
 
-    public CompletableFuture<Page<Item, ?>> queryPageItems(Map<String, SimpleStringProperty> attributeFilterMap) {
-        SimpleStringProperty hashValueProperty = attributeFilterMap.get(hashAttribute);
-        if (hashValueProperty != null && !StringUtils.isNullOrEmpty(hashValueProperty.get())) {
-            return queryItems(attributeFilterMap);
+
+    public void onReachScrollEnd() {
+        if (tableModel.getCurrentPage().hasNextPage()) {
+            CompletableFuture
+                    .supplyAsync(() -> tableModel.getCurrentPage().nextPage())
+                    .thenAccept(page -> Platform.runLater(() -> {
+                        tableModel.setCurrentPage(page);
+                        tableModel.getRows().addAll(asStream(page).collect(Collectors.toList()));
+                    }));
         }
-        return scanItems(attributeFilterMap);
+    }
+
+    public void onRefresh() {
+        queryPageItems().thenAccept(page -> Platform.runLater(() -> {
+            tableModel.setCurrentPage(page);
+            tableModel.getRows().setAll(asStream(page).collect(Collectors.toList()));
+        }));
+    }
+
+    public void onDeleteItem(Item item){
+//        delete(item).thenRun(() -> Platform.runLater(this::applyFilter));
+    }
+
+    // fixme DynamoDB methods
+    public CompletableFuture<Page<Item, ?>> queryPageItems() {
+        SimpleStringProperty hashValueProperty = tableModel.getAttributeFilterMap().get(tableModel.getHashAttribute());
+        if (hashValueProperty != null && !StringUtils.isNullOrEmpty(hashValueProperty.get())) {
+            return queryItems(tableModel.getAttributeFilterMap());
+        }
+        return scanItems(tableModel.getAttributeFilterMap());
     }
 
     public CompletableFuture<Void> createItem(String json) {
@@ -70,35 +98,35 @@ public class TableController {
             if (!filters.isEmpty()) {
                 scanSpec.withScanFilters(filters.toArray(new ScanFilter[]{}));
             }
-            return table.scan(scanSpec.withMaxPageSize(100)).firstPage();
+            return table.scan(scanSpec.withMaxPageSize(PAGE_SIZE)).firstPage();
         });
     }
 
     private CompletableFuture<Page<Item, ?>> queryItems(Map<String, SimpleStringProperty> attributeFilterMap) {
         return CompletableFuture.supplyAsync(() -> {
             QuerySpec querySpec = new QuerySpec();
-            querySpec.withHashKey(hashAttribute, attributeFilterMap.get(hashAttribute).get());
-            if (!StringUtils.isNullOrEmpty(attributeFilterMap.get(rangeAttribute).get())) {
-                querySpec.withRangeKeyCondition(new RangeKeyCondition(rangeAttribute).eq(attributeFilterMap.get(rangeAttribute).get()));
+            querySpec.withHashKey(tableModel.getHashAttribute(), attributeFilterMap.get(tableModel.getHashAttribute()).get());
+            if (!StringUtils.isNullOrEmpty(attributeFilterMap.get(tableModel.getRangeAttribute()).get())) {
+                querySpec.withRangeKeyCondition(new RangeKeyCondition(tableModel.getRangeAttribute()).eq(attributeFilterMap.get(tableModel.getRangeAttribute()).get()));
             }
             List<QueryFilter> filters = attributeFilterMap.entrySet().stream()
-                    .filter(entry -> !entry.getKey().equals(hashAttribute) && !entry.getKey().equals(rangeAttribute))
+                    .filter(entry -> !entry.getKey().equals(tableModel.getHashAttribute()) && !entry.getKey().equals(tableModel.getRangeAttribute()))
                     .filter(entry -> !StringUtils.isNullOrEmpty(entry.getValue().get()))
                     .map(entry -> new QueryFilter(entry.getKey()).eq(entry.getValue().get()))
                     .collect(Collectors.toList());
             if (!filters.isEmpty()) {
                 querySpec.withQueryFilters(filters.toArray(new QueryFilter[]{}));
             }
-            return table.query(querySpec.withMaxPageSize(100)).firstPage();
+            return table.query(querySpec.withMaxPageSize(PAGE_SIZE)).firstPage();
         });
     }
 
     public CompletableFuture<Void> delete(Item item) {
         return CompletableFuture.runAsync(() -> {
-            if (rangeAttribute == null) {
-                table.deleteItem(hashAttribute, item.get(hashAttribute));
+            if (tableModel.getRangeAttribute() == null) {
+                table.deleteItem(tableModel.getHashAttribute(), item.get(tableModel.getHashAttribute()));
             } else {
-                table.deleteItem(hashAttribute, item.get(hashAttribute), rangeAttribute, item.get(rangeAttribute));
+                table.deleteItem(tableModel.getHashAttribute(), item.get(tableModel.getHashAttribute()), tableModel.getRangeAttribute(), item.get(tableModel.getRangeAttribute()));
             }
         });
     }

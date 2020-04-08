@@ -22,9 +22,11 @@ public class TableModel {
     private ObservableList<Item> rows = FXCollections.observableArrayList();
     private IntegerBinding rowsSize = Bindings.createIntegerBinding(() -> rows.size(), rows);
     private Map<String, SimpleStringProperty> attributeFilterMap = new HashMap<>();
-    private Page<Item, ?> currentPage;
+    private SimpleObjectProperty<Page<Item, ?>> currentPage = new SimpleObjectProperty<>();
     private SimpleObjectProperty<DescribeTableResult> describeTableResult = new SimpleObjectProperty<>();
     private LongBinding totalCount = Bindings.createLongBinding(() -> describeTableResult.get() == null ? 0 : describeTableResult.get().getTable().getItemCount(), describeTableResult);
+    private SimpleStringProperty hashAttribute = new SimpleStringProperty();
+    private SimpleStringProperty rangeAttribute = new SimpleStringProperty();
 
     public TableModel(MainModel mainModel) {
         this.mainModel = mainModel;
@@ -59,11 +61,15 @@ public class TableModel {
     }
 
     public Page<Item, ?> getCurrentPage() {
+        return currentPage.get();
+    }
+
+    public SimpleObjectProperty<Page<Item, ?>> currentPageProperty() {
         return currentPage;
     }
 
     public void setCurrentPage(Page<Item, ?> currentPage) {
-        this.currentPage = currentPage;
+        this.currentPage.set(currentPage);
     }
 
     public DescribeTableResult getDescribeTableResult() {
@@ -76,5 +82,29 @@ public class TableModel {
 
     public void setDescribeTableResult(DescribeTableResult describeTableResult) {
         this.describeTableResult.set(describeTableResult);
+    }
+
+    public String getHashAttribute() {
+        return hashAttribute.get();
+    }
+
+    public SimpleStringProperty hashAttributeProperty() {
+        return hashAttribute;
+    }
+
+    public String getRangeAttribute() {
+        return rangeAttribute.get();
+    }
+
+    public SimpleStringProperty rangeAttributeProperty() {
+        return rangeAttribute;
+    }
+
+    public void setHashAttribute(String hashAttribute) {
+        this.hashAttribute.set(hashAttribute);
+    }
+
+    public void setRangeAttribute(String rangeAttribute) {
+        this.rangeAttribute.set(rangeAttribute);
     }
 }

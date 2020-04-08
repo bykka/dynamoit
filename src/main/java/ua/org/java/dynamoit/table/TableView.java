@@ -1,14 +1,12 @@
 package ua.org.java.dynamoit.table;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.Page;
-import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
-import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.ListChangeListener;
 import javafx.scene.control.*;
 import javafx.scene.control.skin.TableViewSkin;
 import javafx.scene.input.Clipboard;
@@ -22,7 +20,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -31,47 +28,20 @@ import static ua.org.java.dynamoit.utils.Utils.asStream;
 
 public class TableView extends VBox {
 
-    private static final String HASH = "HASH";
-    private static final String RANGE = "RANGE";
-
     private TableModel tableModel;
 
     private TableController controller;
     private Button deleteSelectedButton;
     private javafx.scene.control.TableView<Item> tableView;
-    private TableDescription tableDescription;
-    private Map<String, String> keyTypeMap;
 
     private Consumer<TableContext> onSearchInTable;
 
-    public TableView(TableContext context, TableController controller, TableModel tableModel) {
+    public TableView(TableController controller, TableModel tableModel) {
         this.controller = controller;
         this.tableModel = tableModel;
 
         buildUI();
         addModelListeners();
-
-
-//        controller.describeTable().thenAccept(describeTableResult -> Platform.runLater(() -> {
-//            tableDescription = describeTableResult.getTable();
-//            tableModel.setTotalCount(tableDescription.getItemCount().toString());
-//            keyTypeMap = tableDescription.getKeySchema().stream().collect(Collectors.toMap(KeySchemaElement::getAttributeName, KeySchemaElement::getKeyType));
-//
-//            if (context.getPropertyName() != null) {
-//                keyTypeMap.entrySet().stream()
-//                        .filter(entry -> entry.getValue().equals(HASH))
-//                        .map(Map.Entry::getKey)
-//                        .findFirst()
-//                        .ifPresent(key -> tableModel.getAttributeFilterMap().put(key, new SimpleStringProperty(context.getPropertyValue())));
-//            }
-//        })).thenRunAsync(() -> controller.queryPageItems(tableModel.getAttributeFilterMap())
-//                .thenAccept(page -> {
-//                    tableModel.setCurrentPage(page);
-//                    Platform.runLater(() -> {
-//                        buildTableHeaders(tableModel.getCurrentPage());
-//                        showPage(tableModel.getCurrentPage());
-//                    });
-//                }));
     }
 
     private void buildUI() {
@@ -81,7 +51,7 @@ public class TableView extends VBox {
                                 DX.create(Button::new, button -> {
                                     button.setTooltip(new Tooltip("Create a new item"));
                                     button.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.PLUS));
-                                    button.setOnAction(event -> showItemDialog("Create a new item", "New document in JSON format", "", json -> controller.createItem(json).thenRun(() -> Platform.runLater(this::applyFilter))));
+                                    button.setOnAction(event -> showItemDialog("Create a new item", "New document in JSON format", "", json -> controller.createItem(json).thenRun(() -> controller.onRefresh())));
                                 }),
                                 DX.create(Button::new, button -> {
                                     button.setTooltip(new Tooltip("Clear filter"));
@@ -97,7 +67,7 @@ public class TableView extends VBox {
                                 DX.create(Button::new, button -> {
                                     button.setTooltip(new Tooltip("Refresh rows"));
                                     button.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.REFRESH));
-                                    button.setOnAction(event -> applyFilter());
+                                    button.setOnAction(event -> controller.onRefresh());
                                 }),
                                 DX.spacer(),
                                 DX.create(Label::new, t -> {
@@ -119,7 +89,7 @@ public class TableView extends VBox {
                                 TableRow<Item> tableRow = new TableRow<>();
                                 tableRow.setOnMouseClicked(event -> {
                                     if (event.getClickCount() == 2) {
-                                        showItemDialog("Edit the item", "Document in JSON format", tableRow.getItem().toJSONPretty(), json -> controller.updateItem(json).thenRun(() -> Platform.runLater(this::applyFilter)));
+                                        showItemDialog("Edit the item", "Document in JSON format", tableRow.getItem().toJSONPretty(), json -> controller.updateItem(json).thenRun(() -> controller.onRefresh()));
                                     }
                                 });
                                 return tableRow;
@@ -131,29 +101,34 @@ public class TableView extends VBox {
         );
     }
 
-    private void addModelListeners(){
-        tableModel.describeTableResultProperty().addListener((observable, oldValue, newValue) -> {
-
+    private void addModelListeners() {
+        tableModel.getRows().addListener((ListChangeListener<Item>) c -> {
+            while (c.next()) {
+                if (c.wasAdded()) {
+                    buildTableHeaders();
+                    tableView.scrollTo(c.getFrom());
+                }
+            }
         });
     }
 
-    private void buildTableHeaders(Page<Item, ?> page) {
+    private void buildTableHeaders() {
         List<String> availableAttributes = tableView.getColumns().stream().map(TableColumnBase::getColumns).filter(Objects::nonNull).flatMap(Collection::stream).map(TableColumnBase::getId).collect(Collectors.toList());
 
-        asStream(page)
+        tableModel.getRows().stream()
                 .flatMap(item -> asStream(item.attributes()).map(Map.Entry::getKey))
                 .distinct()
                 .sorted((o1, o2) -> {
-                    if (HASH.equalsIgnoreCase(keyTypeMap.get(o1))) {
+                    if (o1.equals(tableModel.getHashAttribute())) {
                         return -1;
                     }
-                    if (HASH.equalsIgnoreCase(keyTypeMap.get(o2))) {
+                    if (o2.equals(tableModel.getHashAttribute())) {
                         return 1;
                     }
-                    if (RANGE.equalsIgnoreCase(keyTypeMap.get(o1))) {
+                    if (o1.equals(tableModel.getRangeAttribute())) {
                         return -1;
                     }
-                    if (RANGE.equalsIgnoreCase(keyTypeMap.get(o2))) {
+                    if (o2.equals(tableModel.getRangeAttribute())) {
                         return 1;
                     }
                     return o1.compareTo(o2);
@@ -165,14 +140,14 @@ public class TableView extends VBox {
                     return DX.create((Supplier<TableColumn<Item, String>>) TableColumn::new, filter -> {
                         TextField textField = new TextField();
                         textField.textProperty().bindBidirectional(filterProperty);
-                        textField.setOnAction(event -> applyFilter());
+                        textField.setOnAction(event -> controller.onRefresh());
                         filter.setGraphic(textField);
                         filter.getColumns().add(DX.create((Supplier<TableColumn<Item, String>>) TableColumn::new, column -> {
                             String text = attrName;
-                            if (HASH.equalsIgnoreCase(keyTypeMap.get(attrName))) {
+                            if (attrName.equals(tableModel.getHashAttribute())) {
                                 text = "#" + attrName;
                             }
-                            if (RANGE.equalsIgnoreCase(keyTypeMap.get(attrName))) {
+                            if (attrName.equals(tableModel.getRangeAttribute())) {
                                 text = "$" + attrName;
                             }
                             column.setText(text);
@@ -219,7 +194,7 @@ public class TableView extends VBox {
                                             SimpleStringProperty property = this.tableModel.getAttributeFilterMap().get(column.getId());
                                             if (property != null) {
                                                 property.set(cell.getText());
-                                                applyFilter();
+                                                controller.onRefresh();
                                             }
                                         });
                                     }),
@@ -275,28 +250,8 @@ public class TableView extends VBox {
         });
     }
 
-    private void showPage(Page<Item, ?> page) {
-        int count = tableModel.getRows().size();
-        asStream(page).forEach(item -> tableModel.getRows().add(item));
-        tableView.scrollTo(count);
-    }
-
-
     private void clearFilter() {
         tableModel.getAttributeFilterMap().values().forEach(simpleStringProperty -> simpleStringProperty.set(null));
-        applyFilter();
-    }
-
-    private void applyFilter() {
-        tableModel.getRows().clear();
-        controller.queryPageItems(tableModel.getAttributeFilterMap()).thenAccept(page -> {
-
-            tableModel.setCurrentPage(page);
-            Platform.runLater(() -> {
-                buildTableHeaders(tableModel.getCurrentPage());
-                showPage(tableModel.getCurrentPage());
-            });
-        });
     }
 
     private void showItemDialog(String title, String promptText, String json, Consumer<String> onSaveConsumer) {
@@ -322,7 +277,7 @@ public class TableView extends VBox {
 
     private void deleteSelectedItem() {
         Item item = tableView.getSelectionModel().getSelectedItem();
-        controller.delete(item).thenRun(() -> Platform.runLater(this::applyFilter));
+        controller.onDeleteItem(item);
     }
 
     private class MyTableViewSkin<T> extends TableViewSkin<T> {
@@ -332,11 +287,7 @@ public class TableView extends VBox {
 
             getVirtualFlow().positionProperty().addListener((observable, oldValue, newValue) -> {
                 if (newValue.doubleValue() == 1.0) {
-                    if (tableModel.getCurrentPage().hasNextPage()) {
-                        CompletableFuture
-                                .runAsync(() -> tableModel.setCurrentPage(tableModel.getCurrentPage().nextPage()))
-                                .thenRun(() -> Platform.runLater(() -> showPage(tableModel.getCurrentPage())));
-                    }
+                    controller.onReachScrollEnd();
                 }
             });
         }
