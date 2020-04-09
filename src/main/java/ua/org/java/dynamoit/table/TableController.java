@@ -67,14 +67,25 @@ public class TableController {
         }));
     }
 
+    public void onCreateItem(String json){
+        createItem(json).thenRun(this::onRefresh);
+    }
+
+    public void onUpdateItem(String json){
+        updateItem(json).thenRun(this::onRefresh);
+    }
+
     public void onDeleteItem(Item item) {
-//        delete(item).thenRun(() -> Platform.runLater(this::applyFilter));
+        delete(item).thenRun(this::onRefresh);
+    }
+
+    public void onClearFilters(){
+        tableModel.getAttributeFilterMap().values().forEach(simpleStringProperty -> simpleStringProperty.set(null));
+        onRefresh();
     }
 
     // fixme DynamoDB methods
-    public CompletableFuture<Page<Item, ?>> queryPageItems() {
-        System.out.println(tableModel.getAttributeFilterMap());
-
+    private CompletableFuture<Page<Item, ?>> queryPageItems() {
         SimpleStringProperty hashValueProperty = tableModel.getAttributeFilterMap().get(tableModel.getHashAttribute());
         if (hashValueProperty != null && !StringUtils.isNullOrEmpty(hashValueProperty.get())) {
             return queryItems(tableModel.getAttributeFilterMap());
@@ -82,11 +93,11 @@ public class TableController {
         return scanItems(tableModel.getAttributeFilterMap());
     }
 
-    public CompletableFuture<Void> createItem(String json) {
+    private CompletableFuture<Void> createItem(String json) {
         return CompletableFuture.runAsync(() -> table.putItem(Item.fromJSON(json)));
     }
 
-    public CompletableFuture<Void> updateItem(String json) {
+    private CompletableFuture<Void> updateItem(String json) {
         return CompletableFuture.runAsync(() -> table.putItem(Item.fromJSON(json)));
     }
 

@@ -28,9 +28,9 @@ import static ua.org.java.dynamoit.utils.Utils.asStream;
 
 public class TableView extends VBox {
 
-    private TableModel tableModel;
+    private final TableModel tableModel;
 
-    private TableController controller;
+    private final TableController controller;
     private Button deleteSelectedButton;
     private javafx.scene.control.TableView<Item> tableView;
 
@@ -51,7 +51,7 @@ public class TableView extends VBox {
                                 DX.create(Button::new, button -> {
                                     button.setTooltip(new Tooltip("Create a new item"));
                                     button.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.PLUS));
-                                    button.setOnAction(event -> showItemDialog("Create a new item", "New document in JSON format", "", json -> controller.createItem(json).thenRun(() -> controller.onRefresh())));
+                                    button.setOnAction(event -> showItemDialog("Create a new item", "New document in JSON format", "", controller::onCreateItem));
                                 }),
                                 DX.create(Button::new, button -> {
                                     button.setTooltip(new Tooltip("Clear filter"));
@@ -89,7 +89,7 @@ public class TableView extends VBox {
                                 TableRow<Item> tableRow = new TableRow<>();
                                 tableRow.setOnMouseClicked(event -> {
                                     if (event.getClickCount() == 2) {
-                                        showItemDialog("Edit the item", "Document in JSON format", tableRow.getItem().toJSONPretty(), json -> controller.updateItem(json).thenRun(() -> controller.onRefresh()));
+                                        showItemDialog("Edit the item", "Document in JSON format", tableRow.getItem().toJSONPretty(), controller::onUpdateItem);
                                     }
                                 });
                                 return tableRow;
@@ -251,7 +251,7 @@ public class TableView extends VBox {
     }
 
     private void clearFilter() {
-        tableModel.getAttributeFilterMap().values().forEach(simpleStringProperty -> simpleStringProperty.set(null));
+        controller.onClearFilters();
     }
 
     private void showItemDialog(String title, String promptText, String json, Consumer<String> onSaveConsumer) {
