@@ -1,8 +1,6 @@
 package ua.org.java.dynamoit;
 
 import com.amazonaws.util.StringUtils;
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -16,8 +14,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import ua.org.java.dynamoit.db.DynamoDBService;
-import ua.org.java.dynamoit.table.*;
 import ua.org.java.dynamoit.table.TableView;
+import ua.org.java.dynamoit.table.*;
 import ua.org.java.dynamoit.utils.DX;
 
 import javax.inject.Inject;
@@ -59,7 +57,7 @@ public class MainView extends VBox {
                                                                 }),
                                                                 DX.create(Button::new, button -> {
                                                                     button.setTooltip(new Tooltip("Save current filter"));
-                                                                    button.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.SAVE));
+                                                                    button.setGraphic(DX.icon("icons/star.png"));
                                                                     button.disableProperty().bind(mainModel.selectedProfileProperty().isEmpty());
                                                                     button.setOnAction(this::onFilterSave);
                                                                 }),
@@ -69,7 +67,7 @@ public class MainView extends VBox {
                                                                 }),
                                                                 DX.create(Button::new, button -> {
                                                                     button.setTooltip(new Tooltip("Reload list of tables"));
-                                                                    button.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.REFRESH));
+                                                                    button.setGraphic(DX.icon("icons/arrow_refresh.png"));
                                                                     button.disableProperty().bind(mainModel.selectedProfileProperty().isEmpty());
                                                                 })
                                                         )),
@@ -105,7 +103,7 @@ public class MainView extends VBox {
         });
 
         mainModel.getFilteredTables().addListener((ListChangeListener<String>) c -> {
-            allTables.getChildren().setAll(mainModel.getFilteredTables().stream().map(TreeItem::new).collect(Collectors.toList()));
+            allTables.getChildren().setAll(mainModel.getFilteredTables().stream().map(TableTreeItem::new).collect(Collectors.toList()));
             allTables.setExpanded(true);
         });
 
@@ -117,7 +115,7 @@ public class MainView extends VBox {
                                     .stream()
                                     .map(filter -> {
                                         FilterTreeItem filterTables = new FilterTreeItem(filter);
-                                        filterTables.getChildren().addAll(mainModel.getAvailableTables().stream().filter(tableName -> tableName.contains(filter)).map(TreeItem::new).collect(Collectors.toList()));
+                                        filterTables.getChildren().addAll(mainModel.getAvailableTables().stream().filter(tableName -> tableName.contains(filter)).map(TableTreeItem::new).collect(Collectors.toList()));
                                         filterTables.setExpanded(true);
                                         return filterTables;
                                     }).collect(Collectors.toList())
@@ -157,7 +155,7 @@ public class MainView extends VBox {
     private static class AllTreeItem extends TreeItem<String> {
 
         public AllTreeItem() {
-            super("All tables");
+            super("All tables", DX.icon("icons/database.png"));
         }
 
     }
@@ -165,8 +163,16 @@ public class MainView extends VBox {
     private static class FilterTreeItem extends TreeItem<String> {
 
         public FilterTreeItem(String filter) {
-            super("Contains: " + filter);
+            super("Contains: " + filter, DX.icon("icons/folder_star.png"));
         }
+    }
+
+    private static class TableTreeItem extends TreeItem<String> {
+
+        public TableTreeItem(String text) {
+            super(text, DX.icon("icons/table.png"));
+        }
+
     }
 
 }

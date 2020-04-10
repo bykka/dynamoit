@@ -10,7 +10,7 @@ public class DynamoItApp extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        primaryStage.getIcons().add(new Image("dynamite.png"));
+        primaryStage.getIcons().add(new Image("icons/dynamite.png"));
         primaryStage.setTitle("DynamoIt");
         primaryStage.setScene(
                 DX.scene(() -> {

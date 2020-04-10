@@ -4,6 +4,8 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -56,6 +58,10 @@ public class DX {
         T component = creator.get();
         builder.accept(component);
         return component;
+    }
+
+    public static ImageView icon(String icon){
+        return new ImageView(new Image(icon, 16, 16, true, true));
     }
 
 }

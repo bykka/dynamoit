@@ -1,19 +1,19 @@
 package ua.org.java.dynamoit.table;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ListChangeListener;
 import javafx.scene.control.*;
 import javafx.scene.control.skin.TableViewSkin;
+import javafx.scene.image.Image;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
+import javafx.stage.Stage;
 import ua.org.java.dynamoit.utils.DX;
 
 import java.util.Collection;
@@ -50,23 +50,23 @@ public class TableView extends VBox {
                         DX.toolBar(toolBar -> List.of(
                                 DX.create(Button::new, button -> {
                                     button.setTooltip(new Tooltip("Create a new item"));
-                                    button.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.PLUS));
+                                    button.setGraphic(DX.icon("icons/table_row_insert.png"));
                                     button.setOnAction(event -> showItemDialog("Create a new item", "New document in JSON format", "", controller::onCreateItem));
-                                }),
-                                DX.create(Button::new, button -> {
-                                    button.setTooltip(new Tooltip("Clear filter"));
-                                    button.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.FILTER));
-                                    button.setOnAction(event -> clearFilter());
                                 }),
                                 DX.create(Button::new, button -> {
                                     deleteSelectedButton = button;
                                     button.setTooltip(new Tooltip("Delete selected rows"));
-                                    button.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.TRASH));
+                                    button.setGraphic(DX.icon("icons/table_row_delete.png"));
                                     button.setOnAction(event -> deleteSelectedItem());
                                 }),
                                 DX.create(Button::new, button -> {
+                                    button.setTooltip(new Tooltip("Clear filter"));
+                                    button.setGraphic(DX.icon("icons/filter_clear.png"));
+                                    button.setOnAction(event -> clearFilter());
+                                }),
+                                DX.create(Button::new, button -> {
                                     button.setTooltip(new Tooltip("Refresh rows"));
-                                    button.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.REFRESH));
+                                    button.setGraphic(DX.icon("icons/table_refresh.png"));
                                     button.setOnAction(event -> controller.onRefresh());
                                 }),
                                 DX.spacer(),
@@ -143,14 +143,13 @@ public class TableView extends VBox {
                         textField.setOnAction(event -> controller.onRefresh());
                         filter.setGraphic(textField);
                         filter.getColumns().add(DX.create((Supplier<TableColumn<Item, String>>) TableColumn::new, column -> {
-                            String text = attrName;
                             if (attrName.equals(tableModel.getHashAttribute())) {
-                                text = "#" + attrName;
+                                column.setGraphic(DX.icon("icons/key.png"));
                             }
                             if (attrName.equals(tableModel.getRangeAttribute())) {
-                                text = "$" + attrName;
+                                column.setGraphic(DX.icon("icons/sort_columns.png"));
                             }
-                            column.setText(text);
+                            column.setText(attrName);
                             column.setId(attrName);
                             column.setPrefWidth(200);
                             column.setCellValueFactory(param -> {
@@ -177,7 +176,7 @@ public class TableView extends VBox {
                             DX.contextMenu(contextMenu -> List.of(
                                     DX.create(MenuItem::new, menuCopy -> {
                                         menuCopy.textProperty().bind(Bindings.concat("Copy '", cell.textProperty(), "'"));
-                                        menuCopy.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.COPY));
+                                        menuCopy.setGraphic(DX.icon("icons/page_copy.png"));
                                         menuCopy.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
                                         menuCopy.setOnAction(event -> {
                                             ClipboardContent content = new ClipboardContent();
@@ -188,7 +187,7 @@ public class TableView extends VBox {
                                     }),
                                     DX.create(MenuItem::new, menuFilter -> {
                                         menuFilter.textProperty().bind(Bindings.concat("Filter '", cell.textProperty(), "'"));
-                                        menuFilter.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.FILTER));
+                                        menuFilter.setGraphic(DX.icon("icons/filter_add.png"));
                                         menuFilter.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
                                         menuFilter.setOnAction(event -> {
                                             SimpleStringProperty property = this.tableModel.getAttributeFilterMap().get(column.getId());
@@ -200,11 +199,12 @@ public class TableView extends VBox {
                                     }),
                                     DX.create(Menu::new, menuSearch -> {
                                         menuSearch.textProperty().bind(Bindings.concat("Search '", cell.textProperty(), "' in"));
-                                        menuSearch.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.SEARCH));
+                                        menuSearch.setGraphic(DX.icon("icons/table_tab_search.png"));
                                         menuSearch.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
                                         menuSearch.getItems().add(
                                                 DX.create(Menu::new, allTablesMenuItem -> {
                                                     allTablesMenuItem.textProperty().bind(Bindings.concat("All tables"));
+                                                    allTablesMenuItem.setGraphic(DX.icon("icons/database.png"));
                                                     allTablesMenuItem.getItems().addAll(
                                                             tableModel.getMainModel().getAvailableTables().stream().map(tableName ->
                                                                     DX.create(MenuItem::new, menuItem -> {
@@ -223,6 +223,7 @@ public class TableView extends VBox {
                                                 tableModel.getMainModel().getSavedFilters().stream().map(filter ->
                                                         DX.create(Menu::new, filterMenuItem -> {
                                                             filterMenuItem.textProperty().bind(Bindings.concat("Contains: " + filter));
+                                                            filterMenuItem.setGraphic(DX.icon("icons/folder_star.png"));
                                                             filterMenuItem.getItems().addAll(
                                                                     tableModel.getMainModel().getAvailableTables().stream()
                                                                             .filter(tableName -> tableName.contains(filter))
@@ -261,6 +262,7 @@ public class TableView extends VBox {
         textArea.setPrefHeight(800);
         Dialog<String> dialog = new Dialog<>();
         dialog.setTitle(title);
+        ((Stage) dialog.getDialogPane().getScene().getWindow()).getIcons().add(new Image("icons/page.png"));
         ButtonType saveButton = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(saveButton, ButtonType.CLOSE);
         dialog.getDialogPane().setContent(textArea);
