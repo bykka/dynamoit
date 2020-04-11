@@ -12,10 +12,12 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import ua.org.java.dynamoit.utils.DX;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -68,6 +70,17 @@ public class TableView extends VBox {
                                     button.setTooltip(new Tooltip("Refresh rows"));
                                     button.setGraphic(DX.icon("icons/table_refresh.png"));
                                     button.setOnAction(event -> controller.onRefresh());
+                                }),
+                                DX.create(Button::new, button -> {
+                                    button.setTooltip(new Tooltip("Save table as json"));
+                                    button.setGraphic(DX.icon("icons/table_save.png"));
+                                    button.setOnAction(event -> {
+                                        FileChooser fileChooser = new FileChooser();
+                                        File file = fileChooser.showSaveDialog(this.getScene().getWindow());
+                                        if (file != null) {
+                                            controller.onTableSave(file);
+                                        }
+                                    });
                                 }),
                                 DX.spacer(),
                                 DX.create(Label::new, t -> {

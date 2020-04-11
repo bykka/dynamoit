@@ -5,11 +5,19 @@ import com.amazonaws.services.dynamodbv2.document.*;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
 import com.amazonaws.util.StringUtils;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import ua.org.java.dynamoit.db.DynamoDBService;
 import ua.org.java.dynamoit.utils.Utils;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -67,11 +75,11 @@ public class TableController {
         }));
     }
 
-    public void onCreateItem(String json){
+    public void onCreateItem(String json) {
         createItem(json).thenRun(this::onRefresh);
     }
 
-    public void onUpdateItem(String json){
+    public void onUpdateItem(String json) {
         updateItem(json).thenRun(this::onRefresh);
     }
 
@@ -79,13 +87,48 @@ public class TableController {
         delete(item).thenRun(this::onRefresh);
     }
 
-    public void onClearFilters(){
+    public void onClearFilters() {
         tableModel.getAttributeFilterMap().values().forEach(simpleStringProperty -> simpleStringProperty.set(null));
         onRefresh();
     }
 
+    public void onTableSave(File file) {
+        executeQueryOrSearch().thenAccept(items -> {
+            BufferedWriter writer = null;
+            try {
+                writer = Files.newBufferedWriter(file.toPath(), StandardCharsets.UTF_8);
+                JsonGenerator generator = new JsonFactory(new ObjectMapper()).createGenerator(writer);
+                generator.writeStartArray();
+                Utils.asStream(items).forEach(o -> {
+                    try {
+                        generator.writeRaw(o.toJSON());
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+                generator.writeEndArray();
+                generator.flush();
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                if (writer != null) {
+                    try {
+                        writer.flush();
+                        writer.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+    }
+
     // fixme DynamoDB methods
     private CompletableFuture<Page<Item, ?>> queryPageItems() {
+        return executeQueryOrSearch().thenCompose(items -> CompletableFuture.completedFuture(items.firstPage()));
+    }
+
+    private CompletableFuture<? extends ItemCollection<?>> executeQueryOrSearch() {
         SimpleStringProperty hashValueProperty = tableModel.getAttributeFilterMap().get(tableModel.getHashAttribute());
         if (hashValueProperty != null && !StringUtils.isNullOrEmpty(hashValueProperty.get())) {
             return queryItems(tableModel.getAttributeFilterMap());
@@ -101,7 +144,7 @@ public class TableController {
         return CompletableFuture.runAsync(() -> table.putItem(Item.fromJSON(json)));
     }
 
-    private CompletableFuture<Page<Item, ?>> scanItems(Map<String, SimpleStringProperty> attributeFilterMap) {
+    private CompletableFuture<ItemCollection<ScanOutcome>> scanItems(Map<String, SimpleStringProperty> attributeFilterMap) {
         return CompletableFuture.supplyAsync(() -> {
             ScanSpec scanSpec = new ScanSpec();
             List<ScanFilter> filters = attributeFilterMap.entrySet().stream()
@@ -111,11 +154,11 @@ public class TableController {
             if (!filters.isEmpty()) {
                 scanSpec.withScanFilters(filters.toArray(new ScanFilter[]{}));
             }
-            return table.scan(scanSpec.withMaxPageSize(PAGE_SIZE)).firstPage();
+            return table.scan(scanSpec.withMaxPageSize(PAGE_SIZE));
         });
     }
 
-    private CompletableFuture<Page<Item, ?>> queryItems(Map<String, SimpleStringProperty> attributeFilterMap) {
+    private CompletableFuture<ItemCollection<QueryOutcome>> queryItems(Map<String, SimpleStringProperty> attributeFilterMap) {
         return CompletableFuture.supplyAsync(() -> {
             QuerySpec querySpec = new QuerySpec();
             querySpec.withHashKey(tableModel.getHashAttribute(), attributeFilterMap.get(tableModel.getHashAttribute()).get());
@@ -130,11 +173,11 @@ public class TableController {
             if (!filters.isEmpty()) {
                 querySpec.withQueryFilters(filters.toArray(new QueryFilter[]{}));
             }
-            return table.query(querySpec.withMaxPageSize(PAGE_SIZE)).firstPage();
+            return table.query(querySpec.withMaxPageSize(PAGE_SIZE));
         });
     }
 
-    public CompletableFuture<Void> delete(Item item) {
+    private CompletableFuture<Void> delete(Item item) {
         return CompletableFuture.runAsync(() -> {
             if (tableModel.getRangeAttribute() == null) {
                 table.deleteItem(tableModel.getHashAttribute(), item.get(tableModel.getHashAttribute()));
@@ -143,4 +186,5 @@ public class TableController {
             }
         });
     }
+
 }
