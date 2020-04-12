@@ -141,7 +141,8 @@ public class MainView extends VBox {
 
     private void createAndOpenTab(TableContext tableContext){
         TableComponent tableComponent = DaggerTableComponent.builder()
-                .tableModule(new TableModule(tableContext, mainModel))
+                .mainModel(mainModel)
+                .tableContext(tableContext)
                 .build();
 
         TableView tableItemsView = tableComponent.view();

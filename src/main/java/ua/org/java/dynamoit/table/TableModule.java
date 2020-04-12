@@ -10,24 +10,6 @@ import javax.inject.Singleton;
 @Module
 public class TableModule {
 
-    private TableContext context;
-    private MainModel mainModel;
-
-    public TableModule(TableContext context, MainModel mainModel) {
-        this.context = context;
-        this.mainModel = mainModel;
-    }
-
-    @Provides
-    public TableContext context() {
-        return this.context;
-    }
-
-    @Provides
-    public MainModel mainModel() {
-        return this.mainModel;
-    }
-
     @Provides
     @Singleton
     public TableModel model(MainModel mainModel) {
