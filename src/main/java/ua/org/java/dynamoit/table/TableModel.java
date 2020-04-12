@@ -19,6 +19,7 @@ public class TableModel {
 
     private MainModel mainModel;
 
+    private String tableName;
     private ObservableList<Item> rows = FXCollections.observableArrayList();
     private IntegerBinding rowsSize = Bindings.createIntegerBinding(() -> rows.size(), rows);
     private Map<String, SimpleStringProperty> attributeFilterMap = new HashMap<>();
@@ -34,6 +35,14 @@ public class TableModel {
 
     public MainModel getMainModel() {
         return mainModel;
+    }
+
+    public String getTableName() {
+        return tableName;
+    }
+
+    public void setTableName(String tableName) {
+        this.tableName = tableName;
     }
 
     public ObservableList<Item> getRows() {

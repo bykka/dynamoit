@@ -76,6 +76,13 @@ public class TableView extends VBox {
                                     button.setGraphic(DX.icon("icons/table_save.png"));
                                     button.setOnAction(event -> {
                                         FileChooser fileChooser = new FileChooser();
+                                        fileChooser.setInitialFileName(tableModel.getTableName() + ".json");
+                                        FileChooser.ExtensionFilter jsonFiles = new FileChooser.ExtensionFilter("Json files", "*.json");
+                                        fileChooser.getExtensionFilters().addAll(
+                                                new FileChooser.ExtensionFilter("All files", "*.*"),
+                                                jsonFiles
+                                        );
+                                        fileChooser.setSelectedExtensionFilter(jsonFiles);
                                         File file = fileChooser.showSaveDialog(this.getScene().getWindow());
                                         if (file != null) {
                                             controller.onTableSave(file);

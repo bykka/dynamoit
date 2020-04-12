@@ -39,6 +39,8 @@ public class TableController {
         this.context = context;
         this.tableModel = tableModel;
 
+        tableModel.setTableName(context.getTableName());
+
         dbClient = dynamoDBService.getOrCreateDynamoDBClient(context.getProfileName());
         documentClient = dynamoDBService.getOrCreateDocumentClient(context.getProfileName());
         table = documentClient.getTable(context.getTableName());
@@ -101,7 +103,7 @@ public class TableController {
                 generator.writeStartArray();
                 Utils.asStream(items).forEach(o -> {
                     try {
-                        generator.writeRaw(o.toJSON());
+                        generator.writeRawValue(o.toJSON());
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
