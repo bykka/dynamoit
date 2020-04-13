@@ -46,12 +46,21 @@ public class TableController {
         table = documentClient.getTable(context.getTableName());
 
         CompletableFuture.supplyAsync(() -> dbClient.describeTable(context.getTableName()))
-                .thenAccept(describeTable -> Platform.runLater(() -> {
-                    Utils.getHashKey(describeTable).ifPresent(tableModel::setHashAttribute);
-                    Utils.getRangeKey(describeTable).ifPresent(tableModel::setRangeAttribute);
-                    tableModel.setDescribeTableResult(describeTable);
-                }))
-                .thenCompose(aVoid -> queryPageItems())
+                .thenCompose(describeTable -> {
+                    CompletableFuture<Boolean> future = new CompletableFuture<>();
+                    Platform.runLater(() -> {
+                        Utils.getHashKey(describeTable).ifPresent(tableModel::setHashAttribute);
+                        Utils.getRangeKey(describeTable).ifPresent(tableModel::setRangeAttribute);
+                        tableModel.setDescribeTableResult(describeTable);
+
+                        if (context.getPropertyName() != null && context.getPropertyValue() != null) {
+                            tableModel.getAttributeFilterMap().put(tableModel.getHashAttribute(), new SimpleStringProperty(context.getPropertyValue()));
+                        }
+                        future.complete(true);
+                    });
+                    return future;
+                })
+                .thenCompose(bool -> queryPageItems())
                 .thenAccept(page -> Platform.runLater(() -> {
                     tableModel.setCurrentPage(page);
                     tableModel.getRows().addAll(asStream(page).collect(Collectors.toList()));
