@@ -1,4 +1,4 @@
-package ua.org.java.dynamoit.table;
+package ua.org.java.dynamoit.components.tablegrid;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
 import javafx.beans.binding.Bindings;
@@ -28,17 +28,17 @@ import java.util.stream.Collectors;
 
 import static ua.org.java.dynamoit.utils.Utils.asStream;
 
-public class TableView extends VBox {
+public class TableGridView extends VBox {
 
-    private final TableModel tableModel;
+    private final TableGridModel tableModel;
 
-    private final TableController controller;
+    private final TableGridController controller;
     private Button deleteSelectedButton;
     private javafx.scene.control.TableView<Item> tableView;
 
-    private Consumer<TableContext> onSearchInTable;
+    private Consumer<TableGridContext> onSearchInTable;
 
-    public TableView(TableController controller, TableModel tableModel) {
+    public TableGridView(TableGridController controller, TableGridModel tableModel) {
         this.controller = controller;
         this.tableModel = tableModel;
 
@@ -231,7 +231,7 @@ public class TableView extends VBox {
                                                                         menuItem.setText(tableName);
                                                                         menuItem.setOnAction(event -> {
                                                                             if (onSearchInTable != null) {
-                                                                                onSearchInTable.accept(new TableContext(tableModel.getMainModel().getSelectedProfile(), tableName, column.getId(), cell.getText()));
+                                                                                onSearchInTable.accept(new TableGridContext(tableModel.getMainModel().getSelectedProfile(), tableName, column.getId(), cell.getText()));
                                                                             }
                                                                         });
                                                                     })
@@ -252,7 +252,7 @@ public class TableView extends VBox {
                                                                                         menuItem.setText(tableName);
                                                                                         menuItem.setOnAction(event -> {
                                                                                             if (onSearchInTable != null) {
-                                                                                                onSearchInTable.accept(new TableContext(tableModel.getMainModel().getSelectedProfile(), tableName, column.getId(), cell.getText()));
+                                                                                                onSearchInTable.accept(new TableGridContext(tableModel.getMainModel().getSelectedProfile(), tableName, column.getId(), cell.getText()));
                                                                                             }
                                                                                         });
                                                                                     })
@@ -315,7 +315,7 @@ public class TableView extends VBox {
         }
     }
 
-    public void setOnSearchInTable(Consumer<TableContext> onSearchInTable) {
+    public void setOnSearchInTable(Consumer<TableGridContext> onSearchInTable) {
         this.onSearchInTable = onSearchInTable;
     }
 }

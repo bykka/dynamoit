@@ -1,4 +1,4 @@
-package ua.org.java.dynamoit.table;
+package ua.org.java.dynamoit.components.tablegrid;
 
 import dagger.BindsInstance;
 import dagger.Component;
@@ -7,19 +7,19 @@ import ua.org.java.dynamoit.db.DynamoDBModule;
 
 import javax.inject.Singleton;
 
-@Component(modules = {TableModule.class, DynamoDBModule.class})
+@Component(modules = {TableGridModule.class, DynamoDBModule.class})
 @Singleton
-public interface TableComponent {
+public interface TableGridComponent {
 
-    TableView view();
+    TableGridView view();
 
     @Component.Builder
     interface Builder {
         @BindsInstance
         Builder mainModel(MainModel mainModel);
         @BindsInstance
-        Builder tableContext(TableContext context);
-        TableComponent build();
+        Builder tableContext(TableGridContext context);
+        TableGridComponent build();
     }
 
 }

@@ -1,4 +1,4 @@
-package ua.org.java.dynamoit.table;
+package ua.org.java.dynamoit.components.tablegrid;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Page;
@@ -15,7 +15,7 @@ import ua.org.java.dynamoit.MainModel;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TableModel {
+public class TableGridModel {
 
     private MainModel mainModel;
 
@@ -29,7 +29,7 @@ public class TableModel {
     private SimpleStringProperty hashAttribute = new SimpleStringProperty();
     private SimpleStringProperty rangeAttribute = new SimpleStringProperty();
 
-    public TableModel(MainModel mainModel) {
+    public TableGridModel(MainModel mainModel) {
         this.mainModel = mainModel;
     }
 

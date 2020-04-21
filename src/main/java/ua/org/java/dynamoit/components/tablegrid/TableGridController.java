@@ -1,4 +1,4 @@
-package ua.org.java.dynamoit.table;
+package ua.org.java.dynamoit.components.tablegrid;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.document.*;
@@ -26,16 +26,16 @@ import java.util.stream.Collectors;
 
 import static ua.org.java.dynamoit.utils.Utils.asStream;
 
-public class TableController {
+public class TableGridController {
 
     public static final int PAGE_SIZE = 100;
     private AmazonDynamoDB dbClient;
     private DynamoDB documentClient;
     private Table table;
-    private TableContext context;
-    private TableModel tableModel;
+    private TableGridContext context;
+    private TableGridModel tableModel;
 
-    public TableController(TableContext context, TableModel tableModel, DynamoDBService dynamoDBService) {
+    public TableGridController(TableGridContext context, TableGridModel tableModel, DynamoDBService dynamoDBService) {
         this.context = context;
         this.tableModel = tableModel;
 

@@ -1,18 +1,18 @@
-package ua.org.java.dynamoit.table;
+package ua.org.java.dynamoit.components.tablegrid;
 
-public class TableContext {
+public class TableGridContext {
 
     private String profileName;
     private String tableName;
     private String propertyName;
     private String propertyValue;
 
-    public TableContext(String profileName, String tableName) {
+    public TableGridContext(String profileName, String tableName) {
         this.profileName = profileName;
         this.tableName = tableName;
     }
 
-    public TableContext(String profileName, String tableName, String propertyName, String propertyValue) {
+    public TableGridContext(String profileName, String tableName, String propertyName, String propertyValue) {
         this.profileName = profileName;
         this.tableName = tableName;
         this.propertyName = propertyName;

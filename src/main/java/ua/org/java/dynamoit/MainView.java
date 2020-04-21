@@ -14,8 +14,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import ua.org.java.dynamoit.db.DynamoDBService;
-import ua.org.java.dynamoit.table.TableView;
-import ua.org.java.dynamoit.table.*;
+import ua.org.java.dynamoit.components.tablegrid.TableGridView;
+import ua.org.java.dynamoit.components.tablegrid.*;
 import ua.org.java.dynamoit.utils.DX;
 
 import javax.inject.Inject;
@@ -135,17 +135,17 @@ public class MainView extends VBox {
                 return;
             }
 
-            createAndOpenTab(new TableContext(mainModel.getSelectedProfile(), selectedItem.getValue()));
+            createAndOpenTab(new TableGridContext(mainModel.getSelectedProfile(), selectedItem.getValue()));
         }
     }
 
-    private void createAndOpenTab(TableContext tableContext){
-        TableComponent tableComponent = DaggerTableComponent.builder()
+    private void createAndOpenTab(TableGridContext tableContext){
+        TableGridComponent tableComponent = DaggerTableGridComponent.builder()
                 .mainModel(mainModel)
                 .tableContext(tableContext)
                 .build();
 
-        TableView tableItemsView = tableComponent.view();
+        TableGridView tableItemsView = tableComponent.view();
         tableItemsView.setOnSearchInTable(this::createAndOpenTab);
 
         Tab tab = new Tab(tableContext.getTableName(), tableItemsView);
