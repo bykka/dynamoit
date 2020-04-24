@@ -3,11 +3,15 @@ package ua.org.java.dynamoit;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ListChangeListener;
+import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import org.controlsfx.control.textfield.TextFields;
+import ua.org.java.dynamoit.components.activityindicator.ActivityIndicator;
 import ua.org.java.dynamoit.components.tablegrid.DaggerTableGridComponent;
 import ua.org.java.dynamoit.components.tablegrid.TableGridComponent;
 import ua.org.java.dynamoit.components.tablegrid.TableGridContext;
@@ -26,7 +30,7 @@ public class MainView extends VBox {
     private final TreeItem<String> allTables = new AllTreeItem();
     private TabPane tabPane;
 
-    public MainView(MainModel mainModel, MainController controller) {
+    public MainView(MainModel mainModel, MainController controller, ActivityIndicator activityIndicator) {
         this.model = mainModel;
         this.getChildren().addAll(
                 List.of(
@@ -38,7 +42,7 @@ public class MainView extends VBox {
                                                 SplitPane.setResizableWithParent(vBox1, false);
                                                 return List.of(
                                                         DX.toolBar(toolBar -> List.of(
-                                                                DX.create(TextField::new, textField -> {
+                                                                DX.create(TextFields::createClearableTextField, textField -> {
                                                                     HBox.setHgrow(textField, Priority.ALWAYS);
                                                                     textField.setPromptText("Table name contains");
                                                                     textField.textProperty().bindBidirectional(mainModel.filterProperty());
@@ -73,7 +77,18 @@ public class MainView extends VBox {
                                             })
                                     );
                                 }
-                        )
+                        ),
+                        DX.create(HBox::new, hBox -> {
+                            hBox.setPadding(new Insets(3,3,3,3));
+                            hBox.getChildren().addAll(
+                                    List.of(
+                                            DX.create(Pane::new, pane -> {
+                                                HBox.setHgrow(pane, Priority.ALWAYS);
+                                            }),
+                                            activityIndicator
+                                    )
+                            );
+                        })
                 )
         );
 

@@ -10,26 +10,39 @@ public class MainController {
 
     private final DynamoDBService dynamoDBService;
     private final MainModel model;
+    private final EventBus eventBus;
 
-    public MainController(DynamoDBService dynamoDBService, MainModel model) {
+    public MainController(DynamoDBService dynamoDBService, MainModel model, EventBus eventBus) {
         this.dynamoDBService = dynamoDBService;
         this.model = model;
+        this.eventBus = eventBus;
 
-        CompletableFuture
-                .supplyAsync(this.dynamoDBService::getAvailableProfiles)
-                .thenAcceptAsync(profiles -> model.getAvailableProfiles().addAll(profiles), FXExecutor.getInstance());
+        activity(
+                CompletableFuture
+                        .supplyAsync(this.dynamoDBService::getAvailableProfiles)
+                        .thenAcceptAsync(profiles -> model.getAvailableProfiles().addAll(profiles), FXExecutor.getInstance())
+        );
 
         this.model.selectedProfileProperty().addListener((observable, oldValue, newValue) -> {
             this.model.getAvailableTables().clear();
             if (!StringUtils.isNullOrEmpty(newValue)) {
-                this.dynamoDBService.getListOfTables(newValue)
-                        .thenAcceptAsync(tables -> this.model.getAvailableTables().addAll(tables), FXExecutor.getInstance());
+                activity(
+                        this.dynamoDBService.getListOfTables(newValue)
+                                .thenAcceptAsync(tables -> this.model.getAvailableTables().addAll(tables), FXExecutor.getInstance())
+                );
             }
         });
     }
 
     public void onSaveFilter() {
         this.model.getSavedFilters().add(model.getFilter());
+    }
+
+    public void activity(CompletableFuture<?> completableFuture) {
+        eventBus.startActivity();
+        completableFuture.whenComplete((o, throwable) -> {
+            eventBus.stopActivity();
+        });
     }
 
 }

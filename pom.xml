@@ -93,6 +93,13 @@
             <artifactId>dagger</artifactId>
             <version>${dagger.version}</version>
         </dependency>
+        <!-- controlsfx -->
+        <dependency>
+            <groupId>org.controlsfx</groupId>
+            <artifactId>controlsfx</artifactId>
+            <version>11.0.1</version>
+        </dependency>
+        <!-- eventbus -->
         <!-- testing -->
         <dependency>
             <groupId>junit</groupId>
