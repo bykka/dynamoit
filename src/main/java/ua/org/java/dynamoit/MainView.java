@@ -3,7 +3,6 @@ package ua.org.java.dynamoit;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ListChangeListener;
-import javafx.event.ActionEvent;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
@@ -21,15 +20,14 @@ import java.util.stream.Collectors;
 
 public class MainView extends VBox {
 
-    private MainModel mainModel;
+    private final MainModel model;
 
-    private ObjectProperty<TreeItem<String>> rootTreeItem = new SimpleObjectProperty<>();
-
-    private TreeItem<String> allTables = new AllTreeItem();
+    private final ObjectProperty<TreeItem<String>> rootTreeItem = new SimpleObjectProperty<>();
+    private final TreeItem<String> allTables = new AllTreeItem();
     private TabPane tabPane;
 
     public MainView(MainModel mainModel, MainController controller) {
-        this.mainModel = mainModel;
+        this.model = mainModel;
         this.getChildren().addAll(
                 List.of(
                         DX.splitPane(splitPane -> {
@@ -50,7 +48,7 @@ public class MainView extends VBox {
                                                                     button.setTooltip(new Tooltip("Save current filter"));
                                                                     button.setGraphic(DX.icon("icons/star.png"));
                                                                     button.disableProperty().bind(mainModel.selectedProfileProperty().isEmpty());
-                                                                    button.setOnAction(this::onFilterSave);
+                                                                    button.setOnAction(event -> controller.onSaveFilter());
                                                                 }),
                                                                 DX.create((Supplier<ComboBox<String>>) ComboBox::new, comboBox -> {
                                                                     comboBox.setItems(mainModel.getAvailableProfiles());
@@ -79,7 +77,7 @@ public class MainView extends VBox {
                 )
         );
 
-        this.mainModel.getAvailableTables().addListener((ListChangeListener<String>) c -> {
+        this.model.getAvailableTables().addListener((ListChangeListener<String>) c -> {
             while (c.next()) {
                 if (c.wasAdded()) {
                     this.rootTreeItem.set(DX.create(TreeItem::new, root -> {
@@ -112,23 +110,19 @@ public class MainView extends VBox {
         });
     }
 
-    private void onFilterSave(ActionEvent actionEvent) {
-        this.mainModel.getSavedFilters().add(mainModel.getFilter());
-    }
-
     private void onTableSelect(MouseEvent event, TreeItem<String> selectedItem) {
         if (event.getClickCount() == 2 && selectedItem != null) {
             if (selectedItem instanceof AllTreeItem || selectedItem instanceof FilterTreeItem) {
                 return;
             }
 
-            createAndOpenTab(new TableGridContext(mainModel.getSelectedProfile(), selectedItem.getValue()));
+            createAndOpenTab(new TableGridContext(model.getSelectedProfile(), selectedItem.getValue()));
         }
     }
 
-    private void createAndOpenTab(TableGridContext tableContext){
+    private void createAndOpenTab(TableGridContext tableContext) {
         TableGridComponent tableComponent = DaggerTableGridComponent.builder()
-                .mainModel(mainModel)
+                .mainModel(model)
                 .tableContext(tableContext)
                 .build();
 

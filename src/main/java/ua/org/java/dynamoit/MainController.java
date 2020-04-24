@@ -4,16 +4,19 @@ import com.amazonaws.util.StringUtils;
 import ua.org.java.dynamoit.db.DynamoDBService;
 import ua.org.java.dynamoit.utils.FXExecutor;
 
+import java.util.concurrent.CompletableFuture;
+
 public class MainController {
 
-    private DynamoDBService dynamoDBService;
-    private MainModel model;
+    private final DynamoDBService dynamoDBService;
+    private final MainModel model;
 
     public MainController(DynamoDBService dynamoDBService, MainModel model) {
         this.dynamoDBService = dynamoDBService;
         this.model = model;
 
-        this.dynamoDBService.getAvailableProfiles()
+        CompletableFuture
+                .supplyAsync(this.dynamoDBService::getAvailableProfiles)
                 .thenAcceptAsync(profiles -> model.getAvailableProfiles().addAll(profiles), FXExecutor.getInstance());
 
         this.model.selectedProfileProperty().addListener((observable, oldValue, newValue) -> {
@@ -24,4 +27,9 @@ public class MainController {
             }
         });
     }
+
+    public void onSaveFilter() {
+        this.model.getSavedFilters().add(model.getFilter());
+    }
+
 }

@@ -14,12 +14,12 @@ import java.util.concurrent.CompletableFuture;
 
 public class DynamoDBService {
 
-    private ProfilesConfigFile profilesConfigFile = new ProfilesConfigFile();
-    private Map<String, AmazonDynamoDB> profileDynamoDBClientMap = new HashMap<>();
-    private Map<String, DynamoDB> profileDocumentClientMap = new HashMap<>();
+    private final ProfilesConfigFile profilesConfigFile = new ProfilesConfigFile();
+    private final Map<String, AmazonDynamoDB> profileDynamoDBClientMap = new HashMap<>();
+    private final Map<String, DynamoDB> profileDocumentClientMap = new HashMap<>();
 
-    public CompletableFuture<Set<String>> getAvailableProfiles() {
-        return CompletableFuture.supplyAsync(() -> profilesConfigFile.getAllBasicProfiles().keySet());
+    public Set<String> getAvailableProfiles() {
+        return profilesConfigFile.getAllBasicProfiles().keySet();
     }
 
     public CompletableFuture<List<String>> getListOfTables(String profile) {
