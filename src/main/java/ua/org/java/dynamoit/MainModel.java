@@ -5,7 +5,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 
-import java.util.List;
 import java.util.Objects;
 
 public class MainModel {
@@ -15,12 +14,13 @@ public class MainModel {
     private FilteredList<String> filteredTables = availableTables.filtered(Objects::nonNull);
     private ObservableList<String> savedFilters = FXCollections.observableArrayList();
     private SimpleStringProperty selectedProfile = new SimpleStringProperty();
+    private ObservableList<String> availableProfiles = FXCollections.observableArrayList();
 
     public MainModel() {
         filter.addListener((observable, oldValue, newValue) -> filteredTables.setPredicate(value -> value.contains(filter.get())));
     }
 
-    public List<String> getAvailableTables() {
+    public ObservableList<String> getAvailableTables() {
         return availableTables;
     }
 
@@ -46,5 +46,13 @@ public class MainModel {
 
     public SimpleStringProperty selectedProfileProperty() {
         return selectedProfile;
+    }
+
+    public ObservableList<String> getAvailableProfiles() {
+        return availableProfiles;
+    }
+
+    public void setAvailableProfiles(ObservableList<String> availableProfiles) {
+        this.availableProfiles = availableProfiles;
     }
 }

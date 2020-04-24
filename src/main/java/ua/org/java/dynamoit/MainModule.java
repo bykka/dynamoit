@@ -11,14 +11,19 @@ import javax.inject.Singleton;
 public class MainModule {
 
     @Provides
-    public Region mainView(DynamoDBService dynamoDBService, MainModel model){
-        return new MainView(dynamoDBService, model);
+    public static Region mainView(MainModel model, MainController controller) {
+        return new MainView(model, controller);
     }
 
     @Provides
     @Singleton
-    public static MainModel model(){
+    public static MainModel model() {
         return new MainModel();
+    }
+
+    @Provides
+    public static MainController controller(DynamoDBService dynamoDBService, MainModel model) {
+        return new MainController(dynamoDBService, model);
     }
 
 }

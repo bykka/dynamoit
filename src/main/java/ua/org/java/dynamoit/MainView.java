@@ -1,43 +1,34 @@
 package ua.org.java.dynamoit;
 
-import com.amazonaws.util.StringUtils;
-import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import ua.org.java.dynamoit.db.DynamoDBService;
+import ua.org.java.dynamoit.components.tablegrid.DaggerTableGridComponent;
+import ua.org.java.dynamoit.components.tablegrid.TableGridComponent;
+import ua.org.java.dynamoit.components.tablegrid.TableGridContext;
 import ua.org.java.dynamoit.components.tablegrid.TableGridView;
-import ua.org.java.dynamoit.components.tablegrid.*;
 import ua.org.java.dynamoit.utils.DX;
 
-import javax.inject.Inject;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class MainView extends VBox {
 
-    private DynamoDBService dynamoDBService;
-
     private MainModel mainModel;
 
-    private ObservableList<String> availableProfiles = FXCollections.observableArrayList();
     private ObjectProperty<TreeItem<String>> rootTreeItem = new SimpleObjectProperty<>();
 
     private TreeItem<String> allTables = new AllTreeItem();
     private TabPane tabPane;
 
-    @Inject
-    public MainView(DynamoDBService dynamoDBService, MainModel mainModel) {
-        this.dynamoDBService = dynamoDBService;
+    public MainView(MainModel mainModel, MainController controller) {
         this.mainModel = mainModel;
         this.getChildren().addAll(
                 List.of(
@@ -62,7 +53,7 @@ public class MainView extends VBox {
                                                                     button.setOnAction(this::onFilterSave);
                                                                 }),
                                                                 DX.create((Supplier<ComboBox<String>>) ComboBox::new, comboBox -> {
-                                                                    comboBox.setItems(availableProfiles);
+                                                                    comboBox.setItems(mainModel.getAvailableProfiles());
                                                                     comboBox.valueProperty().bindBidirectional(mainModel.selectedProfileProperty());
                                                                 }),
                                                                 DX.create(Button::new, button -> {
@@ -88,17 +79,13 @@ public class MainView extends VBox {
                 )
         );
 
-        this.dynamoDBService.getAvailableProfiles().thenAccept(profiles -> Platform.runLater(() -> this.availableProfiles.addAll(profiles)));
-
-        this.mainModel.selectedProfileProperty().addListener((observable, oldValue, newValue) -> {
-            this.mainModel.getAvailableTables().clear();
-            if (!StringUtils.isNullOrEmpty(newValue)) {
-                this.dynamoDBService.getListOfTables(newValue).thenAccept(tables -> Platform.runLater(() -> {
-                    this.mainModel.getAvailableTables().addAll(tables);
+        this.mainModel.getAvailableTables().addListener((ListChangeListener<String>) c -> {
+            while (c.next()) {
+                if (c.wasAdded()) {
                     this.rootTreeItem.set(DX.create(TreeItem::new, root -> {
                         root.getChildren().add(allTables);
                     }));
-                }));
+                }
             }
         });
 
