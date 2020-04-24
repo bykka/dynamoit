@@ -57,6 +57,7 @@
     </build>
 
     <dependencies>
+        <!-- openjfx -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
@@ -75,25 +76,24 @@
             <version>${javafx.version}</version>
             <classifier>mac</classifier>
         </dependency>
-
+        <!-- aws sdk -->
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-dynamodb</artifactId>
             <version>${aws.sdk.version}</version>
         </dependency>
-
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-config</artifactId>
             <version>${aws.sdk.version}</version>
         </dependency>
-
+        <!-- dagger -->
         <dependency>
             <groupId>com.google.dagger</groupId>
             <artifactId>dagger</artifactId>
             <version>${dagger.version}</version>
         </dependency>
-
+        <!-- testing -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

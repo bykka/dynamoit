@@ -8,9 +8,9 @@ import com.amazonaws.util.StringUtils;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import ua.org.java.dynamoit.db.DynamoDBService;
+import ua.org.java.dynamoit.utils.FXExecutor;
 import ua.org.java.dynamoit.utils.Utils;
 
 import java.io.BufferedWriter;
@@ -45,26 +45,22 @@ public class TableGridController {
         documentClient = dynamoDBService.getOrCreateDocumentClient(context.getProfileName());
         table = documentClient.getTable(context.getTableName());
 
-        CompletableFuture.supplyAsync(() -> dbClient.describeTable(context.getTableName()))
-                .thenCompose(describeTable -> {
-                    CompletableFuture<Boolean> future = new CompletableFuture<>();
-                    Platform.runLater(() -> {
-                        Utils.getHashKey(describeTable).ifPresent(tableModel::setHashAttribute);
-                        Utils.getRangeKey(describeTable).ifPresent(tableModel::setRangeAttribute);
-                        tableModel.setDescribeTableResult(describeTable);
+        CompletableFuture
+                .supplyAsync(() -> dbClient.describeTable(context.getTableName()))
+                .thenAcceptAsync(describeTable -> {
+                    Utils.getHashKey(describeTable).ifPresent(tableModel::setHashAttribute);
+                    Utils.getRangeKey(describeTable).ifPresent(tableModel::setRangeAttribute);
+                    tableModel.setDescribeTableResult(describeTable);
 
-                        if (context.getPropertyName() != null && context.getPropertyValue() != null) {
-                            tableModel.getAttributeFilterMap().put(tableModel.getHashAttribute(), new SimpleStringProperty(context.getPropertyValue()));
-                        }
-                        future.complete(true);
-                    });
-                    return future;
-                })
-                .thenCompose(bool -> queryPageItems())
-                .thenAccept(page -> Platform.runLater(() -> {
+                    if (context.getPropertyName() != null && context.getPropertyValue() != null) {
+                        tableModel.getAttributeFilterMap().put(tableModel.getHashAttribute(), new SimpleStringProperty(context.getPropertyValue()));
+                    }
+                }, FXExecutor.getInstance())
+                .thenCompose(__ -> queryPageItems())
+                .thenAcceptAsync(page -> {
                     tableModel.setCurrentPage(page);
                     tableModel.getRows().addAll(asStream(page).collect(Collectors.toList()));
-                }));
+                }, FXExecutor.getInstance());
     }
 
 
@@ -72,18 +68,18 @@ public class TableGridController {
         if (tableModel.getCurrentPage().hasNextPage()) {
             CompletableFuture
                     .supplyAsync(() -> tableModel.getCurrentPage().nextPage())
-                    .thenAccept(page -> Platform.runLater(() -> {
+                    .thenAcceptAsync(page -> {
                         tableModel.setCurrentPage(page);
                         tableModel.getRows().addAll(asStream(page).collect(Collectors.toList()));
-                    }));
+                    }, FXExecutor.getInstance());
         }
     }
 
     public void onRefresh() {
-        queryPageItems().thenAccept(page -> Platform.runLater(() -> {
+        queryPageItems().thenAcceptAsync(page -> {
             tableModel.setCurrentPage(page);
             tableModel.getRows().setAll(asStream(page).collect(Collectors.toList()));
-        }));
+        }, FXExecutor.getInstance());
     }
 
     public void onCreateItem(String json) {
