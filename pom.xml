@@ -99,7 +99,12 @@
             <artifactId>controlsfx</artifactId>
             <version>11.0.1</version>
         </dependency>
-        <!-- eventbus -->
+        <!-- richtextfx -->
+        <dependency>
+            <groupId>org.fxmisc.richtext</groupId>
+            <artifactId>richtextfx</artifactId>
+            <version>0.10.5</version>
+        </dependency>
         <!-- testing -->
         <dependency>
             <groupId>junit</groupId>

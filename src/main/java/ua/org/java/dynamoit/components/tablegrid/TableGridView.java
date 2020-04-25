@@ -15,6 +15,9 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import org.controlsfx.control.textfield.TextFields;
+import org.fxmisc.flowless.VirtualizedScrollPane;
+import ua.org.java.dynamoit.components.jsoneditor.JsonEditor;
 import ua.org.java.dynamoit.utils.DX;
 
 import java.io.File;
@@ -69,7 +72,7 @@ public class TableGridView extends VBox {
                                 DX.create(Button::new, button -> {
                                     button.setTooltip(new Tooltip("Refresh rows"));
                                     button.setGraphic(DX.icon("icons/table_refresh.png"));
-                                    button.setOnAction(event -> controller.onRefresh());
+                                    button.setOnAction(event -> controller.onRefreshData());
                                 }),
                                 DX.create(Button::new, button -> {
                                     button.setTooltip(new Tooltip("Save table as json"));
@@ -158,10 +161,10 @@ public class TableGridView extends VBox {
                     SimpleStringProperty filterProperty = tableModel.getAttributeFilterMap().computeIfAbsent(attrName, s -> new SimpleStringProperty());
 
                     return DX.create((Supplier<TableColumn<Item, String>>) TableColumn::new, filter -> {
-                        TextField textField = new TextField();
-                        textField.textProperty().bindBidirectional(filterProperty);
-                        textField.setOnAction(event -> controller.onRefresh());
-                        filter.setGraphic(textField);
+                        filter.setGraphic(DX.create(TextFields::createClearableTextField, textField -> {
+                            textField.textProperty().bindBidirectional(filterProperty);
+                            textField.setOnAction(event -> controller.onRefreshData());
+                        }));
                         filter.getColumns().add(DX.create((Supplier<TableColumn<Item, String>>) TableColumn::new, column -> {
                             if (attrName.equals(tableModel.getHashAttribute())) {
                                 column.setGraphic(DX.icon("icons/key.png"));
@@ -213,7 +216,7 @@ public class TableGridView extends VBox {
                                             SimpleStringProperty property = this.tableModel.getAttributeFilterMap().get(column.getId());
                                             if (property != null) {
                                                 property.set(cell.getText());
-                                                controller.onRefresh();
+                                                controller.onRefreshData();
                                             }
                                         });
                                     }),
@@ -276,8 +279,8 @@ public class TableGridView extends VBox {
     }
 
     private void showItemDialog(String title, String promptText, String json, Consumer<String> onSaveConsumer) {
-        TextArea textArea = new TextArea(json);
-        textArea.setPromptText(promptText);
+        JsonEditor textArea = new JsonEditor(json);
+//        textArea.setPromptText(promptText);
         textArea.setPrefWidth(800);
         textArea.setPrefHeight(800);
         Dialog<String> dialog = new Dialog<>();
@@ -285,7 +288,7 @@ public class TableGridView extends VBox {
         ((Stage) dialog.getDialogPane().getScene().getWindow()).getIcons().add(new Image("icons/page.png"));
         ButtonType saveButton = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(saveButton, ButtonType.CLOSE);
-        dialog.getDialogPane().setContent(textArea);
+        dialog.getDialogPane().setContent(new VirtualizedScrollPane<>(textArea));
         dialog.initModality(Modality.NONE);
         dialog.setResizable(true);
         dialog.setResultConverter(param -> {

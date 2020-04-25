@@ -75,7 +75,7 @@ public class TableGridController {
         }
     }
 
-    public void onRefresh() {
+    public void onRefreshData() {
         queryPageItems().thenAcceptAsync(page -> {
             tableModel.setCurrentPage(page);
             tableModel.getRows().setAll(asStream(page).collect(Collectors.toList()));
@@ -83,20 +83,20 @@ public class TableGridController {
     }
 
     public void onCreateItem(String json) {
-        createItem(json).thenRun(this::onRefresh);
+        createItem(json).thenRun(this::onRefreshData);
     }
 
     public void onUpdateItem(String json) {
-        updateItem(json).thenRun(this::onRefresh);
+        updateItem(json).thenRun(this::onRefreshData);
     }
 
     public void onDeleteItem(Item item) {
-        delete(item).thenRun(this::onRefresh);
+        delete(item).thenRun(this::onRefreshData);
     }
 
     public void onClearFilters() {
         tableModel.getAttributeFilterMap().values().forEach(simpleStringProperty -> simpleStringProperty.set(null));
-        onRefresh();
+        onRefreshData();
     }
 
     public void onTableSave(File file) {
