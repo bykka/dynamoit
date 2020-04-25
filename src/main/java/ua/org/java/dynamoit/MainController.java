@@ -26,10 +26,7 @@ public class MainController {
         this.model.selectedProfileProperty().addListener((observable, oldValue, newValue) -> {
             this.model.getAvailableTables().clear();
             if (!StringUtils.isNullOrEmpty(newValue)) {
-                activity(
-                        this.dynamoDBService.getListOfTables(newValue)
-                                .thenAcceptAsync(tables -> this.model.getAvailableTables().addAll(tables), FXExecutor.getInstance())
-                );
+                getListOfTables(newValue);
             }
         });
     }
@@ -38,7 +35,18 @@ public class MainController {
         this.model.getSavedFilters().add(model.getFilter());
     }
 
-    public void activity(CompletableFuture<?> completableFuture) {
+    public void onTablesRefresh(){
+        getListOfTables(model.getSelectedProfile());
+    }
+
+    private void getListOfTables(String profile){
+        activity(
+                this.dynamoDBService.getListOfTables(profile)
+                        .thenAcceptAsync(tables -> this.model.getAvailableTables().setAll(tables), FXExecutor.getInstance())
+        );
+    }
+
+    private void activity(CompletableFuture<?> completableFuture) {
         eventBus.startActivity();
         completableFuture.whenComplete((o, throwable) -> {
             eventBus.stopActivity();

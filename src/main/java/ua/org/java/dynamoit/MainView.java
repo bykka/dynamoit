@@ -62,6 +62,7 @@ public class MainView extends VBox {
                                                                     button.setTooltip(new Tooltip("Reload list of tables"));
                                                                     button.setGraphic(DX.icon("icons/arrow_refresh.png"));
                                                                     button.disableProperty().bind(mainModel.selectedProfileProperty().isEmpty());
+                                                                    button.setOnAction(__ -> controller.onTablesRefresh());
                                                                 })
                                                         )),
                                                         DX.create((Supplier<TreeView<String>>) TreeView::new, treeView -> {
