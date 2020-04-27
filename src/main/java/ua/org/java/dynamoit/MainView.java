@@ -12,7 +12,6 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.controlsfx.control.textfield.TextFields;
 import ua.org.java.dynamoit.components.activityindicator.ActivityIndicator;
-import ua.org.java.dynamoit.components.tablegrid.DaggerTableGridComponent;
 import ua.org.java.dynamoit.components.tablegrid.TableGridComponent;
 import ua.org.java.dynamoit.components.tablegrid.TableGridContext;
 import ua.org.java.dynamoit.components.tablegrid.TableGridView;
@@ -25,6 +24,7 @@ import java.util.stream.Collectors;
 public class MainView extends VBox {
 
     private final MainModel model;
+    private final MainController controller;
 
     private final ObjectProperty<TreeItem<String>> rootTreeItem = new SimpleObjectProperty<>();
     private final TreeItem<String> allTables = new AllTreeItem();
@@ -32,6 +32,7 @@ public class MainView extends VBox {
 
     public MainView(MainModel mainModel, MainController controller, ActivityIndicator activityIndicator) {
         this.model = mainModel;
+        this.controller = controller;
         this.getChildren().addAll(
                 List.of(
                         DX.splitPane(splitPane -> {
@@ -137,10 +138,7 @@ public class MainView extends VBox {
     }
 
     private void createAndOpenTab(TableGridContext tableContext) {
-        TableGridComponent tableComponent = DaggerTableGridComponent.builder()
-                .mainModel(model)
-                .tableContext(tableContext)
-                .build();
+        TableGridComponent tableComponent = controller.buildTableGridComponent(tableContext);
 
         TableGridView tableItemsView = tableComponent.view();
         tableItemsView.setOnSearchInTable(this::createAndOpenTab);

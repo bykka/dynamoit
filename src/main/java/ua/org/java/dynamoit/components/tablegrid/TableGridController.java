@@ -2,6 +2,7 @@ package ua.org.java.dynamoit.components.tablegrid;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.document.*;
+import com.amazonaws.services.dynamodbv2.document.internal.PageBasedCollection;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
 import com.amazonaws.util.StringUtils;
@@ -10,6 +11,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.util.Pair;
+import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.db.DynamoDBService;
 import ua.org.java.dynamoit.utils.FXExecutor;
 import ua.org.java.dynamoit.utils.Utils;
@@ -35,60 +37,63 @@ public class TableGridController {
      */
     private static final int PAGE_SIZE = 100;
 
-    private AmazonDynamoDB dbClient;
-    private DynamoDB documentClient;
-    private Table table;
-    private TableGridContext context;
-    private TableGridModel tableModel;
+    private final AmazonDynamoDB dbClient;
+    private final Table table;
+    private final TableGridModel tableModel;
+    private final EventBus eventBus;
 
-    public TableGridController(TableGridContext context, TableGridModel tableModel, DynamoDBService dynamoDBService) {
-        this.context = context;
+    public TableGridController(TableGridContext context, TableGridModel tableModel, DynamoDBService dynamoDBService, EventBus eventBus) {
         this.tableModel = tableModel;
+        this.eventBus = eventBus;
 
         tableModel.setTableName(context.getTableName());
 
         dbClient = dynamoDBService.getOrCreateDynamoDBClient(context.getProfileName());
-        documentClient = dynamoDBService.getOrCreateDocumentClient(context.getProfileName());
+        DynamoDB documentClient = dynamoDBService.getOrCreateDocumentClient(context.getProfileName());
         table = documentClient.getTable(context.getTableName());
 
-        CompletableFuture
-                .supplyAsync(() -> dbClient.describeTable(context.getTableName()))
-                .thenAcceptAsync(describeTable -> {
-                    Utils.getHashKey(describeTable).ifPresent(tableModel::setHashAttribute);
-                    Utils.getRangeKey(describeTable).ifPresent(tableModel::setRangeAttribute);
-                    tableModel.setDescribeTableResult(describeTable);
+        eventBus.activity(
+                CompletableFuture
+                        .supplyAsync(() -> dbClient.describeTable(context.getTableName()))
+                        .thenAcceptAsync(describeTable -> {
+                            Utils.getHashKey(describeTable).ifPresent(tableModel::setHashAttribute);
+                            Utils.getRangeKey(describeTable).ifPresent(tableModel::setRangeAttribute);
+                            tableModel.setDescribeTableResult(describeTable);
 
-                    if (context.getPropertyName() != null && context.getPropertyValue() != null) {
-                        tableModel.getAttributeFilterMap().put(tableModel.getHashAttribute(), new SimpleStringProperty(context.getPropertyValue()));
-                    }
-                }, FXExecutor.getInstance())
-                .thenCompose(__ -> queryPageItems())
-                .thenAcceptAsync(page -> {
-                    Pair<List<Item>, Page<Item, ?>> pair = iteratePage(page);
-                    tableModel.getRows().addAll(pair.getKey());
-                    tableModel.setCurrentPage(pair.getValue());
-                }, FXExecutor.getInstance());
+                            if (context.getPropertyName() != null && context.getPropertyValue() != null) {
+                                tableModel.getAttributeFilterMap().put(tableModel.getHashAttribute(), new SimpleStringProperty(context.getPropertyValue()));
+                            }
+                        }, FXExecutor.getInstance())
+                        .thenCompose(__ -> queryPageItems())
+                        .thenAcceptAsync(pair -> {
+                            tableModel.getRows().addAll(pair.getKey());
+                            tableModel.setCurrentPage(pair.getValue());
+                        }, FXExecutor.getInstance())
+        );
     }
 
 
     public void onReachScrollEnd() {
         if (tableModel.getCurrentPage().hasNextPage()) {
-            CompletableFuture
-                    .supplyAsync(() -> tableModel.getCurrentPage().nextPage())
-                    .thenAcceptAsync(page -> {
-                        Pair<List<Item>, Page<Item, ?>> pair = iteratePage(page);
-                        tableModel.getRows().addAll(pair.getKey());
-                        tableModel.setCurrentPage(pair.getValue());
-                    }, FXExecutor.getInstance());
+            eventBus.activity(
+                    CompletableFuture
+                            .supplyAsync(() -> tableModel.getCurrentPage().nextPage())
+                            .thenAcceptAsync(page -> {
+                                Pair<List<Item>, Page<Item, ?>> pair = iteratePage(page);
+                                tableModel.getRows().addAll(pair.getKey());
+                                tableModel.setCurrentPage(pair.getValue());
+                            }, FXExecutor.getInstance())
+            );
         }
     }
 
     public void onRefreshData() {
-        queryPageItems().thenAcceptAsync(page -> {
-            Pair<List<Item>, Page<Item, ?>> pair = iteratePage(page);
-            tableModel.getRows().addAll(pair.getKey());
-            tableModel.setCurrentPage(pair.getValue());
-        }, FXExecutor.getInstance());
+        eventBus.activity(
+                queryPageItems().thenAcceptAsync(pair -> {
+                    tableModel.getRows().addAll(pair.getKey());
+                    tableModel.setCurrentPage(pair.getValue());
+                }, FXExecutor.getInstance())
+        );
     }
 
     public void onCreateItem(String json) {
@@ -109,36 +114,37 @@ public class TableGridController {
     }
 
     public void onTableSave(File file) {
-        executeQueryOrSearch().thenAccept(items -> {
-            BufferedWriter writer = null;
-            try {
-                writer = Files.newBufferedWriter(file.toPath(), StandardCharsets.UTF_8);
-                JsonGenerator generator = new JsonFactory(new ObjectMapper()).createGenerator(writer);
-                generator.writeStartArray();
-                Utils.asStream(items).forEach(o -> {
+        eventBus.activity(
+                executeQueryOrSearch().thenAccept(items -> {
+                    BufferedWriter writer = null;
                     try {
-                        generator.writeRawValue(o.toJSON());
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
-                generator.writeEndArray();
-                generator.flush();
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                if (writer != null) {
-                    try {
-                        writer.flush();
-                        writer.close();
-                    } catch (IOException e) {
+                        writer = Files.newBufferedWriter(file.toPath(), StandardCharsets.UTF_8);
+                        JsonGenerator generator = new JsonFactory(new ObjectMapper()).createGenerator(writer);
+                        generator.writeStartArray();
+                        Utils.asStream(items).forEach(o -> {
+                            try {
+                                generator.writeRawValue(o.toJSON());
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+                        generator.writeEndArray();
+                        generator.flush();
+                    } catch (Exception e) {
                         e.printStackTrace();
+                    } finally {
+                        if (writer != null) {
+                            try {
+                                writer.flush();
+                                writer.close();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
                     }
-                }
-            }
-        });
+                })
+        );
     }
-
 
     /**
      * Iterate page to get around PAGE_SIZE number of items if exist
@@ -158,8 +164,10 @@ public class TableGridController {
     }
 
     // fixme DynamoDB methods
-    private CompletableFuture<Page<Item, ?>> queryPageItems() {
-        return executeQueryOrSearch().thenCompose(items -> CompletableFuture.completedFuture(items.firstPage()));
+    private CompletableFuture<Pair<List<Item>, Page<Item, ?>>> queryPageItems() {
+        return executeQueryOrSearch()
+                .thenApply(PageBasedCollection::firstPage)
+                .thenApply(TableGridController::iteratePage);
     }
 
     private CompletableFuture<? extends ItemCollection<?>> executeQueryOrSearch() {

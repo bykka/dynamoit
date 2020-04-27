@@ -8,7 +8,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class EventBus {
 
-    private SimpleIntegerProperty activityCount = new SimpleIntegerProperty();
+    private final SimpleIntegerProperty activityCount = new SimpleIntegerProperty();
 
     public void startActivity() {
         if (Platform.isFxApplicationThread()) {
@@ -26,12 +26,15 @@ public class EventBus {
         }
     }
 
-    public int getActivityCount() {
-        return activityCount.get();
-    }
-
     public SimpleIntegerProperty activityCountProperty() {
         return activityCount;
+    }
+
+    public void activity(CompletableFuture<?> completableFuture) {
+        startActivity();
+        completableFuture.whenComplete((o, throwable) -> {
+            stopActivity();
+        });
     }
 
 }

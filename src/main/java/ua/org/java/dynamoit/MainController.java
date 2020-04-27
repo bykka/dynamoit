@@ -1,6 +1,9 @@
 package ua.org.java.dynamoit;
 
 import com.amazonaws.util.StringUtils;
+import ua.org.java.dynamoit.components.tablegrid.DaggerTableGridComponent;
+import ua.org.java.dynamoit.components.tablegrid.TableGridComponent;
+import ua.org.java.dynamoit.components.tablegrid.TableGridContext;
 import ua.org.java.dynamoit.db.DynamoDBService;
 import ua.org.java.dynamoit.utils.FXExecutor;
 
@@ -17,7 +20,7 @@ public class MainController {
         this.model = model;
         this.eventBus = eventBus;
 
-        activity(
+        eventBus.activity(
                 CompletableFuture
                         .supplyAsync(this.dynamoDBService::getAvailableProfiles)
                         .thenAcceptAsync(profiles -> model.getAvailableProfiles().addAll(profiles), FXExecutor.getInstance())
@@ -35,22 +38,23 @@ public class MainController {
         this.model.getSavedFilters().add(model.getFilter());
     }
 
-    public void onTablesRefresh(){
+    public void onTablesRefresh() {
         getListOfTables(model.getSelectedProfile());
     }
 
-    private void getListOfTables(String profile){
-        activity(
+    public TableGridComponent buildTableGridComponent(TableGridContext tableContext){
+        return DaggerTableGridComponent.builder()
+                .mainModel(model)
+                .eventBus(eventBus)
+                .tableContext(tableContext)
+                .build();
+    }
+
+    private void getListOfTables(String profile) {
+        eventBus.activity(
                 this.dynamoDBService.getListOfTables(profile)
                         .thenAcceptAsync(tables -> this.model.getAvailableTables().setAll(tables), FXExecutor.getInstance())
         );
-    }
-
-    private void activity(CompletableFuture<?> completableFuture) {
-        eventBus.startActivity();
-        completableFuture.whenComplete((o, throwable) -> {
-            eventBus.stopActivity();
-        });
     }
 
 }

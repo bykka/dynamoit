@@ -2,6 +2,7 @@ package ua.org.java.dynamoit.components.tablegrid;
 
 import dagger.BindsInstance;
 import dagger.Component;
+import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.MainModel;
 import ua.org.java.dynamoit.db.DynamoDBModule;
 
@@ -17,6 +18,8 @@ public interface TableGridComponent {
     interface Builder {
         @BindsInstance
         Builder mainModel(MainModel mainModel);
+        @BindsInstance
+        Builder eventBus(EventBus eventBus);
         @BindsInstance
         Builder tableContext(TableGridContext context);
         TableGridComponent build();
