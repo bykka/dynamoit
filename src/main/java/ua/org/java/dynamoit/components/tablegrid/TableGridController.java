@@ -88,6 +88,7 @@ public class TableGridController {
     }
 
     public void onRefreshData() {
+        tableModel.getRows().clear();
         eventBus.activity(
                 queryPageItems().thenAcceptAsync(pair -> {
                     tableModel.getRows().addAll(pair.getKey());
