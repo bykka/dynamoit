@@ -9,6 +9,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.util.Pair;
 import ua.org.java.dynamoit.db.DynamoDBService;
 import ua.org.java.dynamoit.utils.FXExecutor;
 import ua.org.java.dynamoit.utils.Utils;
@@ -18,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -28,7 +30,11 @@ import static ua.org.java.dynamoit.utils.Utils.asStream;
 
 public class TableGridController {
 
-    public static final int PAGE_SIZE = 100;
+    /**
+     * Maximum number of items in one page
+     */
+    private static final int PAGE_SIZE = 100;
+
     private AmazonDynamoDB dbClient;
     private DynamoDB documentClient;
     private Table table;
@@ -58,8 +64,9 @@ public class TableGridController {
                 }, FXExecutor.getInstance())
                 .thenCompose(__ -> queryPageItems())
                 .thenAcceptAsync(page -> {
-                    tableModel.setCurrentPage(page);
-                    tableModel.getRows().addAll(asStream(page).collect(Collectors.toList()));
+                    Pair<List<Item>, Page<Item, ?>> pair = iteratePage(page);
+                    tableModel.getRows().addAll(pair.getKey());
+                    tableModel.setCurrentPage(pair.getValue());
                 }, FXExecutor.getInstance());
     }
 
@@ -69,16 +76,18 @@ public class TableGridController {
             CompletableFuture
                     .supplyAsync(() -> tableModel.getCurrentPage().nextPage())
                     .thenAcceptAsync(page -> {
-                        tableModel.setCurrentPage(page);
-                        tableModel.getRows().addAll(asStream(page).collect(Collectors.toList()));
+                        Pair<List<Item>, Page<Item, ?>> pair = iteratePage(page);
+                        tableModel.getRows().addAll(pair.getKey());
+                        tableModel.setCurrentPage(pair.getValue());
                     }, FXExecutor.getInstance());
         }
     }
 
     public void onRefreshData() {
         queryPageItems().thenAcceptAsync(page -> {
-            tableModel.setCurrentPage(page);
-            tableModel.getRows().setAll(asStream(page).collect(Collectors.toList()));
+            Pair<List<Item>, Page<Item, ?>> pair = iteratePage(page);
+            tableModel.getRows().addAll(pair.getKey());
+            tableModel.setCurrentPage(pair.getValue());
         }, FXExecutor.getInstance());
     }
 
@@ -128,6 +137,24 @@ public class TableGridController {
                 }
             }
         });
+    }
+
+
+    /**
+     * Iterate page to get around PAGE_SIZE number of items if exist
+     *
+     * @param page current page
+     * @return list of items and next page
+     */
+    private static Pair<List<Item>, Page<Item, ?>> iteratePage(Page<Item, ?> page) {
+        List<Item> items = new ArrayList<>(PAGE_SIZE);
+        items.addAll(asStream(page).collect(Collectors.toList()));
+
+        while (items.size() < PAGE_SIZE && page.hasNextPage()) {
+            page = page.nextPage();
+            items.addAll(asStream(page).collect(Collectors.toList()));
+        }
+        return new Pair<>(items, page);
     }
 
     // fixme DynamoDB methods

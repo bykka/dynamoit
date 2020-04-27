@@ -136,7 +136,12 @@ public class TableGridView extends VBox {
     }
 
     private void buildTableHeaders() {
-        List<String> availableAttributes = tableView.getColumns().stream().map(TableColumnBase::getColumns).filter(Objects::nonNull).flatMap(Collection::stream).map(TableColumnBase::getId).collect(Collectors.toList());
+        List<String> availableAttributes = tableView.getColumns().stream()
+                .map(TableColumnBase::getColumns)
+                .filter(Objects::nonNull)
+                .flatMap(Collection::stream)
+                .map(TableColumnBase::getId)
+                .collect(Collectors.toList());
 
         tableModel.getRows().stream()
                 .flatMap(item -> asStream(item.attributes()).map(Map.Entry::getKey))

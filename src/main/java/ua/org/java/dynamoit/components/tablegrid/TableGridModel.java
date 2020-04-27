@@ -17,17 +17,17 @@ import java.util.Map;
 
 public class TableGridModel {
 
-    private MainModel mainModel;
+    private final MainModel mainModel;
 
     private String tableName;
-    private ObservableList<Item> rows = FXCollections.observableArrayList();
-    private IntegerBinding rowsSize = Bindings.createIntegerBinding(() -> rows.size(), rows);
-    private Map<String, SimpleStringProperty> attributeFilterMap = new HashMap<>();
-    private SimpleObjectProperty<Page<Item, ?>> currentPage = new SimpleObjectProperty<>();
-    private SimpleObjectProperty<DescribeTableResult> describeTableResult = new SimpleObjectProperty<>();
-    private LongBinding totalCount = Bindings.createLongBinding(() -> describeTableResult.get() == null ? 0 : describeTableResult.get().getTable().getItemCount(), describeTableResult);
-    private SimpleStringProperty hashAttribute = new SimpleStringProperty();
-    private SimpleStringProperty rangeAttribute = new SimpleStringProperty();
+    private final ObservableList<Item> rows = FXCollections.observableArrayList();
+    private final IntegerBinding rowsSize = Bindings.createIntegerBinding(rows::size, rows);
+    private final Map<String, SimpleStringProperty> attributeFilterMap = new HashMap<>();
+    private Page<Item, ?> currentPage;
+    private final SimpleObjectProperty<DescribeTableResult> describeTableResult = new SimpleObjectProperty<>();
+    private final LongBinding totalCount = Bindings.createLongBinding(() -> describeTableResult.get() == null ? 0 : describeTableResult.get().getTable().getItemCount(), describeTableResult);
+    private final SimpleStringProperty hashAttribute = new SimpleStringProperty();
+    private final SimpleStringProperty rangeAttribute = new SimpleStringProperty();
 
     public TableGridModel(MainModel mainModel) {
         this.mainModel = mainModel;
@@ -70,15 +70,11 @@ public class TableGridModel {
     }
 
     public Page<Item, ?> getCurrentPage() {
-        return currentPage.get();
-    }
-
-    public SimpleObjectProperty<Page<Item, ?>> currentPageProperty() {
         return currentPage;
     }
 
     public void setCurrentPage(Page<Item, ?> currentPage) {
-        this.currentPage.set(currentPage);
+        this.currentPage = currentPage;
     }
 
     public DescribeTableResult getDescribeTableResult() {
