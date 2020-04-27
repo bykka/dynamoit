@@ -111,7 +111,7 @@ public class TableGridView extends VBox {
                             tableView.setRowFactory(param -> {
                                 TableRow<Item> tableRow = new TableRow<>();
                                 tableRow.setOnMouseClicked(event -> {
-                                    if (event.getClickCount() == 2) {
+                                    if (event.getClickCount() == 2 && tableRow.getItem() != null) {
                                         showItemDialog("Edit the item", "Document in JSON format", tableRow.getItem().toJSONPretty(), controller::onUpdateItem);
                                     }
                                 });
