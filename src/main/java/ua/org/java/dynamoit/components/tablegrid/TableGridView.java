@@ -88,7 +88,7 @@ public class TableGridView extends VBox {
                                         fileChooser.setSelectedExtensionFilter(jsonFiles);
                                         File file = fileChooser.showSaveDialog(this.getScene().getWindow());
                                         if (file != null) {
-                                            controller.onTableSave(file);
+                                            controller.onSaveToFile(file);
                                         }
                                     });
                                 }),

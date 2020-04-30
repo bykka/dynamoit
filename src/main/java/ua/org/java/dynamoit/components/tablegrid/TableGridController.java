@@ -110,15 +110,21 @@ public class TableGridController {
     }
 
     public void onCreateItem(String json) {
-        createItem(json).thenRun(this::onRefreshData);
+        eventBus.activity(
+                createItem(json).thenRun(this::onRefreshData)
+        );
     }
 
     public void onUpdateItem(String json) {
-        updateItem(json).thenRun(this::onRefreshData);
+        eventBus.activity(
+                updateItem(json).thenRun(this::onRefreshData)
+        );
     }
 
     public void onDeleteItem(Item item) {
-        delete(item).thenRun(this::onRefreshData);
+        eventBus.activity(
+                delete(item).thenRun(this::onRefreshData)
+        );
     }
 
     public void onClearFilters() {
@@ -126,7 +132,7 @@ public class TableGridController {
         onRefreshData();
     }
 
-    public void onTableSave(File file) {
+    public void onSaveToFile(File file) {
         eventBus.activity(
                 executeQueryOrSearch().thenAccept(items -> {
                     BufferedWriter writer = null;
