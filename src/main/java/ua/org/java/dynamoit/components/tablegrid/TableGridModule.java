@@ -5,6 +5,7 @@ import dagger.Provides;
 import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.MainModel;
 import ua.org.java.dynamoit.db.DynamoDBService;
+import ua.org.java.dynamoit.utils.FXExecutor;
 
 import javax.inject.Singleton;
 
@@ -24,7 +25,15 @@ public class TableGridModule {
 
     @Provides
     public TableGridController controller(TableGridContext tableContext, TableGridModel tableModel, DynamoDBService dynamoDBService, EventBus eventBus) {
-        return new TableGridController(tableContext, tableModel, dynamoDBService, eventBus);
+        TableGridController controller = new TableGridController(
+                tableContext,
+                tableModel,
+                dynamoDBService,
+                eventBus,
+                FXExecutor.getInstance()
+        );
+        controller.init();
+        return controller;
     }
 
 }

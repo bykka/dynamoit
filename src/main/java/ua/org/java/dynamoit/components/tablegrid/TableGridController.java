@@ -13,7 +13,6 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.util.Pair;
 import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.db.DynamoDBService;
-import ua.org.java.dynamoit.utils.FXExecutor;
 import ua.org.java.dynamoit.utils.Utils;
 
 import java.io.BufferedWriter;
@@ -26,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
 import static ua.org.java.dynamoit.utils.Utils.asStream;
@@ -39,19 +39,30 @@ public class TableGridController {
 
     private final AmazonDynamoDB dbClient;
     private final Table table;
+    private final TableGridContext context;
     private final TableGridModel tableModel;
     private final EventBus eventBus;
+    private final Executor uiExecutor;
 
-    public TableGridController(TableGridContext context, TableGridModel tableModel, DynamoDBService dynamoDBService, EventBus eventBus) {
+    public TableGridController(TableGridContext context,
+                               TableGridModel tableModel,
+                               DynamoDBService dynamoDBService,
+                               EventBus eventBus,
+                               Executor uiExecutor
+    ) {
+        this.context = context;
         this.tableModel = tableModel;
         this.eventBus = eventBus;
+        this.uiExecutor = uiExecutor;
 
         tableModel.setTableName(context.getTableName());
 
         dbClient = dynamoDBService.getOrCreateDynamoDBClient(context.getProfileName());
         DynamoDB documentClient = dynamoDBService.getOrCreateDocumentClient(context.getProfileName());
         table = documentClient.getTable(context.getTableName());
+    }
 
+    public void init() {
         eventBus.activity(
                 CompletableFuture
                         .supplyAsync(() -> dbClient.describeTable(context.getTableName()))
@@ -63,15 +74,14 @@ public class TableGridController {
                             if (context.getPropertyName() != null && context.getPropertyValue() != null) {
                                 tableModel.getAttributeFilterMap().put(tableModel.getHashAttribute(), new SimpleStringProperty(context.getPropertyValue()));
                             }
-                        }, FXExecutor.getInstance())
+                        }, uiExecutor)
                         .thenCompose(__ -> queryPageItems())
                         .thenAcceptAsync(pair -> {
                             tableModel.getRows().addAll(pair.getKey());
                             tableModel.setCurrentPage(pair.getValue());
-                        }, FXExecutor.getInstance())
+                        }, uiExecutor)
         );
     }
-
 
     public void onReachScrollEnd() {
         if (tableModel.getCurrentPage().hasNextPage()) {
@@ -82,19 +92,19 @@ public class TableGridController {
                                 Pair<List<Item>, Page<Item, ?>> pair = iteratePage(page);
                                 tableModel.getRows().addAll(pair.getKey());
                                 tableModel.setCurrentPage(pair.getValue());
-                            }, FXExecutor.getInstance())
+                            }, uiExecutor)
             );
         }
     }
 
-    public void onRefreshData() {
-        eventBus.activity(
-                CompletableFuture.runAsync(() -> tableModel.getRows().clear(), FXExecutor.getInstance())
+    public CompletableFuture<Void> onRefreshData() {
+        return eventBus.activity(
+                CompletableFuture.runAsync(() -> tableModel.getRows().clear(), uiExecutor)
                         .thenComposeAsync(aVoid ->
                                 queryPageItems().thenAcceptAsync(pair -> {
                                     tableModel.getRows().addAll(pair.getKey());
                                     tableModel.setCurrentPage(pair.getValue());
-                                }, FXExecutor.getInstance())
+                                }, uiExecutor)
                         )
         );
     }
@@ -167,7 +177,7 @@ public class TableGridController {
     }
 
     // fixme DynamoDB methods
-    private CompletableFuture<Pair<List<Item>, Page<Item, ?>>> queryPageItems() {
+    CompletableFuture<Pair<List<Item>, Page<Item, ?>>> queryPageItems() {
         return executeQueryOrSearch()
                 .thenApply(PageBasedCollection::firstPage)
                 .thenApply(TableGridController::iteratePage);

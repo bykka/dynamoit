@@ -5,6 +5,7 @@ import dagger.Provides;
 import javafx.scene.layout.Region;
 import ua.org.java.dynamoit.components.activityindicator.ActivityIndicator;
 import ua.org.java.dynamoit.db.DynamoDBService;
+import ua.org.java.dynamoit.utils.FXExecutor;
 
 import javax.inject.Singleton;
 
@@ -30,7 +31,7 @@ public class MainModule {
     @Provides
     @Singleton
     public static EventBus eventBus(){
-        return new EventBus();
+        return new EventBus(FXExecutor.getInstance());
     }
 
     @Provides

@@ -2,19 +2,24 @@ package ua.org.java.dynamoit;
 
 import javafx.application.Platform;
 import javafx.beans.property.SimpleIntegerProperty;
-import ua.org.java.dynamoit.utils.FXExecutor;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 public class EventBus {
 
     private final SimpleIntegerProperty activityCount = new SimpleIntegerProperty();
+    private Executor uiExecutor;
+
+    public EventBus(Executor uiExecutor) {
+        this.uiExecutor = uiExecutor;
+    }
 
     public void startActivity() {
         if (Platform.isFxApplicationThread()) {
             activityCount.set(activityCount.get() + 1);
         } else {
-            CompletableFuture.runAsync(() -> activityCount.set(activityCount.get() + 1), FXExecutor.getInstance());
+            CompletableFuture.runAsync(() -> activityCount.set(activityCount.get() + 1), uiExecutor);
         }
     }
 
@@ -22,7 +27,7 @@ public class EventBus {
         if (Platform.isFxApplicationThread()) {
             activityCount.set(activityCount.get() - 1);
         } else {
-            CompletableFuture.runAsync(() -> activityCount.set(activityCount.get() - 1), FXExecutor.getInstance());
+            CompletableFuture.runAsync(() -> activityCount.set(activityCount.get() - 1), uiExecutor);
         }
     }
 
@@ -30,9 +35,9 @@ public class EventBus {
         return activityCount;
     }
 
-    public void activity(CompletableFuture<?> completableFuture) {
+    public <T> CompletableFuture<T> activity(CompletableFuture<T> completableFuture) {
         startActivity();
-        completableFuture.whenComplete((o, throwable) -> {
+        return completableFuture.whenComplete((o, throwable) -> {
             stopActivity();
         });
     }
