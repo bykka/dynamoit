@@ -77,8 +77,8 @@ public class TableGridController {
                         }, uiExecutor)
                         .thenCompose(__ -> queryPageItems())
                         .thenAcceptAsync(pair -> {
-                            tableModel.getRows().addAll(pair.getKey());
                             tableModel.setCurrentPage(pair.getValue());
+                            tableModel.getRows().addAll(pair.getKey());
                         }, uiExecutor)
         );
     }
@@ -90,8 +90,8 @@ public class TableGridController {
                             .supplyAsync(() -> tableModel.getCurrentPage().nextPage())
                             .thenAcceptAsync(page -> {
                                 Pair<List<Item>, Page<Item, ?>> pair = iteratePage(page);
-                                tableModel.getRows().addAll(pair.getKey());
                                 tableModel.setCurrentPage(pair.getValue());
+                                tableModel.getRows().addAll(pair.getKey());
                             }, uiExecutor)
             );
         }
