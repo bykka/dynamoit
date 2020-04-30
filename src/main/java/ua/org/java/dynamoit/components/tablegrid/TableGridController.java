@@ -88,12 +88,14 @@ public class TableGridController {
     }
 
     public void onRefreshData() {
-        tableModel.getRows().clear();
         eventBus.activity(
-                queryPageItems().thenAcceptAsync(pair -> {
-                    tableModel.getRows().addAll(pair.getKey());
-                    tableModel.setCurrentPage(pair.getValue());
-                }, FXExecutor.getInstance())
+                CompletableFuture.runAsync(() -> tableModel.getRows().clear(), FXExecutor.getInstance())
+                        .thenComposeAsync(aVoid ->
+                                queryPageItems().thenAcceptAsync(pair -> {
+                                    tableModel.getRows().addAll(pair.getKey());
+                                    tableModel.setCurrentPage(pair.getValue());
+                                }, FXExecutor.getInstance())
+                        )
         );
     }
 
