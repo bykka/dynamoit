@@ -58,7 +58,7 @@ public class TableGridController {
                         .thenAcceptAsync(describeTable -> {
                             Utils.getHashKey(describeTable).ifPresent(tableModel::setHashAttribute);
                             Utils.getRangeKey(describeTable).ifPresent(tableModel::setRangeAttribute);
-                            tableModel.setDescribeTableResult(describeTable);
+                            tableModel.setTotalCount(describeTable.getTable().getItemCount());
 
                             if (context.getPropertyName() != null && context.getPropertyValue() != null) {
                                 tableModel.getAttributeFilterMap().put(tableModel.getHashAttribute(), new SimpleStringProperty(context.getPropertyValue()));

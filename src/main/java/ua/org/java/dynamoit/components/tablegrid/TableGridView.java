@@ -196,82 +196,78 @@ public class TableGridView extends VBox {
             TableCell<Item, String> cell = new TableCell<>();
             cell.textProperty().bind(cell.itemProperty());
 
-            cell.textProperty().addListener((observable, oldValue, newValue) -> {
-                if (newValue == null || newValue.trim().length() == 0) {
-                    cell.setContextMenu(null);
-                } else {
-                    cell.setContextMenu(
-                            DX.contextMenu(contextMenu -> List.of(
-                                    DX.create(MenuItem::new, menuCopy -> {
-                                        menuCopy.textProperty().bind(Bindings.concat("Copy '", cell.textProperty(), "'"));
-                                        menuCopy.setGraphic(DX.icon("icons/page_copy.png"));
-                                        menuCopy.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
-                                        menuCopy.setOnAction(event -> {
-                                            ClipboardContent content = new ClipboardContent();
-                                            content.putString(cell.textProperty().get());
-                                            Clipboard clipboard = Clipboard.getSystemClipboard();
-                                            clipboard.setContent(content);
-                                        });
-                                    }),
-                                    DX.create(MenuItem::new, menuFilter -> {
-                                        menuFilter.textProperty().bind(Bindings.concat("Filter '", cell.textProperty(), "'"));
-                                        menuFilter.setGraphic(DX.icon("icons/filter_add.png"));
-                                        menuFilter.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
-                                        menuFilter.setOnAction(event -> {
-                                            SimpleStringProperty property = this.tableModel.getAttributeFilterMap().get(column.getId());
-                                            if (property != null) {
-                                                property.set(cell.getText());
-                                                controller.onRefreshData();
-                                            }
-                                        });
-                                    }),
-                                    DX.create(Menu::new, menuSearch -> {
-                                        menuSearch.textProperty().bind(Bindings.concat("Search '", cell.textProperty(), "' in"));
-                                        menuSearch.setGraphic(DX.icon("icons/table_tab_search.png"));
-                                        menuSearch.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
-                                        menuSearch.getItems().add(
-                                                DX.create(Menu::new, allTablesMenuItem -> {
-                                                    allTablesMenuItem.textProperty().bind(Bindings.concat("All tables"));
-                                                    allTablesMenuItem.setGraphic(DX.icon("icons/database.png"));
-                                                    allTablesMenuItem.getItems().addAll(
-                                                            tableModel.getMainModel().getAvailableTables().stream().map(tableName ->
-                                                                    DX.create(MenuItem::new, menuItem -> {
-                                                                        menuItem.setText(tableName);
-                                                                        menuItem.setOnAction(event -> {
-                                                                            if (onSearchInTable != null) {
-                                                                                onSearchInTable.accept(new TableGridContext(tableModel.getMainModel().getSelectedProfile(), tableName, column.getId(), cell.getText()));
-                                                                            }
-                                                                        });
-                                                                    })
-                                                            ).collect(Collectors.toList())
+            cell.setOnContextMenuRequested(event -> {
+                if (cell.getText() != null && cell.getText().trim().length() != 0) {
+                    DX.contextMenu(contextMenu -> List.of(
+                            DX.create(MenuItem::new, menuCopy -> {
+                                menuCopy.textProperty().bind(Bindings.concat("Copy '", cell.textProperty(), "'"));
+                                menuCopy.setGraphic(DX.icon("icons/page_copy.png"));
+                                menuCopy.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
+                                menuCopy.setOnAction(__ -> {
+                                    ClipboardContent content = new ClipboardContent();
+                                    content.putString(cell.textProperty().get());
+                                    Clipboard clipboard = Clipboard.getSystemClipboard();
+                                    clipboard.setContent(content);
+                                });
+                            }),
+                            DX.create(MenuItem::new, menuFilter -> {
+                                menuFilter.textProperty().bind(Bindings.concat("Filter '", cell.textProperty(), "'"));
+                                menuFilter.setGraphic(DX.icon("icons/filter_add.png"));
+                                menuFilter.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
+                                menuFilter.setOnAction(__ -> {
+                                    SimpleStringProperty property = this.tableModel.getAttributeFilterMap().get(column.getId());
+                                    if (property != null) {
+                                        property.set(cell.getText());
+                                        controller.onRefreshData();
+                                    }
+                                });
+                            }),
+                            DX.create(Menu::new, menuSearch -> {
+                                menuSearch.textProperty().bind(Bindings.concat("Search '", cell.textProperty(), "' in"));
+                                menuSearch.setGraphic(DX.icon("icons/table_tab_search.png"));
+                                menuSearch.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
+                                menuSearch.getItems().add(
+                                        DX.create(Menu::new, allTablesMenuItem -> {
+                                            allTablesMenuItem.textProperty().bind(Bindings.concat("All tables"));
+                                            allTablesMenuItem.setGraphic(DX.icon("icons/database.png"));
+                                            allTablesMenuItem.getItems().addAll(
+                                                    tableModel.getMainModel().getAvailableTables().stream().map(tableName ->
+                                                            DX.create(MenuItem::new, menuItem -> {
+                                                                menuItem.setText(tableName);
+                                                                menuItem.setOnAction(__ -> {
+                                                                    if (onSearchInTable != null) {
+                                                                        onSearchInTable.accept(new TableGridContext(tableModel.getMainModel().getSelectedProfile(), tableName, column.getId(), cell.getText()));
+                                                                    }
+                                                                });
+                                                            })
+                                                    ).collect(Collectors.toList())
+                                            );
+                                        })
+                                );
+                                menuSearch.getItems().addAll(
+                                        tableModel.getMainModel().getSavedFilters().stream().map(filter ->
+                                                DX.create(Menu::new, filterMenuItem -> {
+                                                    filterMenuItem.textProperty().bind(Bindings.concat("Contains: " + filter));
+                                                    filterMenuItem.setGraphic(DX.icon("icons/folder_star.png"));
+                                                    filterMenuItem.getItems().addAll(
+                                                            tableModel.getMainModel().getAvailableTables().stream()
+                                                                    .filter(tableName -> tableName.contains(filter))
+                                                                    .map(tableName ->
+                                                                            DX.create(MenuItem::new, menuItem -> {
+                                                                                menuItem.setText(tableName);
+                                                                                menuItem.setOnAction(__ -> {
+                                                                                    if (onSearchInTable != null) {
+                                                                                        onSearchInTable.accept(new TableGridContext(tableModel.getMainModel().getSelectedProfile(), tableName, column.getId(), cell.getText()));
+                                                                                    }
+                                                                                });
+                                                                            })
+                                                                    ).collect(Collectors.toList())
                                                     );
                                                 })
-                                        );
-                                        menuSearch.getItems().addAll(
-                                                tableModel.getMainModel().getSavedFilters().stream().map(filter ->
-                                                        DX.create(Menu::new, filterMenuItem -> {
-                                                            filterMenuItem.textProperty().bind(Bindings.concat("Contains: " + filter));
-                                                            filterMenuItem.setGraphic(DX.icon("icons/folder_star.png"));
-                                                            filterMenuItem.getItems().addAll(
-                                                                    tableModel.getMainModel().getAvailableTables().stream()
-                                                                            .filter(tableName -> tableName.contains(filter))
-                                                                            .map(tableName ->
-                                                                                    DX.create(MenuItem::new, menuItem -> {
-                                                                                        menuItem.setText(tableName);
-                                                                                        menuItem.setOnAction(event -> {
-                                                                                            if (onSearchInTable != null) {
-                                                                                                onSearchInTable.accept(new TableGridContext(tableModel.getMainModel().getSelectedProfile(), tableName, column.getId(), cell.getText()));
-                                                                                            }
-                                                                                        });
-                                                                                    })
-                                                                            ).collect(Collectors.toList())
-                                                            );
-                                                        })
-                                                ).collect(Collectors.toList())
-                                        );
-                                    })
-                            ))
-                    );
+                                        ).collect(Collectors.toList())
+                                );
+                            })
+                    )).show(cell, event.getScreenX(), event.getScreenY());
                 }
             });
 
