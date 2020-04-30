@@ -1,5 +1,6 @@
 package ua.org.java.dynamoit;
 
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ListChangeListener;
@@ -27,12 +28,15 @@ public class MainView extends VBox {
     private final MainController controller;
 
     private final ObjectProperty<TreeItem<String>> rootTreeItem = new SimpleObjectProperty<>();
-    private final TreeItem<String> allTables = new AllTreeItem();
+    private final TreeItem<String> allTables;
     private TabPane tabPane;
 
     public MainView(MainModel mainModel, MainController controller, ActivityIndicator activityIndicator) {
         this.model = mainModel;
         this.controller = controller;
+
+        allTables = new AllTreeItem();
+
         this.getChildren().addAll(
                 List.of(
                         DX.splitPane(splitPane -> {
@@ -148,10 +152,11 @@ public class MainView extends VBox {
         tabPane.getSelectionModel().select(tab);
     }
 
-    private static class AllTreeItem extends TreeItem<String> {
+    private class AllTreeItem extends TreeItem<String> {
 
         public AllTreeItem() {
             super("All tables", DX.icon("icons/database.png"));
+            valueProperty().bind(Bindings.concat("All tables (", Bindings.size(model.getFilteredTables()), ")"));
         }
 
     }
