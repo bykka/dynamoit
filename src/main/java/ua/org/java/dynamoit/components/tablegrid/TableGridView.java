@@ -102,7 +102,9 @@ public class TableGridView extends VBox {
 
                             tableView.getColumns().add(DX.create((Supplier<TableColumn<Item, Number>>) TableColumn::new, column -> {
                                 column.setPrefWidth(35);
-                                column.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(tableModel.getRows().indexOf(param.getValue())));
+                                column.setResizable(false);
+                                column.setStyle( "-fx-alignment: CENTER-RIGHT;");
+                                column.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(tableModel.getRows().indexOf(param.getValue()) + 1));
                             }));
 
                             VBox.setVgrow(tableView, Priority.ALWAYS);
