@@ -4,7 +4,9 @@ import com.amazonaws.services.dynamodbv2.model.DescribeTableResult;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
 
+import java.util.Comparator;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -33,5 +35,22 @@ public class Utils {
         TableDescription tableDescription = describeTableResult.getTable();
         return tableDescription.getKeySchema().stream().filter(keySchemaElement -> keySchemaElement.getKeyType().equals("RANGE")).map(KeySchemaElement::getAttributeName).findFirst();
     }
+
+
+    public static BiFunction<String, String, Comparator<String>> KEYS_FIRST = (String hashKeyName, String rangeKeyName) -> (o1, o2) -> {
+        if (o1.equals(hashKeyName)) {
+            return -1;
+        }
+        if (o2.equals(hashKeyName)) {
+            return 1;
+        }
+        if (o1.equals(rangeKeyName)) {
+            return -1;
+        }
+        if (o2.equals(rangeKeyName)) {
+            return 1;
+        }
+        return o1.compareTo(o2);
+    };
 
 }

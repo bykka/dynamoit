@@ -29,6 +29,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static ua.org.java.dynamoit.utils.Utils.KEYS_FIRST;
 import static ua.org.java.dynamoit.utils.Utils.asStream;
 
 public class TableGridView extends VBox {
@@ -148,21 +149,7 @@ public class TableGridView extends VBox {
         tableModel.getRows().stream()
                 .flatMap(item -> asStream(item.attributes()).map(Map.Entry::getKey))
                 .distinct()
-                .sorted((o1, o2) -> {
-                    if (o1.equals(tableModel.getHashAttribute())) {
-                        return -1;
-                    }
-                    if (o2.equals(tableModel.getHashAttribute())) {
-                        return 1;
-                    }
-                    if (o1.equals(tableModel.getRangeAttribute())) {
-                        return -1;
-                    }
-                    if (o2.equals(tableModel.getRangeAttribute())) {
-                        return 1;
-                    }
-                    return o1.compareTo(o2);
-                })
+                .sorted(KEYS_FIRST.apply(tableModel.getHashAttribute(), tableModel.getRangeAttribute()))
                 .filter(attrName -> !availableAttributes.contains(attrName))
                 .map(attrName -> {
                     SimpleStringProperty filterProperty = tableModel.getAttributeFilterMap().computeIfAbsent(attrName, s -> new SimpleStringProperty());
