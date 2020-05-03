@@ -1,19 +1,12 @@
 package ua.org.java.dynamoit.utils;
 
-import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.model.DescribeTableResult;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
-import javafx.util.Pair;
-import ua.org.java.dynamoit.components.tablegrid.TableGridModel;
 
 import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -59,25 +52,5 @@ public class Utils {
         }
         return o1.compareTo(o2);
     };
-
-    public static Map<String, TableGridModel.AttributeType> getAttributesTypes(List<Item> itemList) {
-        Function<Object, TableGridModel.AttributeType> mapper = value -> {
-            if (value != null) {
-                if (value instanceof Boolean) {
-                    return TableGridModel.AttributeType.BOOLEAN;
-                }
-                if (value instanceof Number) {
-                    return TableGridModel.AttributeType.NUMBER;
-                }
-            }
-            return TableGridModel.AttributeType.STRING;
-        };
-
-        return itemList.stream()
-                .flatMap(item ->
-                        asStream(item.attributes())
-                        .map(entry -> new Pair<>(entry.getKey(), mapper.apply(entry.getValue()))))
-                .collect(Collectors.toMap(Pair::getKey, Pair::getValue, (attributeType, attributeType2) -> attributeType));
-    }
 
 }

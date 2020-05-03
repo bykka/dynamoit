@@ -15,10 +15,6 @@ import java.util.Map;
 
 public class TableGridModel {
 
-    public enum AttributeType {
-        STRING, NUMBER, BOOLEAN
-    }
-
     private final MainModel mainModel;
 
     private String tableName;
@@ -30,7 +26,7 @@ public class TableGridModel {
     private final Map<String, SimpleStringProperty> attributeFilterMap = new HashMap<>();
     private final SimpleStringProperty hashAttribute = new SimpleStringProperty();
     private final SimpleStringProperty rangeAttribute = new SimpleStringProperty();
-    private final Map<String, AttributeType> attributeTypesMap = new HashMap<>();
+    private final Map<String, Attributes.Type> attributeTypesMap = new HashMap<>();
 
     public TableGridModel(MainModel mainModel) {
         this.mainModel = mainModel;
@@ -108,7 +104,7 @@ public class TableGridModel {
         this.rangeAttribute.set(rangeAttribute);
     }
 
-    public Map<String, AttributeType> getAttributeTypesMap() {
+    public Map<String, Attributes.Type> getAttributeTypesMap() {
         return attributeTypesMap;
     }
 }

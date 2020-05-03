@@ -18,7 +18,6 @@ import ua.org.java.dynamoit.utils.Utils;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -29,8 +28,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
+import static ua.org.java.dynamoit.components.tablegrid.Attributes.*;
 import static ua.org.java.dynamoit.utils.Utils.asStream;
-import static ua.org.java.dynamoit.utils.Utils.getAttributesTypes;
 
 public class TableGridController {
 
@@ -196,7 +195,7 @@ public class TableGridController {
 
     private CompletableFuture<? extends ItemCollection<?>> executeQueryOrSearch() {
         SimpleStringProperty hashValueProperty = tableModel.getAttributeFilterMap().get(tableModel.getHashAttribute());
-        if (hashValueProperty != null && !StringUtils.isNullOrEmpty(hashValueProperty.get())) {
+        if (hashValueProperty != null && !StringUtils.isNullOrEmpty(hashValueProperty.get()) && !hashValueProperty.get().contains(ASTERISK)) {
             return queryItems(tableModel.getAttributeFilterMap());
         }
         return scanItems(tableModel.getAttributeFilterMap());
@@ -215,18 +214,7 @@ public class TableGridController {
             ScanSpec scanSpec = new ScanSpec();
             List<ScanFilter> filters = attributeFilterMap.entrySet().stream()
                     .filter(entry -> Objects.nonNull(entry.getValue().get()) && entry.getValue().get().trim().length() > 0)
-                    .map(entry -> {
-                        Object value = entry.getValue().get();
-                        TableGridModel.AttributeType attributeType = tableModel.getAttributeTypesMap().get(entry.getKey());
-                        if (attributeType == TableGridModel.AttributeType.NUMBER) {
-                            value = new BigDecimal(entry.getValue().get());
-                        }
-                        if (attributeType == TableGridModel.AttributeType.BOOLEAN) {
-                            value = Boolean.valueOf(entry.getValue().get());
-                        }
-                        return new Pair<>(entry.getKey(), value);
-                    })
-                    .map(pair -> new ScanFilter(pair.getKey()).eq(pair.getValue()))
+                    .map(entry -> attributeValueToFilter(entry.getKey(), entry.getValue().get(), tableModel.getAttributeTypesMap().get(entry.getKey()), ScanFilter::new))
                     .collect(Collectors.toList());
             if (!filters.isEmpty()) {
                 scanSpec.withScanFilters(filters.toArray(new ScanFilter[]{}));
@@ -245,18 +233,7 @@ public class TableGridController {
             List<QueryFilter> filters = attributeFilterMap.entrySet().stream()
                     .filter(entry -> !entry.getKey().equals(tableModel.getHashAttribute()) && !entry.getKey().equals(tableModel.getRangeAttribute()))
                     .filter(entry -> !StringUtils.isNullOrEmpty(entry.getValue().get()))
-                    .map(entry -> {
-                        Object value = entry.getValue().get();
-                        TableGridModel.AttributeType attributeType = tableModel.getAttributeTypesMap().get(entry.getKey());
-                        if (attributeType == TableGridModel.AttributeType.NUMBER) {
-                            value = new BigDecimal(entry.getValue().get());
-                        }
-                        if (attributeType == TableGridModel.AttributeType.BOOLEAN) {
-                            value = Boolean.valueOf(entry.getValue().get());
-                        }
-                        return new Pair<>(entry.getKey(), value);
-                    })
-                    .map(entry -> new QueryFilter(entry.getKey()).eq(entry.getValue()))
+                    .map(entry -> attributeValueToFilter(entry.getKey(), entry.getValue().get(), tableModel.getAttributeTypesMap().get(entry.getKey()), QueryFilter::new))
                     .collect(Collectors.toList());
             if (!filters.isEmpty()) {
                 querySpec.withQueryFilters(filters.toArray(new QueryFilter[]{}));
