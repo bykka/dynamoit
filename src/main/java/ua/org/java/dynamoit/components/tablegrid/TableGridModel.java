@@ -15,16 +15,22 @@ import java.util.Map;
 
 public class TableGridModel {
 
+    public enum AttributeType {
+        STRING, NUMBER, BOOLEAN
+    }
+
     private final MainModel mainModel;
 
     private String tableName;
     private final ObservableList<Item> rows = FXCollections.observableArrayList();
     private final IntegerBinding rowsSize = Bindings.createIntegerBinding(rows::size, rows);
-    private final Map<String, SimpleStringProperty> attributeFilterMap = new HashMap<>();
     private Page<Item, ?> currentPage;
     private final SimpleLongProperty totalCount = new SimpleLongProperty();
+
+    private final Map<String, SimpleStringProperty> attributeFilterMap = new HashMap<>();
     private final SimpleStringProperty hashAttribute = new SimpleStringProperty();
     private final SimpleStringProperty rangeAttribute = new SimpleStringProperty();
+    private final Map<String, AttributeType> attributeTypesMap = new HashMap<>();
 
     public TableGridModel(MainModel mainModel) {
         this.mainModel = mainModel;
@@ -100,5 +106,9 @@ public class TableGridModel {
 
     public void setRangeAttribute(String rangeAttribute) {
         this.rangeAttribute.set(rangeAttribute);
+    }
+
+    public Map<String, AttributeType> getAttributeTypesMap() {
+        return attributeTypesMap;
     }
 }

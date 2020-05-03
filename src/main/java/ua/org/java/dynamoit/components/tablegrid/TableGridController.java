@@ -18,6 +18,7 @@ import ua.org.java.dynamoit.utils.Utils;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -29,6 +30,7 @@ import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
 import static ua.org.java.dynamoit.utils.Utils.asStream;
+import static ua.org.java.dynamoit.utils.Utils.getAttributesTypes;
 
 public class TableGridController {
 
@@ -77,6 +79,7 @@ public class TableGridController {
                         }, uiExecutor)
                         .thenCompose(__ -> queryPageItems())
                         .thenAcceptAsync(pair -> {
+                            tableModel.getAttributeTypesMap().putAll(getAttributesTypes(pair.getKey()));
                             tableModel.setCurrentPage(pair.getValue());
                             tableModel.getRows().addAll(pair.getKey());
                         }, uiExecutor)
@@ -88,8 +91,9 @@ public class TableGridController {
             eventBus.activity(
                     CompletableFuture
                             .supplyAsync(() -> tableModel.getCurrentPage().nextPage())
-                            .thenAcceptAsync(page -> {
-                                Pair<List<Item>, Page<Item, ?>> pair = iteratePage(page);
+                            .thenApply(TableGridController::iteratePage)
+                            .thenAcceptAsync(pair -> {
+                                tableModel.getAttributeTypesMap().putAll(getAttributesTypes(pair.getKey()));
                                 tableModel.setCurrentPage(pair.getValue());
                                 tableModel.getRows().addAll(pair.getKey());
                             }, uiExecutor)
@@ -102,6 +106,7 @@ public class TableGridController {
                 CompletableFuture.runAsync(() -> tableModel.getRows().clear(), uiExecutor)
                         .thenComposeAsync(aVoid ->
                                 queryPageItems().thenAcceptAsync(pair -> {
+                                    tableModel.getAttributeTypesMap().putAll(getAttributesTypes(pair.getKey()));
                                     tableModel.getRows().addAll(pair.getKey());
                                     tableModel.setCurrentPage(pair.getValue());
                                 }, uiExecutor)
@@ -210,7 +215,18 @@ public class TableGridController {
             ScanSpec scanSpec = new ScanSpec();
             List<ScanFilter> filters = attributeFilterMap.entrySet().stream()
                     .filter(entry -> Objects.nonNull(entry.getValue().get()) && entry.getValue().get().trim().length() > 0)
-                    .map(entry -> new ScanFilter(entry.getKey()).eq(entry.getValue().get()))
+                    .map(entry -> {
+                        Object value = entry.getValue().get();
+                        TableGridModel.AttributeType attributeType = tableModel.getAttributeTypesMap().get(entry.getKey());
+                        if (attributeType == TableGridModel.AttributeType.NUMBER) {
+                            value = new BigDecimal(entry.getValue().get());
+                        }
+                        if (attributeType == TableGridModel.AttributeType.BOOLEAN) {
+                            value = Boolean.valueOf(entry.getValue().get());
+                        }
+                        return new Pair<>(entry.getKey(), value);
+                    })
+                    .map(pair -> new ScanFilter(pair.getKey()).eq(pair.getValue()))
                     .collect(Collectors.toList());
             if (!filters.isEmpty()) {
                 scanSpec.withScanFilters(filters.toArray(new ScanFilter[]{}));
@@ -229,7 +245,18 @@ public class TableGridController {
             List<QueryFilter> filters = attributeFilterMap.entrySet().stream()
                     .filter(entry -> !entry.getKey().equals(tableModel.getHashAttribute()) && !entry.getKey().equals(tableModel.getRangeAttribute()))
                     .filter(entry -> !StringUtils.isNullOrEmpty(entry.getValue().get()))
-                    .map(entry -> new QueryFilter(entry.getKey()).eq(entry.getValue().get()))
+                    .map(entry -> {
+                        Object value = entry.getValue().get();
+                        TableGridModel.AttributeType attributeType = tableModel.getAttributeTypesMap().get(entry.getKey());
+                        if (attributeType == TableGridModel.AttributeType.NUMBER) {
+                            value = new BigDecimal(entry.getValue().get());
+                        }
+                        if (attributeType == TableGridModel.AttributeType.BOOLEAN) {
+                            value = Boolean.valueOf(entry.getValue().get());
+                        }
+                        return new Pair<>(entry.getKey(), value);
+                    })
+                    .map(entry -> new QueryFilter(entry.getKey()).eq(entry.getValue()))
                     .collect(Collectors.toList());
             if (!filters.isEmpty()) {
                 querySpec.withQueryFilters(filters.toArray(new QueryFilter[]{}));
