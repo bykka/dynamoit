@@ -1,8 +1,7 @@
 package ua.org.java.dynamoit;
 
+import io.reactivex.rxjavafx.observables.JavaFxObservable;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
@@ -27,9 +26,9 @@ public class MainView extends VBox {
     private final MainModel model;
     private final MainController controller;
 
-    private final ObjectProperty<TreeItem<String>> rootTreeItem = new SimpleObjectProperty<>();
     private final TreeItem<String> allTables;
     private TabPane tabPane;
+    private TreeView<String> treeView;
 
     public MainView(MainModel mainModel, MainController controller, ActivityIndicator activityIndicator) {
         this.model = mainModel;
@@ -72,8 +71,10 @@ public class MainView extends VBox {
                                                         )),
                                                         DX.create((Supplier<TreeView<String>>) TreeView::new, treeView -> {
                                                             VBox.setVgrow(treeView, Priority.ALWAYS);
-                                                            treeView.rootProperty().bind(this.rootTreeItem);
+                                                            this.treeView = treeView;
+                                                            treeView.setRoot(new TreeItem<>());
                                                             treeView.setShowRoot(false);
+                                                            treeView.getRoot().getChildren().add(allTables);
                                                             treeView.setOnMouseClicked(event -> this.onTableSelect(event, treeView.getSelectionModel().getSelectedItem()));
                                                         })
                                                 );
@@ -85,7 +86,7 @@ public class MainView extends VBox {
                                 }
                         ),
                         DX.create(HBox::new, hBox -> {
-                            hBox.setPadding(new Insets(3,3,3,3));
+                            hBox.setPadding(new Insets(3, 3, 3, 3));
                             hBox.getChildren().addAll(
                                     List.of(
                                             DX.create(Pane::new, pane -> {
@@ -98,37 +99,23 @@ public class MainView extends VBox {
                 )
         );
 
-        this.model.getAvailableTables().addListener((ListChangeListener<String>) c -> {
-            while (c.next()) {
-                if (c.wasAdded()) {
-                    this.rootTreeItem.set(DX.create(TreeItem::new, root -> {
-                        root.getChildren().add(allTables);
-                    }));
-                }
-            }
-        });
-
         mainModel.getFilteredTables().addListener((ListChangeListener<String>) c -> {
             allTables.getChildren().setAll(mainModel.getFilteredTables().stream().map(TableTreeItem::new).collect(Collectors.toList()));
             allTables.setExpanded(true);
         });
 
-        mainModel.getSavedFilters().addListener((ListChangeListener<String>) c -> {
-            while (c.next()) {
-                if (c.wasAdded()) {
-                    this.rootTreeItem.get().getChildren().addAll(
-                            c.getAddedSubList()
-                                    .stream()
-                                    .map(filter -> {
-                                        FilterTreeItem filterTables = new FilterTreeItem(filter);
-                                        filterTables.getChildren().addAll(mainModel.getAvailableTables().stream().filter(tableName -> tableName.contains(filter)).map(TableTreeItem::new).collect(Collectors.toList()));
-                                        filterTables.setExpanded(true);
-                                        return filterTables;
-                                    }).collect(Collectors.toList())
-                    );
-                }
-            }
-        });
+        JavaFxObservable.additionsOf(mainModel.getSavedFilters())
+                .map(filter -> {
+                    FilterTreeItem filterTables = new FilterTreeItem(filter);
+                    filterTables.getChildren().addAll(mainModel.getAvailableTables()
+                            .stream()
+                            .filter(tableName -> tableName.contains(filter))
+                            .map(TableTreeItem::new)
+                            .collect(Collectors.toList()));
+                    filterTables.setExpanded(true);
+                    return filterTables;
+                })
+                .subscribe(filterTreeItem -> this.treeView.getRoot().getChildren().add(filterTreeItem));
     }
 
     private void onTableSelect(MouseEvent event, TreeItem<String> selectedItem) {
