@@ -68,12 +68,18 @@ public class TableGridController {
                 CompletableFuture
                         .supplyAsync(() -> dbClient.describeTable(context.getTableName()))
                         .thenAcceptAsync(describeTable -> {
-                            Utils.getHashKey(describeTable).ifPresent(tableModel::setHashAttribute);
-                            Utils.getRangeKey(describeTable).ifPresent(tableModel::setRangeAttribute);
+                            Utils.getHashKey(describeTable).ifPresent(attr -> {
+                                tableModel.setHashAttribute(attr);
+                                tableModel.getAttributeFilterMap().put(attr, new SimpleStringProperty());
+                            });
+                            Utils.getRangeKey(describeTable).ifPresent(attr -> {
+                                tableModel.setRangeAttribute(attr);
+                                tableModel.getAttributeFilterMap().put(attr, new SimpleStringProperty());
+                            });
                             tableModel.setTotalCount(describeTable.getTable().getItemCount());
 
                             if (context.getPropertyName() != null && context.getPropertyValue() != null) {
-                                tableModel.getAttributeFilterMap().put(tableModel.getHashAttribute(), new SimpleStringProperty(context.getPropertyValue()));
+                                tableModel.getAttributeFilterMap().get(tableModel.getHashAttribute()).set(context.getPropertyValue());
                             }
                         }, uiExecutor)
                         .thenCompose(__ -> queryPageItems())

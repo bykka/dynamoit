@@ -2,6 +2,7 @@ package ua.org.java.dynamoit;
 
 import javafx.application.Platform;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.scene.control.Alert;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -39,6 +40,10 @@ public class EventBus {
         startActivity();
         return completableFuture.whenComplete((o, throwable) -> {
             stopActivity();
+            if (throwable != null) {
+                throwable.printStackTrace();
+                CompletableFuture.runAsync(() -> new Alert(Alert.AlertType.ERROR, throwable.getLocalizedMessage()).show(), uiExecutor);
+            }
         });
     }
 
