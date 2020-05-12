@@ -18,15 +18,16 @@ public class TableGridModel {
     private final MainModel mainModel;
 
     private String tableName;
-    private final ObservableList<Item> rows = FXCollections.observableArrayList();
-    private final IntegerBinding rowsSize = Bindings.createIntegerBinding(rows::size, rows);
-    private Page<Item, ?> currentPage;
-    private final SimpleLongProperty totalCount = new SimpleLongProperty();
-
-    private final Map<String, SimpleStringProperty> attributeFilterMap = new HashMap<>();
     private final SimpleStringProperty hashAttribute = new SimpleStringProperty();
     private final SimpleStringProperty rangeAttribute = new SimpleStringProperty();
     private final Map<String, Attributes.Type> attributeTypesMap = new HashMap<>();
+    private final SimpleLongProperty totalCount = new SimpleLongProperty();
+
+    private final ObservableList<Item> rows = FXCollections.observableArrayList();
+    private final IntegerBinding rowsSize = Bindings.createIntegerBinding(rows::size, rows);
+    private Page<Item, ?> currentPage;
+
+    private final Map<String, SimpleStringProperty> attributeFilterMap = new HashMap<>();
 
     public TableGridModel(MainModel mainModel) {
         this.mainModel = mainModel;

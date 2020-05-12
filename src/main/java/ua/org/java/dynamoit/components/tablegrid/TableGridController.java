@@ -84,7 +84,7 @@ public class TableGridController {
                         }, uiExecutor)
                         .thenCompose(__ -> queryPageItems())
                         .thenAcceptAsync(pair -> {
-                            tableModel.getAttributeTypesMap().putAll(getAttributesTypes(pair.getKey()));
+                            tableModel.getAttributeTypesMap().putAll(defineAttributesTypes(pair.getKey()));
                             tableModel.setCurrentPage(pair.getValue());
                             tableModel.getRows().addAll(pair.getKey());
                         }, uiExecutor)
@@ -98,7 +98,7 @@ public class TableGridController {
                             .supplyAsync(() -> tableModel.getCurrentPage().nextPage())
                             .thenApply(TableGridController::iteratePage)
                             .thenAcceptAsync(pair -> {
-                                tableModel.getAttributeTypesMap().putAll(getAttributesTypes(pair.getKey()));
+                                tableModel.getAttributeTypesMap().putAll(defineAttributesTypes(pair.getKey()));
                                 tableModel.setCurrentPage(pair.getValue());
                                 tableModel.getRows().addAll(pair.getKey());
                             }, uiExecutor)
@@ -111,7 +111,7 @@ public class TableGridController {
                 CompletableFuture.runAsync(() -> tableModel.getRows().clear(), uiExecutor)
                         .thenComposeAsync(aVoid ->
                                 queryPageItems().thenAcceptAsync(pair -> {
-                                    tableModel.getAttributeTypesMap().putAll(getAttributesTypes(pair.getKey()));
+                                    tableModel.getAttributeTypesMap().putAll(defineAttributesTypes(pair.getKey()));
                                     tableModel.getRows().addAll(pair.getKey());
                                     tableModel.setCurrentPage(pair.getValue());
                                 }, uiExecutor)

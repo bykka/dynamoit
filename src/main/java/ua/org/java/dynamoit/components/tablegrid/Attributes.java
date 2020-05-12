@@ -23,7 +23,7 @@ public final class Attributes {
     }
 
 
-    public static Map<String, Attributes.Type> getAttributesTypes(List<Item> itemList) {
+    public static Map<String, Attributes.Type> defineAttributesTypes(List<Item> itemList) {
         Function<Object, Attributes.Type> mapper = value -> {
             if (value != null) {
                 if (value instanceof Boolean) {
