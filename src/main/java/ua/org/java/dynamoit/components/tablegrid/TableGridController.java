@@ -5,6 +5,8 @@ import com.amazonaws.services.dynamodbv2.document.*;
 import com.amazonaws.services.dynamodbv2.document.internal.PageBasedCollection;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
+import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
+import com.amazonaws.services.dynamodbv2.model.DescribeTableResult;
 import com.amazonaws.util.StringUtils;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -20,10 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
@@ -67,27 +66,9 @@ public class TableGridController {
         eventBus.activity(
                 CompletableFuture
                         .supplyAsync(() -> dbClient.describeTable(context.getTableName()))
-                        .thenAcceptAsync(describeTable -> {
-                            Utils.getHashKey(describeTable).ifPresent(attr -> {
-                                tableModel.setHashAttribute(attr);
-                                tableModel.getAttributeFilterMap().put(attr, new SimpleStringProperty());
-                            });
-                            Utils.getRangeKey(describeTable).ifPresent(attr -> {
-                                tableModel.setRangeAttribute(attr);
-                                tableModel.getAttributeFilterMap().put(attr, new SimpleStringProperty());
-                            });
-                            tableModel.setTotalCount(describeTable.getTable().getItemCount());
-
-                            if (context.getPropertyName() != null && context.getPropertyValue() != null) {
-                                tableModel.getAttributeFilterMap().get(tableModel.getHashAttribute()).set(context.getPropertyValue());
-                            }
-                        }, uiExecutor)
+                        .thenAcceptAsync(this::bindToModel, uiExecutor)
                         .thenCompose(__ -> queryPageItems())
-                        .thenAcceptAsync(pair -> {
-                            tableModel.getAttributeTypesMap().putAll(defineAttributesTypes(pair.getKey()));
-                            tableModel.setCurrentPage(pair.getValue());
-                            tableModel.getRows().addAll(pair.getKey());
-                        }, uiExecutor)
+                        .thenAcceptAsync(this::bindToModel, uiExecutor)
         );
     }
 
@@ -110,11 +91,7 @@ public class TableGridController {
         return eventBus.activity(
                 CompletableFuture.runAsync(() -> tableModel.getRows().clear(), uiExecutor)
                         .thenComposeAsync(aVoid ->
-                                queryPageItems().thenAcceptAsync(pair -> {
-                                    tableModel.getAttributeTypesMap().putAll(defineAttributesTypes(pair.getKey()));
-                                    tableModel.getRows().addAll(pair.getKey());
-                                    tableModel.setCurrentPage(pair.getValue());
-                                }, uiExecutor)
+                                queryPageItems().thenAcceptAsync(this::bindToModel, uiExecutor)
                         )
         );
     }
@@ -256,6 +233,38 @@ public class TableGridController {
                 table.deleteItem(tableModel.getHashAttribute(), item.get(tableModel.getHashAttribute()), tableModel.getRangeAttribute(), item.get(tableModel.getRangeAttribute()));
             }
         });
+    }
+
+    /**
+     * sort attributes before bindings
+     */
+    private void bindToModel(DescribeTableResult describeTable){
+        Utils.getHashKey(describeTable).ifPresent(tableModel::setHashAttribute);
+        Utils.getRangeKey(describeTable).ifPresent(tableModel::setRangeAttribute);
+
+        Map<String, String> attributes = new TreeMap<>(Utils.KEYS_FIRST(tableModel.getHashAttribute(), tableModel.getRangeAttribute()));
+        attributes.putAll(
+                describeTable.getTable().getAttributeDefinitions().stream()
+                        .collect(Collectors.toMap(
+                                AttributeDefinition::getAttributeName,
+                                AttributeDefinition::getAttributeType))
+        );
+
+        attributes.forEach((name, type) -> {
+            tableModel.getAttributeFilterMap().put(name, new SimpleStringProperty());
+            tableModel.getAttributeTypesMap().put(name, fromDynamoDBType(type));
+        });
+
+        tableModel.setTotalCount(describeTable.getTable().getItemCount());
+    }
+
+    private void bindToModel(Pair<List<Item>, Page<Item, ?>> pair) {
+        Map<String, Type> attributesTypes = new TreeMap<>(Utils.KEYS_FIRST(tableModel.getHashAttribute(), tableModel.getRangeAttribute()));
+        attributesTypes.putAll(defineAttributesTypes(pair.getKey()));
+
+        tableModel.getAttributeTypesMap().putAll(attributesTypes);
+        tableModel.setCurrentPage(pair.getValue());
+        tableModel.getRows().addAll(pair.getKey());
     }
 
 }

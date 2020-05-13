@@ -5,6 +5,7 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ListChangeListener;
+import javafx.collections.MapChangeListener;
 import javafx.scene.control.*;
 import javafx.scene.control.skin.TableViewSkin;
 import javafx.scene.image.Image;
@@ -19,18 +20,13 @@ import org.controlsfx.control.textfield.TextFields;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import ua.org.java.dynamoit.components.jsoneditor.JsonEditor;
 import ua.org.java.dynamoit.utils.DX;
+import ua.org.java.dynamoit.utils.Utils;
 
 import java.io.File;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
-import static ua.org.java.dynamoit.utils.Utils.KEYS_FIRST;
-import static ua.org.java.dynamoit.utils.Utils.asStream;
 
 public class TableGridView extends VBox {
 
@@ -128,10 +124,15 @@ public class TableGridView extends VBox {
     }
 
     private void addModelListeners() {
+        tableModel.getAttributeTypesMap().addListener((MapChangeListener<String, Attributes.Type>) c -> {
+            if (c.wasAdded()) {
+                buildTableHeaders();
+            }
+        });
+
         tableModel.getRows().addListener((ListChangeListener<Item>) c -> {
             while (c.next()) {
                 if (c.wasAdded()) {
-                    buildTableHeaders();
                     tableView.scrollTo(c.getFrom());
                 }
             }
@@ -140,44 +141,43 @@ public class TableGridView extends VBox {
 
     private void buildTableHeaders() {
         List<String> availableAttributes = tableView.getColumns().stream()
-                .map(TableColumnBase::getColumns)
-                .filter(Objects::nonNull)
-                .flatMap(Collection::stream)
                 .map(TableColumnBase::getId)
                 .collect(Collectors.toList());
 
-        tableModel.getRows().stream()
-                .flatMap(item -> asStream(item.attributes()).map(Map.Entry::getKey))
-                .distinct()
-                .sorted(KEYS_FIRST.apply(tableModel.getHashAttribute(), tableModel.getRangeAttribute()))
+        tableModel.getAttributeTypesMap().keySet().stream()
                 .filter(attrName -> !availableAttributes.contains(attrName))
-                .map(attrName -> {
-                    SimpleStringProperty filterProperty = tableModel.getAttributeFilterMap().computeIfAbsent(attrName, s -> new SimpleStringProperty());
+                .map(Utils::log)
+                .map(this::buildTableColumn)
+                .forEach(tableView.getColumns()::add);
 
-                    return DX.create((Supplier<TableColumn<Item, String>>) TableColumn::new, filter -> {
-                        filter.setGraphic(DX.create(TextFields::createClearableTextField, textField -> {
-                            textField.textProperty().bindBidirectional(filterProperty);
-                            textField.setOnAction(event -> controller.onRefreshData());
-                        }));
-                        filter.getColumns().add(DX.create((Supplier<TableColumn<Item, String>>) TableColumn::new, column -> {
-                            if (attrName.equals(tableModel.getHashAttribute())) {
-                                column.setGraphic(DX.icon("icons/key.png"));
-                            }
-                            if (attrName.equals(tableModel.getRangeAttribute())) {
-                                column.setGraphic(DX.icon("icons/sort_columns.png"));
-                            }
-                            column.setText(attrName);
-                            column.setId(attrName);
-                            column.setPrefWidth(200);
-                            column.setCellValueFactory(param -> {
-                                Object value = param.getValue().get(attrName);
-                                return new SimpleStringProperty(value != null ? value.toString() : "");
-                            });
-                            buildCellContextMenu(column);
-                        }));
-                    });
-                })
-                .forEach(tableColumn -> tableView.getColumns().add(tableColumn));
+    }
+
+    private TableColumn<Item, String> buildTableColumn(String attrName) {
+        SimpleStringProperty filterProperty = tableModel.getAttributeFilterMap().computeIfAbsent(attrName, s -> new SimpleStringProperty());
+
+        return DX.create(TableColumn::new, filter -> {
+            filter.setId(attrName);
+            filter.setGraphic(DX.create(TextFields::createClearableTextField, textField -> {
+                textField.textProperty().bindBidirectional(filterProperty);
+                textField.setOnAction(event -> controller.onRefreshData());
+            }));
+            filter.getColumns().add(DX.create((Supplier<TableColumn<Item, String>>) TableColumn::new, column -> {
+                if (attrName.equals(tableModel.getHashAttribute())) {
+                    column.setGraphic(DX.icon("icons/key.png"));
+                }
+                if (attrName.equals(tableModel.getRangeAttribute())) {
+                    column.setGraphic(DX.icon("icons/sort_columns.png"));
+                }
+                column.setText(attrName);
+                column.setId(attrName);
+                column.setPrefWidth(200);
+                column.setCellValueFactory(param -> {
+                    Object value = param.getValue().get(attrName);
+                    return new SimpleStringProperty(value != null ? value.toString() : "");
+                });
+                buildCellContextMenu(column);
+            }));
+        });
     }
 
     private void buildCellContextMenu(TableColumn<Item, String> column) {

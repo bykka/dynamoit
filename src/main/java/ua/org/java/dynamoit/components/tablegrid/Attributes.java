@@ -43,6 +43,14 @@ public final class Attributes {
                 .collect(Collectors.toMap(Pair::getKey, Pair::getValue, (attributeType, attributeType2) -> attributeType));
     }
 
+    public static Type fromDynamoDBType(String dynamoDBType) {
+        switch (dynamoDBType) {
+            case "N": return Type.NUMBER;
+            case "BOOL": return Type.BOOLEAN;
+        }
+        return Attributes.Type.STRING;
+    }
+
     public static <T extends Filter<T>> T attributeValueToFilter(String attribute, String value, Type type, Function<String, T> filterProvider) {
         T filter = filterProvider.apply(attribute);
 
