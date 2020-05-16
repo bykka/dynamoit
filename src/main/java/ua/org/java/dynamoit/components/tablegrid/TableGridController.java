@@ -67,6 +67,7 @@ public class TableGridController {
                 CompletableFuture
                         .supplyAsync(() -> dbClient.describeTable(context.getTableName()))
                         .thenAcceptAsync(this::bindToModel, uiExecutor)
+                        .thenAccept(__ -> tableModel.getAttributeFilterMap().get(tableModel.getHashAttribute()).set(context.getPropertyValue()))
                         .thenCompose(__ -> queryPageItems())
                         .thenAcceptAsync(this::bindToModel, uiExecutor)
         );

@@ -20,7 +20,6 @@ import org.controlsfx.control.textfield.TextFields;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import ua.org.java.dynamoit.components.jsoneditor.JsonEditor;
 import ua.org.java.dynamoit.utils.DX;
-import ua.org.java.dynamoit.utils.Utils;
 
 import java.io.File;
 import java.util.List;
@@ -146,7 +145,6 @@ public class TableGridView extends VBox {
 
         tableModel.getAttributeTypesMap().keySet().stream()
                 .filter(attrName -> !availableAttributes.contains(attrName))
-                .map(Utils::log)
                 .map(this::buildTableColumn)
                 .forEach(tableView.getColumns()::add);
 
