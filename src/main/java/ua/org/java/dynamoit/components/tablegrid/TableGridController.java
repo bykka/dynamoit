@@ -109,9 +109,9 @@ public class TableGridController {
         );
     }
 
-    public void onDeleteItem(Item item) {
+    public void onDeleteItems(List<Item> items) {
         eventBus.activity(
-                delete(item).thenRun(this::onRefreshData)
+                delete(items).thenRun(this::onRefreshData)
         );
     }
 
@@ -226,20 +226,20 @@ public class TableGridController {
         });
     }
 
-    private CompletableFuture<Void> delete(Item item) {
-        return CompletableFuture.runAsync(() -> {
+    private CompletableFuture<Void> delete(List<Item> items) {
+        return CompletableFuture.runAsync(() -> items.forEach(item -> {
             if (tableModel.getRangeAttribute() == null) {
                 table.deleteItem(tableModel.getHashAttribute(), item.get(tableModel.getHashAttribute()));
             } else {
                 table.deleteItem(tableModel.getHashAttribute(), item.get(tableModel.getHashAttribute()), tableModel.getRangeAttribute(), item.get(tableModel.getRangeAttribute()));
             }
-        });
+        }));
     }
 
     /**
      * sort attributes before bindings
      */
-    private void bindToModel(DescribeTableResult describeTable){
+    private void bindToModel(DescribeTableResult describeTable) {
         Utils.getHashKey(describeTable).ifPresent(tableModel::setHashAttribute);
         Utils.getRangeKey(describeTable).ifPresent(tableModel::setRangeAttribute);
 

@@ -23,6 +23,7 @@ import ua.org.java.dynamoit.utils.DX;
 
 import java.io.File;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -52,13 +53,13 @@ public class TableGridView extends VBox {
                                 DX.create(Button::new, button -> {
                                     button.setTooltip(new Tooltip("Create a new item"));
                                     button.setGraphic(DX.icon("icons/table_row_insert.png"));
-                                    button.setOnAction(event -> showItemDialog("Create a new item", "New document in JSON format", "", controller::onCreateItem));
+                                    button.setOnAction(event -> showItemDialog("Create a new item", "", controller::onCreateItem));
                                 }),
                                 DX.create(Button::new, button -> {
                                     deleteSelectedButton = button;
                                     button.setTooltip(new Tooltip("Delete selected rows"));
                                     button.setGraphic(DX.icon("icons/table_row_delete.png"));
-                                    button.setOnAction(event -> deleteSelectedItem());
+                                    button.setOnAction(event -> deleteSelectedItems());
                                 }),
                                 DX.create(Button::new, button -> {
                                     button.setTooltip(new Tooltip("Clear filter"));
@@ -99,18 +100,19 @@ public class TableGridView extends VBox {
                             tableView.getColumns().add(DX.create((Supplier<TableColumn<Item, Number>>) TableColumn::new, column -> {
                                 column.setPrefWidth(35);
                                 column.setResizable(false);
-                                column.setStyle( "-fx-alignment: CENTER-RIGHT;");
+                                column.setStyle("-fx-alignment: CENTER-RIGHT;");
                                 column.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(tableModel.getRows().indexOf(param.getValue()) + 1));
                             }));
 
                             VBox.setVgrow(tableView, Priority.ALWAYS);
+                            tableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
                             tableView.setItems(tableModel.getRows());
                             tableView.setSkin(new MyTableViewSkin<>(tableView));
                             tableView.setRowFactory(param -> {
                                 TableRow<Item> tableRow = new TableRow<>();
                                 tableRow.setOnMouseClicked(event -> {
                                     if (event.getClickCount() == 2 && tableRow.getItem() != null) {
-                                        showItemDialog("Edit the item", "Document in JSON format", tableRow.getItem().toJSONPretty(), controller::onUpdateItem);
+                                        showItemDialog("Edit the item", tableRow.getItem().toJSONPretty(), controller::onUpdateItem);
                                     }
                                 });
                                 return tableRow;
@@ -266,9 +268,8 @@ public class TableGridView extends VBox {
         controller.onClearFilters();
     }
 
-    private void showItemDialog(String title, String promptText, String json, Consumer<String> onSaveConsumer) {
+    private void showItemDialog(String title, String json, Consumer<String> onSaveConsumer) {
         JsonEditor textArea = new JsonEditor(json);
-//        textArea.setPromptText(promptText);
         textArea.setPrefWidth(800);
         textArea.setPrefHeight(800);
         Dialog<String> dialog = new Dialog<>();
@@ -288,9 +289,15 @@ public class TableGridView extends VBox {
         dialog.showAndWait().ifPresent(onSaveConsumer);
     }
 
-    private void deleteSelectedItem() {
-        Item item = tableView.getSelectionModel().getSelectedItem();
-        controller.onDeleteItem(item);
+    private void deleteSelectedItems() {
+        List<Item> items = tableView.getSelectionModel().getSelectedItems();
+        Alert deleteConfirmation = new Alert(Alert.AlertType.CONFIRMATION, "Do you really want to delete " + items.size() + " item(s)?");
+        Optional<ButtonType> pressedButton = deleteConfirmation.showAndWait();
+        pressedButton.ifPresent(buttonType -> {
+            if (buttonType == ButtonType.OK) {
+                controller.onDeleteItems(items);
+            }
+        });
     }
 
     private class MyTableViewSkin<T> extends TableViewSkin<T> {
