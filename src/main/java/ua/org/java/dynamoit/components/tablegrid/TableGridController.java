@@ -67,7 +67,7 @@ public class TableGridController {
         eventBus.activity(
                 supplyAsync(() -> dbClient.describeTable(context.getTableName()))
                         .thenAcceptAsync(this::bindToModel, uiExecutor)
-                        .thenAccept(__ -> tableModel.getAttributeFilterMap().get(tableModel.getHashAttribute()).set(context.getPropertyValue()))
+                        .thenAccept(__ -> tableModel.getAttributeFilterMap().get(hash()).set(context.getPropertyValue()))
                         .thenCompose(__ -> queryPageItems())
                         .thenAcceptAsync(this::bindToModel, uiExecutor)
         );
@@ -175,7 +175,7 @@ public class TableGridController {
     }
 
     private CompletableFuture<? extends ItemCollection<?>> executeQueryOrSearch() {
-        SimpleStringProperty hashValueProperty = tableModel.getAttributeFilterMap().get(tableModel.getHashAttribute());
+        SimpleStringProperty hashValueProperty = tableModel.getAttributeFilterMap().get(hash());
         if (hashValueProperty != null && !StringUtils.isNullOrEmpty(hashValueProperty.get()) && !hashValueProperty.get().contains(ASTERISK)) {
             return queryItems(tableModel.getAttributeFilterMap());
         }
@@ -207,12 +207,12 @@ public class TableGridController {
     private CompletableFuture<ItemCollection<QueryOutcome>> queryItems(Map<String, SimpleStringProperty> attributeFilterMap) {
         return supplyAsync(() -> {
             QuerySpec querySpec = new QuerySpec();
-            querySpec.withHashKey(tableModel.getHashAttribute(), attributeFilterMap.get(tableModel.getHashAttribute()).get());
-            if (tableModel.getRangeAttribute() != null && !StringUtils.isNullOrEmpty(attributeFilterMap.get(tableModel.getRangeAttribute()).get())) {
-                querySpec.withRangeKeyCondition(new RangeKeyCondition(tableModel.getRangeAttribute()).eq(attributeFilterMap.get(tableModel.getRangeAttribute()).get()));
+            querySpec.withHashKey(hash(), attributeFilterMap.get(hash()).get());
+            if (range() != null && !StringUtils.isNullOrEmpty(attributeFilterMap.get(range()).get())) {
+                querySpec.withRangeKeyCondition(new RangeKeyCondition(range()).eq(attributeFilterMap.get(range()).get()));
             }
             List<QueryFilter> filters = attributeFilterMap.entrySet().stream()
-                    .filter(entry -> !entry.getKey().equals(tableModel.getHashAttribute()) && !entry.getKey().equals(tableModel.getRangeAttribute()))
+                    .filter(entry -> !entry.getKey().equals(hash()) && !entry.getKey().equals(range()))
                     .filter(entry -> !StringUtils.isNullOrEmpty(entry.getValue().get()))
                     .map(entry -> attributeValueToFilter(entry.getKey(), entry.getValue().get(), tableModel.getAttributeTypesMap().get(entry.getKey()), QueryFilter::new))
                     .collect(Collectors.toList());
@@ -225,10 +225,10 @@ public class TableGridController {
 
     private CompletableFuture<Void> delete(List<Item> items) {
         return runAsync(() -> items.forEach(item -> {
-            if (tableModel.getRangeAttribute() == null) {
-                table.deleteItem(tableModel.getHashAttribute(), item.get(tableModel.getHashAttribute()));
+            if (range() == null) {
+                table.deleteItem(hash(), item.get(hash()));
             } else {
-                table.deleteItem(tableModel.getHashAttribute(), item.get(tableModel.getHashAttribute()), tableModel.getRangeAttribute(), item.get(tableModel.getRangeAttribute()));
+                table.deleteItem(hash(), item.get(hash()), range(), item.get(range()));
             }
         }));
     }
@@ -240,7 +240,7 @@ public class TableGridController {
         getHashKey(describeTable).ifPresent(tableModel::setHashAttribute);
         getRangeKey(describeTable).ifPresent(tableModel::setRangeAttribute);
 
-        Map<String, String> attributes = new TreeMap<>(KEYS_FIRST(tableModel.getHashAttribute(), tableModel.getRangeAttribute()));
+        Map<String, String> attributes = new TreeMap<>(KEYS_FIRST(hash(), range()));
         attributes.putAll(
                 describeTable.getTable().getAttributeDefinitions().stream()
                         .collect(Collectors.toMap(
@@ -257,12 +257,20 @@ public class TableGridController {
     }
 
     private void bindToModel(Pair<List<Item>, Page<Item, ?>> pair) {
-        Map<String, Type> attributesTypes = new TreeMap<>(KEYS_FIRST(tableModel.getHashAttribute(), tableModel.getRangeAttribute()));
+        Map<String, Type> attributesTypes = new TreeMap<>(KEYS_FIRST(hash(), range()));
         attributesTypes.putAll(defineAttributesTypes(pair.getKey()));
 
         tableModel.getAttributeTypesMap().putAll(attributesTypes);
         tableModel.setCurrentPage(pair.getValue());
         tableModel.getRows().addAll(pair.getKey());
+    }
+
+    private String hash() {
+        return tableModel.getHashAttribute();
+    }
+
+    private String range() {
+        return tableModel.getRangeAttribute();
     }
 
 }
