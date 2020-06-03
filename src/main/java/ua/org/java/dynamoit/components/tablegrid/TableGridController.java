@@ -15,7 +15,6 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.util.Pair;
 import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.db.DynamoDBService;
-import ua.org.java.dynamoit.utils.Utils;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -27,8 +26,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
+import static java.util.concurrent.CompletableFuture.runAsync;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static ua.org.java.dynamoit.components.tablegrid.Attributes.*;
-import static ua.org.java.dynamoit.utils.Utils.asStream;
+import static ua.org.java.dynamoit.utils.Utils.*;
 
 public class TableGridController {
 
@@ -64,8 +65,7 @@ public class TableGridController {
 
     public void init() {
         eventBus.activity(
-                CompletableFuture
-                        .supplyAsync(() -> dbClient.describeTable(context.getTableName()))
+                supplyAsync(() -> dbClient.describeTable(context.getTableName()))
                         .thenAcceptAsync(this::bindToModel, uiExecutor)
                         .thenAccept(__ -> tableModel.getAttributeFilterMap().get(tableModel.getHashAttribute()).set(context.getPropertyValue()))
                         .thenCompose(__ -> queryPageItems())
@@ -76,8 +76,7 @@ public class TableGridController {
     public void onReachScrollEnd() {
         if (tableModel.getCurrentPage().hasNextPage()) {
             eventBus.activity(
-                    CompletableFuture
-                            .supplyAsync(() -> tableModel.getCurrentPage().nextPage())
+                    supplyAsync(() -> tableModel.getCurrentPage().nextPage())
                             .thenApply(TableGridController::iteratePage)
                             .thenAcceptAsync(pair -> {
                                 tableModel.getAttributeTypesMap().putAll(defineAttributesTypes(pair.getKey()));
@@ -90,10 +89,8 @@ public class TableGridController {
 
     public CompletableFuture<Void> onRefreshData() {
         return eventBus.activity(
-                CompletableFuture.runAsync(() -> tableModel.getRows().clear(), uiExecutor)
-                        .thenComposeAsync(aVoid ->
-                                queryPageItems().thenAcceptAsync(this::bindToModel, uiExecutor)
-                        )
+                runAsync(() -> tableModel.getRows().clear(), uiExecutor)
+                        .thenComposeAsync(aVoid -> queryPageItems().thenAcceptAsync(this::bindToModel, uiExecutor))
         );
     }
 
@@ -128,7 +125,7 @@ public class TableGridController {
                         writer = Files.newBufferedWriter(file.toPath(), StandardCharsets.UTF_8);
                         JsonGenerator generator = new JsonFactory(new ObjectMapper()).createGenerator(writer);
                         generator.writeStartArray();
-                        Utils.asStream(items).forEach(o -> {
+                        asStream(items).forEach(o -> {
                             try {
                                 generator.writeRawValue(o.toJSON());
                             } catch (IOException e) {
@@ -186,15 +183,15 @@ public class TableGridController {
     }
 
     private CompletableFuture<Void> createItem(String json) {
-        return CompletableFuture.runAsync(() -> table.putItem(Item.fromJSON(json)));
+        return runAsync(() -> table.putItem(Item.fromJSON(json)));
     }
 
     private CompletableFuture<Void> updateItem(String json) {
-        return CompletableFuture.runAsync(() -> table.putItem(Item.fromJSON(json)));
+        return runAsync(() -> table.putItem(Item.fromJSON(json)));
     }
 
     private CompletableFuture<ItemCollection<ScanOutcome>> scanItems(Map<String, SimpleStringProperty> attributeFilterMap) {
-        return CompletableFuture.supplyAsync(() -> {
+        return supplyAsync(() -> {
             ScanSpec scanSpec = new ScanSpec();
             List<ScanFilter> filters = attributeFilterMap.entrySet().stream()
                     .filter(entry -> Objects.nonNull(entry.getValue().get()) && entry.getValue().get().trim().length() > 0)
@@ -208,7 +205,7 @@ public class TableGridController {
     }
 
     private CompletableFuture<ItemCollection<QueryOutcome>> queryItems(Map<String, SimpleStringProperty> attributeFilterMap) {
-        return CompletableFuture.supplyAsync(() -> {
+        return supplyAsync(() -> {
             QuerySpec querySpec = new QuerySpec();
             querySpec.withHashKey(tableModel.getHashAttribute(), attributeFilterMap.get(tableModel.getHashAttribute()).get());
             if (tableModel.getRangeAttribute() != null && !StringUtils.isNullOrEmpty(attributeFilterMap.get(tableModel.getRangeAttribute()).get())) {
@@ -227,7 +224,7 @@ public class TableGridController {
     }
 
     private CompletableFuture<Void> delete(Item item) {
-        return CompletableFuture.runAsync(() -> {
+        return runAsync(() -> {
             if (tableModel.getRangeAttribute() == null) {
                 table.deleteItem(tableModel.getHashAttribute(), item.get(tableModel.getHashAttribute()));
             } else {
@@ -239,11 +236,11 @@ public class TableGridController {
     /**
      * sort attributes before bindings
      */
-    private void bindToModel(DescribeTableResult describeTable){
-        Utils.getHashKey(describeTable).ifPresent(tableModel::setHashAttribute);
-        Utils.getRangeKey(describeTable).ifPresent(tableModel::setRangeAttribute);
+    private void bindToModel(DescribeTableResult describeTable) {
+        getHashKey(describeTable).ifPresent(tableModel::setHashAttribute);
+        getRangeKey(describeTable).ifPresent(tableModel::setRangeAttribute);
 
-        Map<String, String> attributes = new TreeMap<>(Utils.KEYS_FIRST(tableModel.getHashAttribute(), tableModel.getRangeAttribute()));
+        Map<String, String> attributes = new TreeMap<>(KEYS_FIRST(tableModel.getHashAttribute(), tableModel.getRangeAttribute()));
         attributes.putAll(
                 describeTable.getTable().getAttributeDefinitions().stream()
                         .collect(Collectors.toMap(
@@ -260,7 +257,7 @@ public class TableGridController {
     }
 
     private void bindToModel(Pair<List<Item>, Page<Item, ?>> pair) {
-        Map<String, Type> attributesTypes = new TreeMap<>(Utils.KEYS_FIRST(tableModel.getHashAttribute(), tableModel.getRangeAttribute()));
+        Map<String, Type> attributesTypes = new TreeMap<>(KEYS_FIRST(tableModel.getHashAttribute(), tableModel.getRangeAttribute()));
         attributesTypes.putAll(defineAttributesTypes(pair.getKey()));
 
         tableModel.getAttributeTypesMap().putAll(attributesTypes);
