@@ -220,12 +220,12 @@ public class TableGridView extends VBox {
                                             allTablesMenuItem.textProperty().bind(Bindings.concat("All tables"));
                                             allTablesMenuItem.setGraphic(DX.icon("icons/database.png"));
                                             allTablesMenuItem.getItems().addAll(
-                                                    tableModel.getMainModel().getAvailableTables().stream().map(tableName ->
+                                                    tableModel.getMainModel().getAvailableTables().stream().map(tableDef ->
                                                             DX.create(MenuItem::new, menuItem -> {
-                                                                menuItem.setText(tableName);
+                                                                menuItem.setText(tableDef.getName());
                                                                 menuItem.setOnAction(__ -> {
                                                                     if (onSearchInTable != null) {
-                                                                        onSearchInTable.accept(new TableGridContext(tableModel.getMainModel().getSelectedProfile(), tableName, column.getId(), cell.getText()));
+                                                                        onSearchInTable.accept(new TableGridContext(tableModel.getMainModel().getSelectedProfile(), tableDef.getName(), column.getId(), cell.getText()));
                                                                     }
                                                                 });
                                                             })
@@ -240,13 +240,13 @@ public class TableGridView extends VBox {
                                                     filterMenuItem.setGraphic(DX.icon("icons/folder_star.png"));
                                                     filterMenuItem.getItems().addAll(
                                                             tableModel.getMainModel().getAvailableTables().stream()
-                                                                    .filter(tableName -> tableName.contains(filter))
-                                                                    .map(tableName ->
+                                                                    .filter(tableDef -> tableDef.getName().contains(filter))
+                                                                    .map(tableDef ->
                                                                             DX.create(MenuItem::new, menuItem -> {
-                                                                                menuItem.setText(tableName);
+                                                                                menuItem.setText(tableDef.getName());
                                                                                 menuItem.setOnAction(__ -> {
                                                                                     if (onSearchInTable != null) {
-                                                                                        onSearchInTable.accept(new TableGridContext(tableModel.getMainModel().getSelectedProfile(), tableName, column.getId(), cell.getText()));
+                                                                                        onSearchInTable.accept(new TableGridContext(tableModel.getMainModel().getSelectedProfile(), tableDef.getName(), column.getId(), cell.getText()));
                                                                                     }
                                                                                 });
                                                                             })

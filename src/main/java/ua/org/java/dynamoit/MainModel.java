@@ -9,18 +9,18 @@ import java.util.Objects;
 
 public class MainModel {
 
-    private ObservableList<String> availableTables = FXCollections.observableArrayList();
+    private ObservableList<TableDef> availableTables = FXCollections.observableArrayList();
     private SimpleStringProperty filter = new SimpleStringProperty("");
-    private FilteredList<String> filteredTables = availableTables.filtered(Objects::nonNull);
+    private FilteredList<TableDef> filteredTables = availableTables.filtered(Objects::nonNull);
     private ObservableList<String> savedFilters = FXCollections.observableArrayList();
     private SimpleStringProperty selectedProfile = new SimpleStringProperty();
     private ObservableList<String> availableProfiles = FXCollections.observableArrayList();
 
     public MainModel() {
-        filter.addListener((observable, oldValue, newValue) -> filteredTables.setPredicate(value -> value.contains(filter.get())));
+        filter.addListener((observable, oldValue, newValue) -> filteredTables.setPredicate(value -> value.getName().contains(filter.get())));
     }
 
-    public ObservableList<String> getAvailableTables() {
+    public ObservableList<TableDef> getAvailableTables() {
         return availableTables;
     }
 
@@ -32,7 +32,7 @@ public class MainModel {
         return filter;
     }
 
-    public FilteredList<String> getFilteredTables(){
+    public FilteredList<TableDef> getFilteredTables(){
          return this.filteredTables;
     }
 
@@ -54,5 +54,18 @@ public class MainModel {
 
     public void setAvailableProfiles(ObservableList<String> availableProfiles) {
         this.availableProfiles = availableProfiles;
+    }
+
+    public static class TableDef {
+
+        private String name;
+
+        public TableDef(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
     }
 }

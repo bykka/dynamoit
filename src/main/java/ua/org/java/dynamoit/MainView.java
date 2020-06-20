@@ -99,8 +99,8 @@ public class MainView extends VBox {
                 )
         );
 
-        mainModel.getFilteredTables().addListener((ListChangeListener<String>) c -> {
-            allTables.getChildren().setAll(mainModel.getFilteredTables().stream().map(TableTreeItem::new).collect(Collectors.toList()));
+        mainModel.getFilteredTables().addListener((ListChangeListener<MainModel.TableDef>) c -> {
+            allTables.getChildren().setAll(mainModel.getFilteredTables().stream().map(MainModel.TableDef::getName).map(TableTreeItem::new).collect(Collectors.toList()));
             allTables.setExpanded(true);
         });
 
@@ -109,7 +109,8 @@ public class MainView extends VBox {
                     FilterTreeItem filterTables = new FilterTreeItem(filter);
                     filterTables.getChildren().addAll(mainModel.getAvailableTables()
                             .stream()
-                            .filter(tableName -> tableName.contains(filter))
+                            .filter(tableDef -> tableDef.getName().contains(filter))
+                            .map(MainModel.TableDef::getName)
                             .map(TableTreeItem::new)
                             .collect(Collectors.toList()));
                     filterTables.setExpanded(true);
