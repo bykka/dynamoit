@@ -70,9 +70,16 @@ public class TableGridController {
 
     public void init() {
         eventBus.activity(
-                supplyAsync(() -> dbClient.describeTable(context.getTableName()))
-                        .thenAcceptAsync(this::bindToModel, uiExecutor)
-                        .thenAccept(__ -> tableModel.getAttributeFilterMap().get(hash()).set(context.getPropertyValue()))
+                supplyAsync(() -> {
+                    if (tableModel.getTableDef().getHashAttribute() == null) {
+                        return supplyAsync(() -> dbClient.describeTable(context.getTableName()))
+                                .thenAcceptAsync(this::bindToModel, uiExecutor);
+                    } else {
+                        return CompletableFuture.completedFuture(Boolean.TRUE);
+                    }
+                })
+                        .thenCompose(__ -> __)
+                        .thenRun(this::applyContext)
                         .thenCompose(__ -> queryPageItems())
                         .thenAcceptAsync(this::bindToModel, uiExecutor)
         );
@@ -84,7 +91,7 @@ public class TableGridController {
                     supplyAsync(() -> tableModel.getCurrentPage().nextPage())
                             .thenApply(TableGridController::iteratePage)
                             .thenAcceptAsync(pair -> {
-                                tableModel.getAttributeTypesMap().putAll(defineAttributesTypes(pair.getKey()));
+                                tableModel.getTableDef().getAttributeTypesMap().putAll(defineAttributesTypes(pair.getKey()));
                                 tableModel.setCurrentPage(pair.getValue());
                                 tableModel.getRows().addAll(pair.getKey());
                             }, uiExecutor)
@@ -200,7 +207,7 @@ public class TableGridController {
             ScanSpec scanSpec = new ScanSpec();
             List<ScanFilter> filters = attributeFilterMap.entrySet().stream()
                     .filter(entry -> Objects.nonNull(entry.getValue().get()) && entry.getValue().get().trim().length() > 0)
-                    .map(entry -> attributeValueToFilter(entry.getKey(), entry.getValue().get(), tableModel.getAttributeTypesMap().get(entry.getKey()), ScanFilter::new))
+                    .map(entry -> attributeValueToFilter(entry.getKey(), entry.getValue().get(), tableModel.getTableDef().getAttributeTypesMap().get(entry.getKey()), ScanFilter::new))
                     .collect(Collectors.toList());
             if (!filters.isEmpty()) {
                 scanSpec.withScanFilters(filters.toArray(new ScanFilter[]{}));
@@ -219,7 +226,7 @@ public class TableGridController {
             List<QueryFilter> filters = attributeFilterMap.entrySet().stream()
                     .filter(entry -> !entry.getKey().equals(hash()) && !entry.getKey().equals(range()))
                     .filter(entry -> !StringUtils.isNullOrEmpty(entry.getValue().get()))
-                    .map(entry -> attributeValueToFilter(entry.getKey(), entry.getValue().get(), tableModel.getAttributeTypesMap().get(entry.getKey()), QueryFilter::new))
+                    .map(entry -> attributeValueToFilter(entry.getKey(), entry.getValue().get(), tableModel.getTableDef().getAttributeTypesMap().get(entry.getKey()), QueryFilter::new))
                     .collect(Collectors.toList());
             if (!filters.isEmpty()) {
                 querySpec.withQueryFilters(filters.toArray(new QueryFilter[]{}));
@@ -242,8 +249,8 @@ public class TableGridController {
      * sort attributes before bindings
      */
     private void bindToModel(DescribeTableResult describeTable) {
-        getHashKey(describeTable).ifPresent(tableModel::setHashAttribute);
-        getRangeKey(describeTable).ifPresent(tableModel::setRangeAttribute);
+        getHashKey(describeTable).ifPresent(tableModel.getTableDef()::setHashAttribute);
+        getRangeKey(describeTable).ifPresent(tableModel.getTableDef()::setRangeAttribute);
 
         Map<String, String> attributes = new TreeMap<>(KEYS_FIRST(hash(), range()));
         attributes.putAll(
@@ -254,8 +261,7 @@ public class TableGridController {
         );
 
         attributes.forEach((name, type) -> {
-            tableModel.getAttributeFilterMap().put(name, new SimpleStringProperty());
-            tableModel.getAttributeTypesMap().put(name, fromDynamoDBType(type));
+            tableModel.getTableDef().getAttributeTypesMap().put(name, fromDynamoDBType(type));
         });
 
         tableModel.setTotalCount(describeTable.getTable().getItemCount());
@@ -265,17 +271,21 @@ public class TableGridController {
         Map<String, Type> attributesTypes = new TreeMap<>(KEYS_FIRST(hash(), range()));
         attributesTypes.putAll(defineAttributesTypes(pair.getKey()));
 
-        tableModel.getAttributeTypesMap().putAll(attributesTypes);
+        tableModel.getTableDef().getAttributeTypesMap().putAll(attributesTypes);
         tableModel.setCurrentPage(pair.getValue());
         tableModel.getRows().addAll(pair.getKey());
     }
 
+    private void applyContext() {
+        tableModel.getAttributeFilterMap().computeIfAbsent(hash(), __ -> new SimpleStringProperty()).set(context.getPropertyValue());
+    }
+
     private String hash() {
-        return tableModel.getHashAttribute();
+        return tableModel.getTableDef().getHashAttribute();
     }
 
     private String range() {
-        return tableModel.getRangeAttribute();
+        return tableModel.getTableDef().getRangeAttribute();
     }
 
 }

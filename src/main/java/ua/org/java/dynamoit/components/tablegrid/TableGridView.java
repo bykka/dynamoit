@@ -5,7 +5,7 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ListChangeListener;
-import javafx.collections.MapChangeListener;
+import javafx.collections.WeakMapChangeListener;
 import javafx.scene.control.*;
 import javafx.scene.control.skin.TableViewSkin;
 import javafx.scene.image.Image;
@@ -44,6 +44,8 @@ public class TableGridView extends VBox {
 
         buildUI();
         addModelListeners();
+
+        buildTableHeaders();
     }
 
     private void buildUI() {
@@ -125,11 +127,11 @@ public class TableGridView extends VBox {
     }
 
     private void addModelListeners() {
-        tableModel.getAttributeTypesMap().addListener((MapChangeListener<String, Attributes.Type>) c -> {
+        tableModel.getTableDef().getAttributeTypesMap().addListener(new WeakMapChangeListener<>(c -> {
             if (c.wasAdded()) {
                 buildTableHeaders();
             }
-        });
+        }));
 
         tableModel.getRows().addListener((ListChangeListener<Item>) c -> {
             while (c.next()) {
@@ -145,7 +147,7 @@ public class TableGridView extends VBox {
                 .map(TableColumnBase::getId)
                 .collect(Collectors.toList());
 
-        tableModel.getAttributeTypesMap().keySet().stream()
+        tableModel.getTableDef().getAttributeTypesMap().keySet().stream()
                 .filter(attrName -> !availableAttributes.contains(attrName))
                 .map(this::buildTableColumn)
                 .forEach(tableView.getColumns()::add);
@@ -162,10 +164,10 @@ public class TableGridView extends VBox {
                 textField.setOnAction(event -> controller.onRefreshData());
             }));
             filter.getColumns().add(DX.create((Supplier<TableColumn<Item, String>>) TableColumn::new, column -> {
-                if (attrName.equals(tableModel.getHashAttribute())) {
+                if (attrName.equals(tableModel.getTableDef().getHashAttribute())) {
                     column.setGraphic(DX.icon("icons/key.png"));
                 }
-                if (attrName.equals(tableModel.getRangeAttribute())) {
+                if (attrName.equals(tableModel.getTableDef().getRangeAttribute())) {
                     column.setGraphic(DX.icon("icons/sort_columns.png"));
                 }
                 column.setText(attrName);

@@ -8,12 +8,10 @@ import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.ObservableMap;
 import ua.org.java.dynamoit.MainModel;
 import ua.org.java.dynamoit.model.TableDef;
 
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class TableGridModel {
@@ -22,9 +20,6 @@ public class TableGridModel {
 
     private TableDef tableDef;
     private String tableName;
-    private final SimpleStringProperty hashAttribute = new SimpleStringProperty();
-    private final SimpleStringProperty rangeAttribute = new SimpleStringProperty();
-    private final ObservableMap<String, Attributes.Type> attributeTypesMap = FXCollections.observableMap(new LinkedHashMap<>());
     private final SimpleLongProperty totalCount = new SimpleLongProperty();
 
     private final ObservableList<Item> rows = FXCollections.observableArrayList();
@@ -93,31 +88,4 @@ public class TableGridModel {
         this.currentPage = currentPage;
     }
 
-    public String getHashAttribute() {
-        return hashAttribute.get();
-    }
-
-    public SimpleStringProperty hashAttributeProperty() {
-        return hashAttribute;
-    }
-
-    public String getRangeAttribute() {
-        return rangeAttribute.get();
-    }
-
-    public SimpleStringProperty rangeAttributeProperty() {
-        return rangeAttribute;
-    }
-
-    public void setHashAttribute(String hashAttribute) {
-        this.hashAttribute.set(hashAttribute);
-    }
-
-    public void setRangeAttribute(String rangeAttribute) {
-        this.rangeAttribute.set(rangeAttribute);
-    }
-
-    public ObservableMap<String, Attributes.Type> getAttributeTypesMap() {
-        return attributeTypesMap;
-    }
 }
