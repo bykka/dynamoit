@@ -4,6 +4,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import ua.org.java.dynamoit.model.TableDef;
 
 import java.util.Objects;
 
@@ -56,16 +57,4 @@ public class MainModel {
         this.availableProfiles = availableProfiles;
     }
 
-    public static class TableDef {
-
-        private String name;
-
-        public TableDef(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return name;
-        }
-    }
 }

@@ -15,6 +15,7 @@ import ua.org.java.dynamoit.components.activityindicator.ActivityIndicator;
 import ua.org.java.dynamoit.components.tablegrid.TableGridComponent;
 import ua.org.java.dynamoit.components.tablegrid.TableGridContext;
 import ua.org.java.dynamoit.components.tablegrid.TableGridView;
+import ua.org.java.dynamoit.model.TableDef;
 import ua.org.java.dynamoit.utils.DX;
 
 import java.util.List;
@@ -99,8 +100,8 @@ public class MainView extends VBox {
                 )
         );
 
-        mainModel.getFilteredTables().addListener((ListChangeListener<MainModel.TableDef>) c -> {
-            allTables.getChildren().setAll(mainModel.getFilteredTables().stream().map(MainModel.TableDef::getName).map(TableTreeItem::new).collect(Collectors.toList()));
+        mainModel.getFilteredTables().addListener((ListChangeListener<TableDef>) c -> {
+            allTables.getChildren().setAll(mainModel.getFilteredTables().stream().map(TableDef::getName).map(TableTreeItem::new).collect(Collectors.toList()));
             allTables.setExpanded(true);
         });
 
@@ -110,7 +111,7 @@ public class MainView extends VBox {
                     filterTables.getChildren().addAll(mainModel.getAvailableTables()
                             .stream()
                             .filter(tableDef -> tableDef.getName().contains(filter))
-                            .map(MainModel.TableDef::getName)
+                            .map(TableDef::getName)
                             .map(TableTreeItem::new)
                             .collect(Collectors.toList()));
                     filterTables.setExpanded(true);

@@ -10,6 +10,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 import ua.org.java.dynamoit.MainModel;
+import ua.org.java.dynamoit.model.TableDef;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -19,6 +20,7 @@ public class TableGridModel {
 
     private final MainModel mainModel;
 
+    private TableDef tableDef;
     private String tableName;
     private final SimpleStringProperty hashAttribute = new SimpleStringProperty();
     private final SimpleStringProperty rangeAttribute = new SimpleStringProperty();
@@ -37,6 +39,14 @@ public class TableGridModel {
 
     public MainModel getMainModel() {
         return mainModel;
+    }
+
+    public TableDef getTableDef() {
+        return tableDef;
+    }
+
+    public void setTableDef(TableDef tableDef) {
+        this.tableDef = tableDef;
     }
 
     public String getTableName() {

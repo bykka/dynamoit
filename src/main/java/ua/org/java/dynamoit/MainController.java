@@ -5,6 +5,7 @@ import ua.org.java.dynamoit.components.tablegrid.DaggerTableGridComponent;
 import ua.org.java.dynamoit.components.tablegrid.TableGridComponent;
 import ua.org.java.dynamoit.components.tablegrid.TableGridContext;
 import ua.org.java.dynamoit.db.DynamoDBService;
+import ua.org.java.dynamoit.model.TableDef;
 import ua.org.java.dynamoit.utils.FXExecutor;
 
 import java.util.concurrent.CompletableFuture;
@@ -54,7 +55,7 @@ public class MainController {
     private void getListOfTables(String profile) {
         eventBus.activity(
                 this.dynamoDBService.getListOfTables(profile)
-                        .thenApply(tables -> tables.stream().map(MainModel.TableDef::new).collect(Collectors.toList()))
+                        .thenApply(tables -> tables.stream().map(TableDef::new).collect(Collectors.toList()))
                         .thenAcceptAsync(tables -> this.model.getAvailableTables().setAll(tables), FXExecutor.getInstance())
         );
     }
