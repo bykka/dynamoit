@@ -1,5 +1,6 @@
 package ua.org.java.dynamoit.model;
 
+import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
@@ -13,6 +14,7 @@ public class TableDef {
     private final SimpleStringProperty hashAttribute = new SimpleStringProperty();
     private final SimpleStringProperty rangeAttribute = new SimpleStringProperty();
     private final ObservableMap<String, Attributes.Type> attributeTypesMap = FXCollections.observableMap(new LinkedHashMap<>());
+    private final SimpleLongProperty totalCount = new SimpleLongProperty();
 
     public TableDef(String name) {
         this.name = name;
@@ -52,5 +54,17 @@ public class TableDef {
 
     public ObservableMap<String, Attributes.Type> getAttributeTypesMap() {
         return attributeTypesMap;
+    }
+
+    public long getTotalCount() {
+        return totalCount.get();
+    }
+
+    public SimpleLongProperty totalCountProperty() {
+        return totalCount;
+    }
+
+    public void setTotalCount(long totalCount) {
+        this.totalCount.set(totalCount);
     }
 }

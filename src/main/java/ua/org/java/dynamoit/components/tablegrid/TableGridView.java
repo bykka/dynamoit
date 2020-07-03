@@ -94,7 +94,7 @@ public class TableGridView extends VBox {
                                 }),
                                 DX.spacer(),
                                 DX.create(Label::new, t -> {
-                                    t.textProperty().bind(Bindings.concat("Count [", tableModel.rowsSizeProperty(), " of ~", tableModel.totalCountProperty(), "]"));
+                                    t.textProperty().bind(Bindings.concat("Count [", tableModel.rowsSizeProperty(), " of ~", tableModel.getTableDef().totalCountProperty(), "]"));
                                 })
                         )),
                         DX.create((Supplier<javafx.scene.control.TableView<Item>>) javafx.scene.control.TableView::new, tableView -> {

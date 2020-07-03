@@ -262,11 +262,9 @@ public class TableGridController {
                                 AttributeDefinition::getAttributeType))
         );
 
-        attributes.forEach((name, type) -> {
-            tableModel.getTableDef().getAttributeTypesMap().put(name, fromDynamoDBType(type));
-        });
+        attributes.forEach((name, type) -> tableModel.getTableDef().getAttributeTypesMap().put(name, fromDynamoDBType(type)));
 
-        tableModel.setTotalCount(describeTable.getTable().getItemCount());
+        tableModel.getTableDef().setTotalCount(describeTable.getTable().getItemCount());
     }
 
     private void bindToModel(Pair<List<Item>, Page<Item, ?>> pair) {
@@ -279,7 +277,7 @@ public class TableGridController {
     }
 
     private void bindToModel(TableDef tableDef) {
-        tableModel.getTableDef().getAttributeTypesMap().keySet().forEach(attr -> tableModel.getAttributeFilterMap().computeIfAbsent(attr, __ -> new SimpleStringProperty()));
+        tableDef.getAttributeTypesMap().keySet().forEach(attr -> tableModel.getAttributeFilterMap().computeIfAbsent(attr, __ -> new SimpleStringProperty()));
     }
 
     private void applyContext() {

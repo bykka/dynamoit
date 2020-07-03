@@ -4,7 +4,6 @@ import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Page;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.IntegerBinding;
-import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -20,7 +19,6 @@ public class TableGridModel {
 
     private TableDef tableDef;
     private String tableName;
-    private final SimpleLongProperty totalCount = new SimpleLongProperty();
 
     private final ObservableList<Item> rows = FXCollections.observableArrayList();
     private final IntegerBinding rowsSize = Bindings.createIntegerBinding(rows::size, rows);
@@ -62,18 +60,6 @@ public class TableGridModel {
 
     public IntegerBinding rowsSizeProperty() {
         return rowsSize;
-    }
-
-    public Long getTotalCount() {
-        return totalCount.get();
-    }
-
-    public SimpleLongProperty totalCountProperty() {
-        return totalCount;
-    }
-
-    public void setTotalCount(long totalCount) {
-        this.totalCount.set(totalCount);
     }
 
     public Map<String, SimpleStringProperty> getAttributeFilterMap() {
