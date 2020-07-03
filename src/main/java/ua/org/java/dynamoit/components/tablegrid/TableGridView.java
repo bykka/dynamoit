@@ -19,6 +19,7 @@ import javafx.stage.Stage;
 import org.controlsfx.control.textfield.TextFields;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import ua.org.java.dynamoit.components.jsoneditor.JsonEditor;
+import ua.org.java.dynamoit.model.TableDef;
 import ua.org.java.dynamoit.utils.DX;
 
 import java.io.File;
@@ -223,14 +224,7 @@ public class TableGridView extends VBox {
                                             allTablesMenuItem.setGraphic(DX.icon("icons/database.png"));
                                             allTablesMenuItem.getItems().addAll(
                                                     tableModel.getMainModel().getAvailableTables().stream().map(tableDef ->
-                                                            DX.create(MenuItem::new, menuItem -> {
-                                                                menuItem.setText(tableDef.getName());
-                                                                menuItem.setOnAction(__ -> {
-                                                                    if (onSearchInTable != null) {
-                                                                        onSearchInTable.accept(new TableGridContext(tableModel.getMainModel().getSelectedProfile(), tableDef.getName(), column.getId(), cell.getText()));
-                                                                    }
-                                                                });
-                                                            })
+                                                            buildContextMenuByTableDef(tableDef, cell.getText())
                                                     ).collect(Collectors.toList())
                                             );
                                         })
@@ -244,14 +238,7 @@ public class TableGridView extends VBox {
                                                             tableModel.getMainModel().getAvailableTables().stream()
                                                                     .filter(tableDef -> tableDef.getName().contains(filter))
                                                                     .map(tableDef ->
-                                                                            DX.create(MenuItem::new, menuItem -> {
-                                                                                menuItem.setText(tableDef.getName());
-                                                                                menuItem.setOnAction(__ -> {
-                                                                                    if (onSearchInTable != null) {
-                                                                                        onSearchInTable.accept(new TableGridContext(tableModel.getMainModel().getSelectedProfile(), tableDef.getName(), column.getId(), cell.getText()));
-                                                                                    }
-                                                                                });
-                                                                            })
+                                                                            buildContextMenuByTableDef(tableDef, cell.getText())
                                                                     ).collect(Collectors.toList())
                                                     );
                                                 })
@@ -317,5 +304,28 @@ public class TableGridView extends VBox {
 
     public void setOnSearchInTable(Consumer<TableGridContext> onSearchInTable) {
         this.onSearchInTable = onSearchInTable;
+    }
+
+    private MenuItem buildContextMenuByTableDef(TableDef tableDef, String value) {
+        return DX.create(Menu::new, menu -> {
+            menu.setText(tableDef.getName());
+            menu.setOnAction(__ -> {
+                if (onSearchInTable != null) {
+                    onSearchInTable.accept(new TableGridContext(tableModel.getMainModel().getSelectedProfile(), tableDef.getName(), tableDef.getHashAttribute(), value));
+                }
+            });
+            menu.getItems().addAll(
+                    tableDef.getAttributeTypesMap().keySet().stream()
+                            .map(attr -> DX.create(MenuItem::new, menuItem -> {
+                                menuItem.setText(attr);
+                                menuItem.setOnAction(__ -> {
+                                    if (onSearchInTable != null) {
+                                        onSearchInTable.accept(new TableGridContext(tableModel.getMainModel().getSelectedProfile(), tableDef.getName(), attr, value));
+                                    }
+                                });
+                            }))
+                            .collect(Collectors.toList())
+            );
+        });
     }
 }

@@ -15,6 +15,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.util.Pair;
 import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.db.DynamoDBService;
+import ua.org.java.dynamoit.model.TableDef;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -75,6 +76,7 @@ public class TableGridController {
                         return supplyAsync(() -> dbClient.describeTable(context.getTableName()))
                                 .thenAcceptAsync(this::bindToModel, uiExecutor);
                     } else {
+                        bindToModel(tableModel.getTableDef());
                         return CompletableFuture.completedFuture(Boolean.TRUE);
                     }
                 })
@@ -276,8 +278,14 @@ public class TableGridController {
         tableModel.getRows().addAll(pair.getKey());
     }
 
+    private void bindToModel(TableDef tableDef) {
+        tableModel.getTableDef().getAttributeTypesMap().keySet().forEach(attr -> tableModel.getAttributeFilterMap().computeIfAbsent(attr, __ -> new SimpleStringProperty()));
+    }
+
     private void applyContext() {
-        tableModel.getAttributeFilterMap().computeIfAbsent(hash(), __ -> new SimpleStringProperty()).set(context.getPropertyValue());
+        if (context.getPropertyName() != null && context.getPropertyValue() != null) {
+            tableModel.getAttributeFilterMap().computeIfAbsent(context.getPropertyName(), __ -> new SimpleStringProperty()).set(context.getPropertyValue());
+        }
     }
 
     private String hash() {
