@@ -10,6 +10,7 @@ import org.junit.Test;
 import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.MainModel;
 import ua.org.java.dynamoit.db.DynamoDBService;
+import ua.org.java.dynamoit.model.TableDef;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -25,7 +26,10 @@ public class TableGridControllerTest {
         TableGridContext context = new TableGridContext("profile1", "table1");
         EventBus eventBus = new EventBus(ForkJoinPool.commonPool());
         MainModel mainModel = new MainModel();
+        TableDef tableDef = new TableDef("Table1");
+        tableDef.setHashAttribute("hash_attr");
         TableGridModel model = new TableGridModel(mainModel);
+        model.setTableDef(tableDef);
         model.getRows().add(new Item());
 
         Table table = mock(Table.class);
