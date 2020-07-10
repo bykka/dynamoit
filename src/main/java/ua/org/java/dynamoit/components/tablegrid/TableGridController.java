@@ -1,3 +1,20 @@
+/*
+ * This file is part of DynamoIt.
+ *
+ *     DynamoIt is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     Foobar is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with DynamoIt.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package ua.org.java.dynamoit.components.tablegrid;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
@@ -72,7 +89,7 @@ public class TableGridController {
     public void init() {
         eventBus.activity(
                 supplyAsync(() -> {
-                    if (tableModel.getTableDef().getHashAttribute() == null) {
+                    if (tableModel.getOriginalTableDescription() == null) {
                         return supplyAsync(() -> dbClient.describeTable(context.getTableName()))
                                 .thenAcceptAsync(this::bindToModel, uiExecutor);
                     } else {
@@ -251,6 +268,8 @@ public class TableGridController {
      * sort attributes before bindings
      */
     private void bindToModel(DescribeTableResult describeTable) {
+        tableModel.setOriginalTableDescription(describeTable.getTable());
+
         getHashKey(describeTable).ifPresent(tableModel.getTableDef()::setHashAttribute);
         getRangeKey(describeTable).ifPresent(tableModel.getTableDef()::setRangeAttribute);
 

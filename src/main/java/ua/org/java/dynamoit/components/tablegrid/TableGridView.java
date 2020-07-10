@@ -1,3 +1,20 @@
+/*
+ * This file is part of DynamoIt.
+ *
+ *     DynamoIt is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     Foobar is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with DynamoIt.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package ua.org.java.dynamoit.components.tablegrid;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
@@ -6,11 +23,13 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ListChangeListener;
 import javafx.collections.WeakMapChangeListener;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.skin.TableViewSkin;
 import javafx.scene.image.Image;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
@@ -23,9 +42,11 @@ import ua.org.java.dynamoit.model.TableDef;
 import ua.org.java.dynamoit.utils.DX;
 
 import java.io.File;
+import java.text.DateFormat;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -91,6 +112,11 @@ public class TableGridView extends VBox {
                                             controller.onSaveToFile(file);
                                         }
                                     });
+                                }),
+                                DX.create(Button::new, button -> {
+                                    button.setTooltip(new Tooltip("Show table information"));
+                                    button.setGraphic(DX.icon("icons/information.png"));
+                                    button.setOnAction(event -> createTableInfoDialog().show());
                                 }),
                                 DX.spacer(),
                                 DX.create(Label::new, t -> {
@@ -195,12 +221,7 @@ public class TableGridView extends VBox {
                                 menuCopy.textProperty().bind(Bindings.concat("Copy '", cell.textProperty(), "'"));
                                 menuCopy.setGraphic(DX.icon("icons/page_copy.png"));
                                 menuCopy.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
-                                menuCopy.setOnAction(__ -> {
-                                    ClipboardContent content = new ClipboardContent();
-                                    content.putString(cell.textProperty().get());
-                                    Clipboard clipboard = Clipboard.getSystemClipboard();
-                                    clipboard.setContent(content);
-                                });
+                                menuCopy.setOnAction(__ -> copyToClipboard(cell.textProperty().get()));
                             }),
                             DX.create(MenuItem::new, menuFilter -> {
                                 menuFilter.textProperty().bind(Bindings.concat("Filter '", cell.textProperty(), "'"));
@@ -309,8 +330,9 @@ public class TableGridView extends VBox {
     private MenuItem buildContextMenuByTableDef(TableDef tableDef, String value) {
         return DX.create(Menu::new, menu -> {
             menu.setText(tableDef.getName());
-            menu.setOnAction(__ -> {
-                if (onSearchInTable != null) {
+            menu.setOnAction(event -> {
+                //issue#1
+                if (onSearchInTable != null && event.getTarget().equals(event.getSource())) {
                     onSearchInTable.accept(new TableGridContext(tableModel.getMainModel().getSelectedProfile(), tableDef.getName(), tableDef.getHashAttribute(), value));
                 }
             });
@@ -327,5 +349,45 @@ public class TableGridView extends VBox {
                             .collect(Collectors.toList())
             );
         });
+    }
+
+    private Dialog<?> createTableInfoDialog() {
+        return DX.create(Dialog::new, dialog -> {
+            dialog.setTitle(tableModel.getTableName());
+            dialog.getDialogPane().getButtonTypes().add(ButtonType.OK);
+            dialog.setResizable(true);
+            dialog.getDialogPane().setContent(DX.create(GridPane::new, gridPane -> {
+                gridPane.setHgap(10);
+                gridPane.setVgap(10);
+
+                Function<Supplier<String>, Node> copyClipboardImage = stringSupplier -> DX.create(() -> DX.icon("icons/page_copy.png"), icon -> {
+                    icon.setOnMouseClicked(__ -> copyToClipboard(stringSupplier.get()));
+                    icon.setStyle("-fx-cursor: hand");
+                });
+
+                gridPane.add(DX.boldLabel("Name:"), 0, 0);
+                gridPane.add(new Label(tableModel.getOriginalTableDescription().getTableName().trim()), 1, 0);
+                gridPane.add(copyClipboardImage.apply(() -> tableModel.getOriginalTableDescription().getTableName()), 2, 0);
+
+                gridPane.add(DX.boldLabel("Arn:"), 0, 1);
+                gridPane.add(new Label(tableModel.getOriginalTableDescription().getTableArn()), 1, 1);
+                gridPane.add(copyClipboardImage.apply(() -> tableModel.getOriginalTableDescription().getTableArn()), 2, 1);
+
+                gridPane.add(DX.boldLabel("Creation date:"), 0, 2);
+                gridPane.add(new Label(DateFormat.getInstance().format(tableModel.getOriginalTableDescription().getCreationDateTime())), 1, 2);
+                gridPane.add(copyClipboardImage.apply(() -> DateFormat.getInstance().format(tableModel.getOriginalTableDescription().getCreationDateTime())), 2, 2);
+
+                gridPane.add(DX.boldLabel("Size:"), 0, 3);
+                gridPane.add(new Label(tableModel.getOriginalTableDescription().getTableSizeBytes() + " bytes"), 1, 3);
+                gridPane.add(copyClipboardImage.apply(() -> "" + tableModel.getOriginalTableDescription().getTableSizeBytes()), 2, 3);
+            }));
+        });
+    }
+
+    private static void copyToClipboard(String value) {
+        ClipboardContent content = new ClipboardContent();
+        content.putString(value);
+        Clipboard clipboard = Clipboard.getSystemClipboard();
+        clipboard.setContent(content);
     }
 }
