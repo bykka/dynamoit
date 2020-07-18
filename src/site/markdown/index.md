@@ -1,4 +1,4 @@
-# DynamoIt
+##Overview
 It's a simple DynamoDB graphical client written on JavaFX.
 
 This client allows easily to view, edit, create, and delete data.
@@ -14,6 +14,6 @@ The main idea of the client is to reach the required data in a few clicks.
  * Edit or delete the selected record 
 
 ## Screenshots:
-![main screen](./src/site/resources/images/main_screen.png)
+![main screen](./images/main_screen.png)
 
-![edit screen](./src/site/resources/images/edit_screen.png)
+![edit screen](./images/edit_screen.png)
