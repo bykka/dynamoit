@@ -13,6 +13,21 @@ The main idea of the client is to reach the required data in a few clicks.
  * Fast data filtering
  * Edit or delete the selected record 
 
+## System requirements, building and running
+Java 11 and maven are required to build and run the application.
+
+Execute the next command to build
+```
+mvn clean package
+```
+
+A jar file with all dependencies will be created in the _target_ directory.
+
+To run the application simply execute the command
+```
+java -jar target/DynamoIt-<version>.jar 
+```
+
 ## Screenshots:
 ![main screen](./src/site/resources/images/main_screen.png)
 
