@@ -326,8 +326,9 @@ public class TableGridView extends VBox {
     private MenuItem buildContextMenuByTableDef(TableDef tableDef, String value) {
         return DX.create(Menu::new, menu -> {
             menu.setText(tableDef.getName());
-            menu.setOnAction(__ -> {
-                if (onSearchInTable != null) {
+            menu.setOnAction(event -> {
+                //issue#1
+                if (onSearchInTable != null && event.getTarget().equals(event.getSource())) {
                     onSearchInTable.accept(new TableGridContext(tableModel.getMainModel().getSelectedProfile(), tableDef.getName(), tableDef.getHashAttribute(), value));
                 }
             });
