@@ -113,6 +113,11 @@ public class TableGridView extends VBox {
                                         }
                                     });
                                 }),
+                                DX.create(Button::new, button -> {
+                                    button.setTooltip(new Tooltip("Show table information"));
+                                    button.setGraphic(DX.icon("icons/information.png"));
+                                    button.setOnAction(event -> createTableInfoDialog().show());
+                                }),
                                 DX.spacer(),
                                 DX.create(Label::new, t -> {
                                     t.textProperty().bind(Bindings.concat("Count [", tableModel.rowsSizeProperty(), " of ~", tableModel.getTableDef().totalCountProperty(), "]"));
