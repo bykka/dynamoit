@@ -89,7 +89,7 @@ public class TableGridController {
     public void init() {
         eventBus.activity(
                 supplyAsync(() -> {
-                    if (tableModel.getTableDef().getHashAttribute() == null) {
+                    if (tableModel.getOriginalTableDescription() == null) {
                         return supplyAsync(() -> dbClient.describeTable(context.getTableName()))
                                 .thenAcceptAsync(this::bindToModel, uiExecutor);
                     } else {
@@ -268,6 +268,8 @@ public class TableGridController {
      * sort attributes before bindings
      */
     private void bindToModel(DescribeTableResult describeTable) {
+        tableModel.setOriginalTableDescription(describeTable.getTable());
+
         getHashKey(describeTable).ifPresent(tableModel.getTableDef()::setHashAttribute);
         getRangeKey(describeTable).ifPresent(tableModel.getTableDef()::setRangeAttribute);
 
