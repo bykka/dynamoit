@@ -81,4 +81,10 @@ public class DX {
         return new ImageView(new Image(icon, 16, 16, true, true));
     }
 
+    public static Label boldLabel(String title) {
+        Label label = new Label(title);
+        label.setStyle("-fx-font-weight: bold");
+        return label;
+    }
+
 }

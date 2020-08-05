@@ -19,6 +19,7 @@ package ua.org.java.dynamoit.components.tablegrid;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Page;
+import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.IntegerBinding;
 import javafx.beans.property.SimpleStringProperty;
@@ -35,6 +36,7 @@ public class TableGridModel {
     private final MainModel mainModel;
 
     private TableDef tableDef;
+    private TableDescription originalTableDescription;
     private String tableName;
 
     private final ObservableList<Item> rows = FXCollections.observableArrayList();
@@ -91,4 +93,12 @@ public class TableGridModel {
         this.currentPage = currentPage;
     }
 
+    public TableDescription getOriginalTableDescription() {
+        return originalTableDescription;
+    }
+
+    public TableGridModel setOriginalTableDescription(TableDescription originalTableDescription) {
+        this.originalTableDescription = originalTableDescription;
+        return this;
+    }
 }
