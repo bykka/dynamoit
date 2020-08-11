@@ -1,19 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ This file is part of DynamoIt.
+  ~
+  ~     DynamoIt is free software: you can redistribute it and/or modify
+  ~     it under the terms of the GNU General Public License as published by
+  ~     the Free Software Foundation, either version 3 of the License, or
+  ~     (at your option) any later version.
+  ~
+  ~     Foobar is distributed in the hope that it will be useful,
+  ~     but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~     GNU General Public License for more details.
+  ~
+  ~     You should have received a copy of the GNU General Public License
+  ~     along with DynamoIt.  If not, see <https://www.gnu.org/licenses/>.
+  -->
+
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>ua.org.java</groupId>
     <artifactId>DynamoIt</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
     <packaging>jar</packaging>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
-        <dagger.version>2.26</dagger.version>
-        <javafx.version>14</javafx.version>
-        <aws.sdk.version>1.11.719</aws.sdk.version>
+        <dagger.version>2.28.3</dagger.version>
+        <javafx.version>14.0.2</javafx.version>
+        <controlsfx.version>11.0.2</controlsfx.version>
+        <aws.sdk.version>1.11.822</aws.sdk.version>
     </properties>
 
     <build>
@@ -52,6 +70,11 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <version>3.9.1</version>
             </plugin>
         </plugins>
     </build>
@@ -97,7 +120,7 @@
         <dependency>
             <groupId>org.controlsfx</groupId>
             <artifactId>controlsfx</artifactId>
-            <version>11.0.1</version>
+            <version>${controlsfx.version}</version>
         </dependency>
         <!-- richtextfx -->
         <dependency>
