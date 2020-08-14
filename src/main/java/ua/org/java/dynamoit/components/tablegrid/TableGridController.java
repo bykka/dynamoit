@@ -30,6 +30,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.util.Pair;
+import org.reactfx.EventStream;
 import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.db.DynamoDBService;
 import ua.org.java.dynamoit.model.TableDef;
@@ -39,6 +40,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -125,6 +127,19 @@ public class TableGridController {
         );
     }
 
+    public EventStream<Boolean> validateItem(EventStream<String> textStream) {
+        return textStream.successionEnds(Duration.ofMillis(100))
+                .map(text -> {
+                    try {
+                        Item item = Item.fromJSON(text);
+
+                        return item.get(hash()) != null && (range() == null || item.get(range()) != null);
+                    } catch (Exception e) {
+                        return false;
+                    }
+                });
+    }
+
     public void onCreateItem(String json) {
         eventBus.activity(
                 createItem(json).thenRun(this::onRefreshData)
@@ -198,7 +213,6 @@ public class TableGridController {
         return new Pair<>(items, page);
     }
 
-    // fixme DynamoDB methods
     CompletableFuture<Pair<List<Item>, Page<Item, ?>>> queryPageItems() {
         return executeQueryOrSearch()
                 .thenApply(PageBasedCollection::firstPage)

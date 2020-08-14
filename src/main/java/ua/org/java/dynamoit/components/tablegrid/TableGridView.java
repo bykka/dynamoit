@@ -37,6 +37,8 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.controlsfx.control.textfield.TextFields;
 import org.fxmisc.flowless.VirtualizedScrollPane;
+import org.reactfx.EventStream;
+import org.reactfx.Subscription;
 import ua.org.java.dynamoit.components.jsoneditor.JsonEditor;
 import ua.org.java.dynamoit.model.TableDef;
 import ua.org.java.dynamoit.utils.DX;
@@ -77,7 +79,7 @@ public class TableGridView extends VBox {
                                 DX.create(Button::new, button -> {
                                     button.setTooltip(new Tooltip("Create a new item"));
                                     button.setGraphic(DX.icon("icons/table_row_insert.png"));
-                                    button.setOnAction(event -> showItemDialog("Create a new item", "", controller::onCreateItem));
+                                    button.setOnAction(event -> showItemDialog("Create a new item", "", controller::onCreateItem, controller::validateItem));
                                 }),
                                 DX.create(Button::new, button -> {
                                     deleteSelectedButton = button;
@@ -141,7 +143,7 @@ public class TableGridView extends VBox {
                                 TableRow<Item> tableRow = new TableRow<>();
                                 tableRow.setOnMouseClicked(event -> {
                                     if (event.getClickCount() == 2 && tableRow.getItem() != null) {
-                                        showItemDialog("Edit the item", tableRow.getItem().toJSONPretty(), controller::onUpdateItem);
+                                        showItemDialog("Edit the item", tableRow.getItem().toJSONPretty(), controller::onUpdateItem, controller::validateItem);
                                     }
                                 });
                                 return tableRow;
@@ -278,10 +280,11 @@ public class TableGridView extends VBox {
         controller.onClearFilters();
     }
 
-    private void showItemDialog(String title, String json, Consumer<String> onSaveConsumer) {
-        JsonEditor textArea = new JsonEditor(json);
+    private void showItemDialog(String title, String json, Consumer<String> onSaveConsumer, Function<EventStream<String>, EventStream<Boolean>> validator) {
+        JsonEditor textArea = new JsonEditor();
         textArea.setPrefWidth(800);
         textArea.setPrefHeight(800);
+
         Dialog<String> dialog = new Dialog<>();
         dialog.setTitle(title);
         ((Stage) dialog.getDialogPane().getScene().getWindow()).getIcons().add(new Image("icons/page.png"));
@@ -296,7 +299,26 @@ public class TableGridView extends VBox {
             }
             return null;
         });
-        dialog.showAndWait().ifPresent(onSaveConsumer);
+
+        Consumer<Boolean> saveButtonDisable = disable -> {
+            Node button = dialog.getDialogPane().lookupButton(saveButton);
+            if (button != null) {
+                button.setDisable(disable);
+            }
+        };
+
+        saveButtonDisable.accept(true);
+
+        Subscription subscribe = validator.apply(textArea.multiPlainChanges().map(__ -> textArea.getText()))
+                .subscribe(valid -> saveButtonDisable.accept(!valid));
+
+        textArea.replaceText(json);
+
+        try {
+            dialog.showAndWait().ifPresent(onSaveConsumer);
+        } finally {
+            subscribe.unsubscribe();
+        }
     }
 
     private void deleteSelectedItems() {
