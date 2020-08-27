@@ -26,20 +26,14 @@ import javafx.collections.WeakMapChangeListener;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.skin.TableViewSkin;
-import javafx.scene.image.Image;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
 import org.controlsfx.control.textfield.TextFields;
-import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.reactfx.EventStream;
-import org.reactfx.Subscription;
-import ua.org.java.dynamoit.components.jsoneditor.JsonEditor;
 import ua.org.java.dynamoit.model.TableDef;
 import ua.org.java.dynamoit.utils.DX;
 
@@ -281,44 +275,9 @@ public class TableGridView extends VBox {
     }
 
     private void showItemDialog(String title, String json, Consumer<String> onSaveConsumer, Function<EventStream<String>, EventStream<Boolean>> validator) {
-        JsonEditor textArea = new JsonEditor();
-        textArea.setPrefWidth(800);
-        textArea.setPrefHeight(800);
+        ItemDialog dialog = new ItemDialog(title, json, validator);
 
-        Dialog<String> dialog = new Dialog<>();
-        dialog.setTitle(title);
-        ((Stage) dialog.getDialogPane().getScene().getWindow()).getIcons().add(new Image("icons/page.png"));
-        ButtonType saveButton = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(saveButton, ButtonType.CLOSE);
-        dialog.getDialogPane().setContent(new VirtualizedScrollPane<>(textArea));
-        dialog.initModality(Modality.NONE);
-        dialog.setResizable(true);
-        dialog.setResultConverter(param -> {
-            if (param == saveButton) {
-                return textArea.getText();
-            }
-            return null;
-        });
-
-        Consumer<Boolean> saveButtonDisable = disable -> {
-            Node button = dialog.getDialogPane().lookupButton(saveButton);
-            if (button != null) {
-                button.setDisable(disable);
-            }
-        };
-
-        saveButtonDisable.accept(true);
-
-        Subscription subscribe = validator.apply(textArea.multiPlainChanges().map(__ -> textArea.getText()))
-                .subscribe(valid -> saveButtonDisable.accept(!valid));
-
-        textArea.replaceText(json);
-
-        try {
-            dialog.showAndWait().ifPresent(onSaveConsumer);
-        } finally {
-            subscribe.unsubscribe();
-        }
+        dialog.showAndWait().ifPresent(onSaveConsumer);
     }
 
     private void deleteSelectedItems() {
