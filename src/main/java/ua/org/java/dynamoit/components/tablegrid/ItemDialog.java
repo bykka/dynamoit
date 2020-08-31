@@ -17,35 +17,77 @@
 
 package ua.org.java.dynamoit.components.tablegrid;
 
+import io.reactivex.Observable;
+import io.reactivex.rxjavafx.schedulers.JavaFxScheduler;
+import io.reactivex.schedulers.Schedulers;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import org.controlsfx.control.textfield.TextFields;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.reactfx.EventStream;
 import org.reactfx.Subscription;
 import ua.org.java.dynamoit.components.jsoneditor.JsonEditor;
+import ua.org.java.dynamoit.utils.DX;
 
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class ItemDialog extends Dialog<String> {
 
+    private final VBox mainBox;
+    private final ToolBar toolBar;
     private Subscription subscribe = null;
+    private final JsonEditor textArea;
+    private TextField searchField;
 
     public ItemDialog(String title, String json, Function<EventStream<String>, EventStream<Boolean>> validator) {
-        JsonEditor textArea = new JsonEditor();
+        this.setTitle(title);
+
+        this.toolBar = DX.toolBar(toolBar -> List.of(
+                DX.create(TextFields::createClearableTextField, textField -> {
+                    this.searchField = textField;
+                    HBox.setHgrow(textField, Priority.ALWAYS);
+                    textField.requestFocus();
+                }),
+                DX.create(Button::new, button -> {
+                    button.setTooltip(new Tooltip("Hide toolbar"));
+                    button.setGraphic(DX.icon("icons/cross.png"));
+                    button.setOnAction(event -> hideToolbar());
+                })
+        ));
+
+        textArea = new JsonEditor();
         textArea.setPrefWidth(800);
         textArea.setPrefHeight(800);
+        textArea.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
+            if (event.isControlDown() && event.getCode().equals(KeyCode.F)) {
+                this.showToolbar();
+            }
+        });
 
-        this.setTitle(title);
+        this.mainBox = DX.create(VBox::new, vBox -> {
+            vBox.setPadding(new Insets(0, 0, 0, 0));
+            vBox.getChildren().addAll(
+                    new VirtualizedScrollPane<>(textArea)
+            );
+        });
+
         ((Stage) this.getDialogPane().getScene().getWindow()).getIcons().add(new Image("icons/page.png"));
         ButtonType saveButton = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
         this.getDialogPane().getButtonTypes().addAll(saveButton, ButtonType.CLOSE);
-        this.getDialogPane().setContent(new VirtualizedScrollPane<>(textArea));
+
+        this.getDialogPane().setContent(this.mainBox);
         this.initModality(Modality.NONE);
         this.setResizable(true);
         this.setResultConverter(param -> {
@@ -70,6 +112,7 @@ public class ItemDialog extends Dialog<String> {
                     .subscribe(valid -> saveButtonDisable.accept(!valid));
 
             textArea.replaceText(json);
+            textArea.requestFocus();
         });
 
         this.onCloseRequestProperty().set(event -> {
@@ -80,4 +123,19 @@ public class ItemDialog extends Dialog<String> {
     }
 
 
+    private void showToolbar() {
+        if (!this.mainBox.getChildren().contains(this.toolBar)) {
+            this.mainBox.getChildren().add(0, this.toolBar);
+
+            Observable.timer(1, TimeUnit.MILLISECONDS)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(JavaFxScheduler.platform())
+                    .subscribe(aLong -> this.searchField.requestFocus());
+        }
+    }
+
+    private void hideToolbar() {
+        this.mainBox.getChildren().remove(this.toolBar);
+        this.textArea.requestFocus();
+    }
 }
