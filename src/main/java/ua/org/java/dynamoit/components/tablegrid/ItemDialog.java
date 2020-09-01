@@ -18,6 +18,7 @@
 package ua.org.java.dynamoit.components.tablegrid;
 
 import io.reactivex.Observable;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.rxjavafx.schedulers.JavaFxScheduler;
 import io.reactivex.schedulers.Schedulers;
 import javafx.geometry.Insets;
@@ -47,9 +48,10 @@ public class ItemDialog extends Dialog<String> {
 
     private final VBox mainBox;
     private final ToolBar toolBar;
-    private Subscription subscribe = null;
+    private Subscription validationSubscribe;
     private final JsonEditor textArea;
     private TextField searchField;
+    private Disposable focusDisposable;
 
     public ItemDialog(String title, String json, Function<EventStream<String>, EventStream<Boolean>> validator) {
         this.setTitle(title);
@@ -107,7 +109,7 @@ public class ItemDialog extends Dialog<String> {
         saveButtonDisable.accept(true);
 
         this.onShowingProperty().set(event -> {
-            subscribe = validator.apply(textArea.multiPlainChanges()
+            validationSubscribe = validator.apply(textArea.multiPlainChanges()
                     .map(__ -> textArea.getText()))
                     .subscribe(valid -> saveButtonDisable.accept(!valid));
 
@@ -116,8 +118,11 @@ public class ItemDialog extends Dialog<String> {
         });
 
         this.onCloseRequestProperty().set(event -> {
-            if (subscribe != null) {
-                subscribe.unsubscribe();
+            if (validationSubscribe != null) {
+                validationSubscribe.unsubscribe();
+            }
+            if (focusDisposable != null) {
+                focusDisposable.dispose();
             }
         });
     }
@@ -127,7 +132,7 @@ public class ItemDialog extends Dialog<String> {
         if (!this.mainBox.getChildren().contains(this.toolBar)) {
             this.mainBox.getChildren().add(0, this.toolBar);
 
-            Observable.timer(1, TimeUnit.MILLISECONDS)
+            focusDisposable = Observable.timer(10, TimeUnit.MILLISECONDS)
                     .subscribeOn(Schedulers.io())
                     .observeOn(JavaFxScheduler.platform())
                     .subscribe(aLong -> this.searchField.requestFocus());
@@ -137,5 +142,6 @@ public class ItemDialog extends Dialog<String> {
     private void hideToolbar() {
         this.mainBox.getChildren().remove(this.toolBar);
         this.textArea.requestFocus();
+        this.focusDisposable.dispose();
     }
 }
