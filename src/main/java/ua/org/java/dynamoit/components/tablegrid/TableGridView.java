@@ -110,6 +110,23 @@ public class TableGridView extends VBox {
                                     });
                                 }),
                                 DX.create(Button::new, button -> {
+                                    button.setTooltip(new Tooltip("Load json into the table"));
+                                    button.setGraphic(DX.icon("icons/table_import.png"));
+                                    button.setOnAction(event -> {
+                                        FileChooser fileChooser = new FileChooser();
+                                        FileChooser.ExtensionFilter jsonFiles = new FileChooser.ExtensionFilter("Json files", "*.json");
+                                        fileChooser.getExtensionFilters().addAll(
+                                                new FileChooser.ExtensionFilter("All files", "*.*"),
+                                                jsonFiles
+                                        );
+                                        fileChooser.setSelectedExtensionFilter(jsonFiles);
+                                        File file = fileChooser.showOpenDialog(this.getScene().getWindow());
+                                        if (file != null) {
+                                            controller.onLoadFromFile(file);
+                                        }
+                                    });
+                                }),
+                                DX.create(Button::new, button -> {
                                     button.setTooltip(new Tooltip("Show table information"));
                                     button.setGraphic(DX.icon("icons/information.png"));
                                     button.setOnAction(event -> createTableInfoDialog().show());

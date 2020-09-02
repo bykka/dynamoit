@@ -27,6 +27,7 @@ import com.amazonaws.services.dynamodbv2.model.DescribeTableResult;
 import com.amazonaws.util.StringUtils;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.util.Pair;
@@ -35,6 +36,7 @@ import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.db.DynamoDBService;
 import ua.org.java.dynamoit.model.TableDef;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
@@ -187,6 +189,29 @@ public class TableGridController {
                             try {
                                 writer.flush();
                                 writer.close();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                })
+        );
+    }
+
+    public void onLoadFromFile(File file) {
+        eventBus.activity(
+                executeQueryOrSearch().thenAccept(items -> {
+                    BufferedReader reader = null;
+                    try {
+                        reader = Files.newBufferedReader(file.toPath(), StandardCharsets.UTF_8);
+                        JsonNode root = new ObjectMapper().readTree(reader);
+                        root.elements().forEachRemaining(jsonNode -> updateItem(jsonNode.toString()));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+                        if (reader != null) {
+                            try {
+                                reader.close();
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
