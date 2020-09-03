@@ -46,6 +46,8 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static java.util.concurrent.CompletableFuture.runAsync;
@@ -54,6 +56,8 @@ import static ua.org.java.dynamoit.components.tablegrid.Attributes.*;
 import static ua.org.java.dynamoit.utils.Utils.*;
 
 public class TableGridController {
+
+    private static final Logger LOG = Logger.getLogger(TableGridController.class.getName());
 
     /**
      * Maximum number of items in one page
@@ -183,14 +187,14 @@ public class TableGridController {
                         generator.writeEndArray();
                         generator.flush();
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        LOG.log(Level.SEVERE, e.getMessage(), e);
                     } finally {
                         if (writer != null) {
                             try {
                                 writer.flush();
                                 writer.close();
                             } catch (IOException e) {
-                                e.printStackTrace();
+                                LOG.log(Level.SEVERE, e.getMessage(), e);
                             }
                         }
                     }
@@ -213,7 +217,7 @@ public class TableGridController {
                             try {
                                 reader.close();
                             } catch (IOException e) {
-                                e.printStackTrace();
+                                LOG.log(Level.SEVERE, e.getMessage(), e);
                             }
                         }
                     }
@@ -270,6 +274,7 @@ public class TableGridController {
             if (!filters.isEmpty()) {
                 scanSpec.withScanFilters(filters.toArray(new ScanFilter[]{}));
             }
+            LOG.fine(() -> "scan = " + scanSpec);
             return table.scan(scanSpec.withMaxPageSize(PAGE_SIZE));
         });
     }
@@ -289,6 +294,7 @@ public class TableGridController {
             if (!filters.isEmpty()) {
                 querySpec.withQueryFilters(filters.toArray(new QueryFilter[]{}));
             }
+            LOG.fine(() -> "query = " + querySpec);
             return table.query(querySpec.withMaxPageSize(PAGE_SIZE));
         });
     }

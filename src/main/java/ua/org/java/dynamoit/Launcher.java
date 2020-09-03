@@ -17,9 +17,18 @@
 
 package ua.org.java.dynamoit;
 
+import java.io.IOException;
+import java.util.logging.LogManager;
+
 public class Launcher {
 
     public static void main(String[] args) {
+        try {
+            LogManager.getLogManager().readConfiguration(Launcher.class.getClassLoader().getResourceAsStream("logging.properties"));
+        } catch (IOException e) {
+            System.out.println("Logger has not been configured");
+        }
+
         DynamoItApp.main(args);
     }
 
