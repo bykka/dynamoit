@@ -200,12 +200,12 @@ public class TableGridController {
 
     public void onLoadFromFile(File file) {
         eventBus.activity(
-                executeQueryOrSearch().thenAccept(items -> {
+                runAsync(() -> {
                     BufferedReader reader = null;
                     try {
                         reader = Files.newBufferedReader(file.toPath(), StandardCharsets.UTF_8);
                         JsonNode root = new ObjectMapper().readTree(reader);
-                        root.elements().forEachRemaining(jsonNode -> updateItem(jsonNode.toString()));
+                        root.elements().forEachRemaining(jsonNode -> table.putItem(Item.fromJSON(jsonNode.toString())));
                     } catch (Exception e) {
                         e.printStackTrace();
                     } finally {

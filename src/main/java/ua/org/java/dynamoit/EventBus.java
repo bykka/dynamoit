@@ -27,7 +27,7 @@ import java.util.concurrent.Executor;
 public class EventBus {
 
     private final SimpleIntegerProperty activityCount = new SimpleIntegerProperty();
-    private Executor uiExecutor;
+    private final Executor uiExecutor;
 
     public EventBus(Executor uiExecutor) {
         this.uiExecutor = uiExecutor;
