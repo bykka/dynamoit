@@ -274,7 +274,7 @@ public class TableGridController {
             if (!filters.isEmpty()) {
                 scanSpec.withScanFilters(filters.toArray(new ScanFilter[]{}));
             }
-            LOG.fine(() -> "scan = " + scanSpec);
+            LOG.fine(() -> String.format("Scan %1s = %2s", table.getTableName(), logAsJson(scanSpec)));
             return table.scan(scanSpec.withMaxPageSize(PAGE_SIZE));
         });
     }
@@ -294,7 +294,7 @@ public class TableGridController {
             if (!filters.isEmpty()) {
                 querySpec.withQueryFilters(filters.toArray(new QueryFilter[]{}));
             }
-            LOG.fine(() -> "query = " + querySpec);
+            LOG.fine(() -> String.format("Query %1s = %2s", table.getTableName(), logAsJson(querySpec)));
             return table.query(querySpec.withMaxPageSize(PAGE_SIZE));
         });
     }

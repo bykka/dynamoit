@@ -22,7 +22,7 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ListChangeListener;
-import javafx.collections.WeakMapChangeListener;
+import javafx.collections.MapChangeListener;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.skin.TableViewSkin;
@@ -167,11 +167,11 @@ public class TableGridView extends VBox {
     }
 
     private void addModelListeners() {
-        tableModel.getTableDef().getAttributeTypesMap().addListener(new WeakMapChangeListener<>(c -> {
+        tableModel.getTableDef().getAttributeTypesMap().addListener((MapChangeListener<String, Attributes.Type>) c -> {
             if (c.wasAdded()) {
                 buildTableHeaders();
             }
-        }));
+        });
 
         tableModel.getRows().addListener((ListChangeListener<Item>) c -> {
             while (c.next()) {
