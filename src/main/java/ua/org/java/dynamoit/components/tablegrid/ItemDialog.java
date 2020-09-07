@@ -19,6 +19,8 @@ package ua.org.java.dynamoit.components.tablegrid;
 
 import io.reactivex.Observable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.rxjavafx.observables.JavaFxObservable;
+import io.reactivex.rxjavafx.observers.JavaFxObserver;
 import io.reactivex.rxjavafx.schedulers.JavaFxScheduler;
 import io.reactivex.schedulers.Schedulers;
 import javafx.geometry.Insets;
@@ -32,6 +34,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Pair;
 import org.controlsfx.control.textfield.TextFields;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.reactfx.EventStream;
@@ -41,15 +44,17 @@ import ua.org.java.dynamoit.utils.DX;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class ItemDialog extends Dialog<String> {
 
     private final VBox mainBox;
     private final ToolBar toolBar;
     private Subscription validationSubscribe;
-    private final JsonEditor textArea;
+    private final JsonEditor textArea = new JsonEditor();
     private TextField searchField;
     private Disposable focusDisposable;
 
@@ -60,7 +65,23 @@ public class ItemDialog extends Dialog<String> {
                 DX.create(TextFields::createClearableTextField, textField -> {
                     this.searchField = textField;
                     HBox.setHgrow(textField, Priority.ALWAYS);
-                    textField.requestFocus();
+                    textField.textProperty().addListener((observable, oldValue, newValue) -> {
+                        AtomicInteger index = new AtomicInteger();
+                        List<Pair<Integer, String>> matches = textArea.getText().lines()
+                                .map(line -> new Pair<>(index.getAndIncrement(), line))
+                                .filter(pair -> pair.getValue().contains(newValue))
+                                .collect(Collectors.toList());
+                    });
+                }),
+                DX.create(Label::new, label -> {
+                    Observable<String> count = JavaFxObservable.changesOf(this.searchField.textProperty())
+                            .map(stringChange -> textArea.getText().lines()
+                                    .filter(line -> line.contains(stringChange.getNewVal()))
+                                    .collect(Collectors.toList()))
+                            .map(list -> list.size() + " matches");
+
+                    label.textProperty().bind(JavaFxObserver.toBinding(count));
+
                 }),
                 DX.create(Button::new, button -> {
                     button.setTooltip(new Tooltip("Hide toolbar"));
@@ -69,7 +90,6 @@ public class ItemDialog extends Dialog<String> {
                 })
         ));
 
-        textArea = new JsonEditor();
         textArea.setPrefWidth(800);
         textArea.setPrefHeight(800);
         textArea.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
