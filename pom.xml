@@ -29,7 +29,7 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <dagger.version>2.28.3</dagger.version>
-        <javafx.version>14.0.2</javafx.version>
+        <javafx.version>15</javafx.version>
         <controlsfx.version>11.0.2</controlsfx.version>
         <aws.sdk.version>1.11.822</aws.sdk.version>
     </properties>
