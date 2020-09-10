@@ -119,7 +119,7 @@ public class ItemDialog extends Dialog<String> {
         this.mainBox = DX.create(VBox::new, vBox -> {
             vBox.setPadding(new Insets(0, 0, 0, 0));
             vBox.getChildren().addAll(
-                    new VirtualizedScrollPane<>(textArea)
+                    DX.create(() -> new VirtualizedScrollPane<>(textArea), pane -> VBox.setVgrow(pane, Priority.ALWAYS))
             );
         });
 
