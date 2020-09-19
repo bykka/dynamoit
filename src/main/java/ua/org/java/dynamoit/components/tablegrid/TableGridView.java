@@ -23,6 +23,7 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ListChangeListener;
 import javafx.collections.MapChangeListener;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.skin.TableViewSkin;
@@ -217,74 +218,76 @@ public class TableGridView extends VBox {
                     Object value = param.getValue().get(attrName);
                     return new SimpleStringProperty(value != null ? value.toString() : "");
                 });
-                buildCellContextMenu(column);
+                column.setCellFactory(param -> {
+                    TableCell<Item, String> cell = new TableCell<>();
+                    if (Attributes.Type.NUMBER == tableModel.getTableDef().getAttributeTypesMap().get(attrName)) {
+                        cell.setAlignment(Pos.CENTER_RIGHT);
+                    }
+                    cell.textProperty().bind(cell.itemProperty());
+                    attachCellContextMenu(cell, attrName);
+                    return cell;
+                });
             }));
         });
     }
 
-    private void buildCellContextMenu(TableColumn<Item, String> column) {
-        column.setCellFactory(param -> {
-            TableCell<Item, String> cell = new TableCell<>();
-            cell.textProperty().bind(cell.itemProperty());
-
-            cell.setOnContextMenuRequested(event -> {
-                if (cell.getText() != null && cell.getText().trim().length() != 0) {
-                    DX.contextMenu(contextMenu -> List.of(
-                            DX.create(MenuItem::new, menuCopy -> {
-                                menuCopy.textProperty().bind(Bindings.concat("Copy '", cell.textProperty(), "'"));
-                                menuCopy.setGraphic(DX.icon("icons/page_copy.png"));
-                                menuCopy.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
-                                menuCopy.setOnAction(__ -> copyToClipboard(cell.textProperty().get()));
-                            }),
-                            DX.create(MenuItem::new, menuFilter -> {
-                                menuFilter.textProperty().bind(Bindings.concat("Filter '", cell.textProperty(), "'"));
-                                menuFilter.setGraphic(DX.icon("icons/filter_add.png"));
-                                menuFilter.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
-                                menuFilter.setOnAction(__ -> {
-                                    SimpleStringProperty property = this.tableModel.getAttributeFilterMap().get(column.getId());
-                                    if (property != null) {
-                                        property.set(cell.getText());
-                                        controller.onRefreshData();
-                                    }
-                                });
-                            }),
-                            DX.create(Menu::new, menuSearch -> {
-                                menuSearch.textProperty().bind(Bindings.concat("Search '", cell.textProperty(), "' in"));
-                                menuSearch.setGraphic(DX.icon("icons/table_tab_search.png"));
-                                menuSearch.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
-                                menuSearch.getItems().add(
-                                        DX.create(Menu::new, allTablesMenuItem -> {
-                                            allTablesMenuItem.textProperty().bind(Bindings.concat("All tables"));
-                                            allTablesMenuItem.setGraphic(DX.icon("icons/database.png"));
-                                            allTablesMenuItem.getItems().addAll(
-                                                    tableModel.getMainModel().getAvailableTables().stream().map(tableDef ->
-                                                            buildContextMenuByTableDef(tableDef, cell.getText())
-                                                    ).collect(Collectors.toList())
-                                            );
-                                        })
-                                );
-                                menuSearch.getItems().addAll(
-                                        tableModel.getMainModel().getSavedFilters().stream().map(filter ->
-                                                DX.create(Menu::new, filterMenuItem -> {
-                                                    filterMenuItem.textProperty().bind(Bindings.concat("Contains: " + filter));
-                                                    filterMenuItem.setGraphic(DX.icon("icons/folder_star.png"));
-                                                    filterMenuItem.getItems().addAll(
-                                                            tableModel.getMainModel().getAvailableTables().stream()
-                                                                    .filter(tableDef -> tableDef.getName().contains(filter))
-                                                                    .map(tableDef ->
-                                                                            buildContextMenuByTableDef(tableDef, cell.getText())
-                                                                    ).collect(Collectors.toList())
-                                                    );
-                                                })
-                                        ).collect(Collectors.toList())
-                                );
-                            })
-                    )).show(cell, event.getScreenX(), event.getScreenY());
-                }
-            });
-
-            return cell;
+    private void attachCellContextMenu(TableCell<Item, String> cell, String attrName) {
+        cell.setOnContextMenuRequested(event -> {
+            if (cell.getText() != null && cell.getText().trim().length() != 0) {
+                DX.contextMenu(contextMenu -> List.of(
+                        DX.create(MenuItem::new, menuCopy -> {
+                            menuCopy.textProperty().bind(Bindings.concat("Copy '", cell.textProperty(), "'"));
+                            menuCopy.setGraphic(DX.icon("icons/page_copy.png"));
+                            menuCopy.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
+                            menuCopy.setOnAction(__ -> copyToClipboard(cell.textProperty().get()));
+                        }),
+                        DX.create(MenuItem::new, menuFilter -> {
+                            menuFilter.textProperty().bind(Bindings.concat("Filter '", cell.textProperty(), "'"));
+                            menuFilter.setGraphic(DX.icon("icons/filter_add.png"));
+                            menuFilter.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
+                            menuFilter.setOnAction(__ -> {
+                                SimpleStringProperty property = this.tableModel.getAttributeFilterMap().get(attrName);
+                                if (property != null) {
+                                    property.set(cell.getText());
+                                    controller.onRefreshData();
+                                }
+                            });
+                        }),
+                        DX.create(Menu::new, menuSearch -> {
+                            menuSearch.textProperty().bind(Bindings.concat("Search '", cell.textProperty(), "' in"));
+                            menuSearch.setGraphic(DX.icon("icons/table_tab_search.png"));
+                            menuSearch.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
+                            menuSearch.getItems().add(
+                                    DX.create(Menu::new, allTablesMenuItem -> {
+                                        allTablesMenuItem.textProperty().bind(Bindings.concat("All tables"));
+                                        allTablesMenuItem.setGraphic(DX.icon("icons/database.png"));
+                                        allTablesMenuItem.getItems().addAll(
+                                                tableModel.getMainModel().getAvailableTables().stream().map(tableDef ->
+                                                        buildContextMenuByTableDef(tableDef, cell.getText())
+                                                ).collect(Collectors.toList())
+                                        );
+                                    })
+                            );
+                            menuSearch.getItems().addAll(
+                                    tableModel.getMainModel().getSavedFilters().stream().map(filter ->
+                                            DX.create(Menu::new, filterMenuItem -> {
+                                                filterMenuItem.textProperty().bind(Bindings.concat("Contains: " + filter));
+                                                filterMenuItem.setGraphic(DX.icon("icons/folder_star.png"));
+                                                filterMenuItem.getItems().addAll(
+                                                        tableModel.getMainModel().getAvailableTables().stream()
+                                                                .filter(tableDef -> tableDef.getName().contains(filter))
+                                                                .map(tableDef ->
+                                                                        buildContextMenuByTableDef(tableDef, cell.getText())
+                                                                ).collect(Collectors.toList())
+                                                );
+                                            })
+                                    ).collect(Collectors.toList())
+                            );
+                        })
+                )).show(cell, event.getScreenX(), event.getScreenY());
+            }
         });
+
     }
 
     private void clearFilter() {
