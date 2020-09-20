@@ -39,15 +39,13 @@ public class JsonEditor extends CodeArea {
                     + "(?<JSONNUMBER>\\d*.?\\d*)"
     );
 
-    public JsonEditor(String text) {
+    public JsonEditor() {
         setParagraphGraphicFactory(LineNumberFactory.get(this));
         this.getStylesheets().add(getClass().getResource("/css/jsoneditor.css").toString());
 
         this.multiPlainChanges()
-                .successionEnds(Duration.ofMillis(400))
+                .successionEnds(Duration.ofMillis(100))
                 .subscribe(__ -> highlight());
-
-        replaceText(text);
     }
 
     private void highlight() {

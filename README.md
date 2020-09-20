@@ -11,7 +11,8 @@ The main idea of the client is to reach the required data in a few clicks.
  * Automatically detects when to use scan or query requests
  * Supports pagination to view data
  * Fast data filtering
- * Edit or delete the selected record 
+ * Edit or delete the selected records 
+ * Search (Ctrl+F) in the edit dialog
 
 ## System requirements, building and running
 Java 11 and maven are required to build and run the application.

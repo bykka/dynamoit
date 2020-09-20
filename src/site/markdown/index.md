@@ -11,7 +11,22 @@ The main idea of the client is to reach the required data in a few clicks.
  * Automatically detects when to use scan or query requests
  * Supports pagination to view data
  * Fast data filtering
- * Edit or delete the selected record 
+ * Edit or delete the selected records
+ * Search (Ctrl+F) in the edit dialog 
+
+## System requirements, building and running
+Java 11 and maven are required to build and run the application.
+
+Execute the next command to build
+```
+mvn clean package
+```
+A jar file with all dependencies will be created in the _target_ directory.
+
+To run the application simply execute the command
+```
+java -jar target/DynamoIt-<version>.jar 
+```
 
 ## Screenshots:
 ![main screen](./images/main_screen.png)

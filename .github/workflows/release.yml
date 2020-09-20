@@ -2,6 +2,7 @@ name: CI
 
 on:
   push:
+    branches: [ master ]
     tags:
       - '*'
 
@@ -12,8 +13,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+      - name: Set up Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - name: Build package
+        run: mvn clean package
       - name: Create Release
-        id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

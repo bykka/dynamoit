@@ -20,6 +20,9 @@ package ua.org.java.dynamoit.utils;
 import com.amazonaws.services.dynamodbv2.model.DescribeTableResult;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.Comparator;
 import java.util.Optional;
@@ -28,6 +31,8 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public class Utils {
+
+    public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
     public static <T> Stream<T> asStream(Iterable<T> iterable) {
         return StreamSupport.stream(iterable.spliterator(), false);
@@ -74,12 +79,16 @@ public class Utils {
             return v1.compareTo(v2);
         };
     }
+
     public static Comparator<String> KEYS_FIRST(String hashKeyName, String rangeKeyName) {
         return KEYS_FIRST(hashKeyName, rangeKeyName, s -> s);
     }
 
-    public static <T> T log(T t){
-        System.out.println(t);
-        return t;
+    public static String logAsJson(Object value) {
+        try {
+            return OBJECT_MAPPER.writeValueAsString(value);
+        } catch (JsonProcessingException ignored) {
+        }
+        return String.valueOf(value);
     }
 }

@@ -27,21 +27,27 @@ import com.amazonaws.services.dynamodbv2.model.DescribeTableResult;
 import com.amazonaws.util.StringUtils;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.util.Pair;
+import org.reactfx.EventStream;
 import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.db.DynamoDBService;
 import ua.org.java.dynamoit.model.TableDef;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static java.util.concurrent.CompletableFuture.runAsync;
@@ -50,6 +56,8 @@ import static ua.org.java.dynamoit.components.tablegrid.Attributes.*;
 import static ua.org.java.dynamoit.utils.Utils.*;
 
 public class TableGridController {
+
+    private static final Logger LOG = Logger.getLogger(TableGridController.class.getName());
 
     /**
      * Maximum number of items in one page
@@ -125,6 +133,19 @@ public class TableGridController {
         );
     }
 
+    public EventStream<Boolean> validateItem(EventStream<String> textStream) {
+        return textStream.successionEnds(Duration.ofMillis(100))
+                .map(text -> {
+                    try {
+                        Item item = Item.fromJSON(text);
+
+                        return item.get(hash()) != null && (range() == null || item.get(range()) != null);
+                    } catch (Exception e) {
+                        return false;
+                    }
+                });
+    }
+
     public void onCreateItem(String json) {
         eventBus.activity(
                 createItem(json).thenRun(this::onRefreshData)
@@ -166,14 +187,37 @@ public class TableGridController {
                         generator.writeEndArray();
                         generator.flush();
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        LOG.log(Level.SEVERE, e.getMessage(), e);
                     } finally {
                         if (writer != null) {
                             try {
                                 writer.flush();
                                 writer.close();
                             } catch (IOException e) {
-                                e.printStackTrace();
+                                LOG.log(Level.SEVERE, e.getMessage(), e);
+                            }
+                        }
+                    }
+                })
+        );
+    }
+
+    public void onLoadFromFile(File file) {
+        eventBus.activity(
+                runAsync(() -> {
+                    BufferedReader reader = null;
+                    try {
+                        reader = Files.newBufferedReader(file.toPath(), StandardCharsets.UTF_8);
+                        JsonNode root = new ObjectMapper().readTree(reader);
+                        root.elements().forEachRemaining(jsonNode -> table.putItem(Item.fromJSON(jsonNode.toString())));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+                        if (reader != null) {
+                            try {
+                                reader.close();
+                            } catch (IOException e) {
+                                LOG.log(Level.SEVERE, e.getMessage(), e);
                             }
                         }
                     }
@@ -198,7 +242,6 @@ public class TableGridController {
         return new Pair<>(items, page);
     }
 
-    // fixme DynamoDB methods
     CompletableFuture<Pair<List<Item>, Page<Item, ?>>> queryPageItems() {
         return executeQueryOrSearch()
                 .thenApply(PageBasedCollection::firstPage)
@@ -231,6 +274,7 @@ public class TableGridController {
             if (!filters.isEmpty()) {
                 scanSpec.withScanFilters(filters.toArray(new ScanFilter[]{}));
             }
+            LOG.fine(() -> String.format("Scan %1s = %2s", table.getTableName(), logAsJson(scanSpec)));
             return table.scan(scanSpec.withMaxPageSize(PAGE_SIZE));
         });
     }
@@ -250,6 +294,7 @@ public class TableGridController {
             if (!filters.isEmpty()) {
                 querySpec.withQueryFilters(filters.toArray(new QueryFilter[]{}));
             }
+            LOG.fine(() -> String.format("Query %1s = %2s", table.getTableName(), logAsJson(querySpec)));
             return table.query(querySpec.withMaxPageSize(PAGE_SIZE));
         });
     }
