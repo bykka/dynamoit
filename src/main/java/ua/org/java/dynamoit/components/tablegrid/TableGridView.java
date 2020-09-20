@@ -82,6 +82,7 @@ public class TableGridView extends VBox {
                                     button.setGraphic(DX.icon("icons/table_row_delete.png"));
                                     button.setOnAction(event -> deleteSelectedItems());
                                 }),
+                                new Separator(),
                                 DX.create(Button::new, button -> {
                                     button.setTooltip(new Tooltip("Clear filter"));
                                     button.setGraphic(DX.icon("icons/filter_clear.png"));
@@ -92,6 +93,7 @@ public class TableGridView extends VBox {
                                     button.setGraphic(DX.icon("icons/table_refresh.png"));
                                     button.setOnAction(event -> controller.onRefreshData());
                                 }),
+                                new Separator(),
                                 DX.create(Button::new, button -> {
                                     button.setTooltip(new Tooltip("Save table as json"));
                                     button.setGraphic(DX.icon("icons/table_save.png"));
@@ -127,6 +129,7 @@ public class TableGridView extends VBox {
                                         }
                                     });
                                 }),
+                                new Separator(),
                                 DX.create(Button::new, button -> {
                                     button.setTooltip(new Tooltip("Show table information"));
                                     button.setGraphic(DX.icon("icons/information.png"));
