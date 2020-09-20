@@ -144,6 +144,7 @@ public class TableGridView extends VBox {
                                 column.setPrefWidth(35);
                                 column.setResizable(false);
                                 column.setStyle("-fx-alignment: CENTER-RIGHT;");
+                                column.getStyleClass().add("column-header");
                                 column.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(tableModel.getRows().indexOf(param.getValue()) + 1));
                             }));
 
