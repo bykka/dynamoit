@@ -53,6 +53,7 @@ public class TableGridView extends VBox {
 
     private final TableGridController controller;
     private Button deleteSelectedButton;
+    private Button clearFilterButton;
     private javafx.scene.control.TableView<Item> tableView;
 
     private Consumer<TableGridContext> onSearchInTable;
@@ -84,6 +85,7 @@ public class TableGridView extends VBox {
                                 }),
                                 new Separator(),
                                 DX.create(Button::new, button -> {
+                                    this.clearFilterButton = button;
                                     button.setTooltip(new Tooltip("Clear filter"));
                                     button.setGraphic(DX.icon("icons/filter_clear.png"));
                                     button.setOnAction(event -> clearFilter());
@@ -183,6 +185,18 @@ public class TableGridView extends VBox {
                     tableView.scrollTo(c.getFrom());
                 }
             }
+        });
+
+        Supplier<Boolean> isFilterClean = () -> tableModel.getAttributeFilterMap().values().stream()
+                .map(prop -> prop.get() == null || prop.get().isBlank())
+                .reduce(true, (a, b) -> a && b);
+
+        tableModel.getAttributeFilterMap().addListener((MapChangeListener<String, SimpleStringProperty>) change -> {
+            SimpleStringProperty valueAdded = change.getValueAdded();
+            valueAdded.addListener((observable, oldValue, newValue) -> {
+                this.clearFilterButton.setDisable(isFilterClean.get());
+            });
+            this.clearFilterButton.setDisable(isFilterClean.get());
         });
     }
 

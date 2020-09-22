@@ -25,11 +25,9 @@ import javafx.beans.binding.IntegerBinding;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableMap;
 import ua.org.java.dynamoit.MainModel;
 import ua.org.java.dynamoit.model.TableDef;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class TableGridModel {
 
@@ -43,7 +41,7 @@ public class TableGridModel {
     private final IntegerBinding rowsSize = Bindings.createIntegerBinding(rows::size, rows);
     private Page<Item, ?> currentPage;
 
-    private final Map<String, SimpleStringProperty> attributeFilterMap = new HashMap<>();
+    private final ObservableMap<String, SimpleStringProperty> attributeFilterMap = FXCollections.observableHashMap();
 
     public TableGridModel(MainModel mainModel) {
         this.mainModel = mainModel;
@@ -81,7 +79,7 @@ public class TableGridModel {
         return rowsSize;
     }
 
-    public Map<String, SimpleStringProperty> getAttributeFilterMap() {
+    public ObservableMap<String, SimpleStringProperty> getAttributeFilterMap() {
         return attributeFilterMap;
     }
 
