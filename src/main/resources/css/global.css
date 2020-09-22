@@ -19,6 +19,6 @@
     -fx-font-weight: bold;
     -fx-alignment: center;
 }
-.table-cell {
-    -fx-font-family: Consolas;
+* {
+    -fx-font-family: Consolas, monospace;
 }
