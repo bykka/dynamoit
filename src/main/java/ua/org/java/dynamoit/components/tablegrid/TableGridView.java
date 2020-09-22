@@ -239,7 +239,7 @@ public class TableGridView extends VBox {
             if (cell.getText() != null && cell.getText().trim().length() != 0) {
                 DX.contextMenu(contextMenu -> List.of(
                         DX.create(MenuItem::new, menuCopy -> {
-                            menuCopy.textProperty().bind(Bindings.concat("Copy '", cell.textProperty(), "'"));
+                            menuCopy.textProperty().bind(Bindings.concat("Copy   '", cell.textProperty(), "'"));
                             menuCopy.setGraphic(DX.icon("icons/page_copy.png"));
                             menuCopy.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
                             menuCopy.setOnAction(__ -> copyToClipboard(cell.textProperty().get()));
