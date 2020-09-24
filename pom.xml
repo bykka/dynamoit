@@ -99,6 +99,12 @@
             <version>${javafx.version}</version>
             <classifier>mac</classifier>
         </dependency>
+        <!-- Just for ScenicView -->
+        <!--<dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-swing</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>-->
         <!-- aws sdk -->
         <dependency>
             <groupId>com.amazonaws</groupId>
