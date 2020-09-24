@@ -15,10 +15,19 @@
  *     along with DynamoIt.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+* {
+    -fx-font-family: Consolas, monospace;
+}
+
 .column-index {
     -fx-font-weight: bold;
     -fx-alignment: center;
 }
-* {
-    -fx-font-family: Consolas, monospace;
+
+.table-row-cell:hover {
+    -fx-background-color: -fx-cell-hover-color;
+}
+
+.table-row-cell:hover:selected {
+    -fx-background-color: -fx-background;
 }
