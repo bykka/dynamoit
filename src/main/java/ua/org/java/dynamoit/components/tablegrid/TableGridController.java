@@ -211,7 +211,15 @@ public class TableGridController {
                     try {
                         reader = Files.newBufferedReader(file.toPath(), StandardCharsets.UTF_8);
                         JsonNode root = new ObjectMapper().readTree(reader);
-                        root.elements().forEachRemaining(jsonNode -> table.putItem(Item.fromJSON(jsonNode.toString())));
+                        Observable.fromIterable(root::elements)
+                                .map(jsonNode -> Item.fromJSON(jsonNode.toString()))
+                                .buffer(25)
+                                .map(list -> {
+                                    TableWriteItems addItems = new TableWriteItems(table.getTableName());
+                                    list.forEach(addItems::addItemToPut);
+                                    return addItems;
+                                })
+                                .subscribe(documentClient::batchWriteItem);
                     } catch (Exception e) {
                         e.printStackTrace();
                     } finally {
@@ -224,7 +232,7 @@ public class TableGridController {
                         }
                     }
                 })
-        );
+        ).whenComplete((v, throwable) -> onRefreshData());
     }
 
     /**
