@@ -41,7 +41,7 @@ public class JsonEditor extends CodeArea {
 
     public JsonEditor() {
         setParagraphGraphicFactory(LineNumberFactory.get(this));
-        this.getStylesheets().add(getClass().getResource("/css/jsoneditor.css").toString());
+        this.getStylesheets().add(getClass().getResource("/css/jsoneditor.css").toExternalForm());
 
         this.multiPlainChanges()
                 .successionEnds(Duration.ofMillis(100))

@@ -29,6 +29,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.reactivex.Observable;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.util.Pair;
 import org.reactfx.EventStream;
@@ -70,6 +71,7 @@ public class TableGridController {
     private final TableGridModel tableModel;
     private final EventBus eventBus;
     private final Executor uiExecutor;
+    private final DynamoDB documentClient;
 
     public TableGridController(TableGridContext context,
                                TableGridModel tableModel,
@@ -90,7 +92,7 @@ public class TableGridController {
         tableModel.setTableName(context.getTableName());
 
         dbClient = dynamoDBService.getOrCreateDynamoDBClient(context.getProfileName());
-        DynamoDB documentClient = dynamoDBService.getOrCreateDocumentClient(context.getProfileName());
+        documentClient = dynamoDBService.getOrCreateDocumentClient(context.getProfileName());
         table = documentClient.getTable(context.getTableName());
     }
 
@@ -209,7 +211,15 @@ public class TableGridController {
                     try {
                         reader = Files.newBufferedReader(file.toPath(), StandardCharsets.UTF_8);
                         JsonNode root = new ObjectMapper().readTree(reader);
-                        root.elements().forEachRemaining(jsonNode -> table.putItem(Item.fromJSON(jsonNode.toString())));
+                        Observable.fromIterable(root::elements)
+                                .map(jsonNode -> Item.fromJSON(jsonNode.toString()))
+                                .buffer(25)
+                                .map(list -> {
+                                    TableWriteItems addItems = new TableWriteItems(table.getTableName());
+                                    list.forEach(addItems::addItemToPut);
+                                    return addItems;
+                                })
+                                .subscribe(documentClient::batchWriteItem);
                     } catch (Exception e) {
                         e.printStackTrace();
                     } finally {
@@ -222,7 +232,7 @@ public class TableGridController {
                         }
                     }
                 })
-        );
+        ).whenComplete((v, throwable) -> onRefreshData());
     }
 
     /**
@@ -300,13 +310,21 @@ public class TableGridController {
     }
 
     private CompletableFuture<Void> delete(List<Item> items) {
-        return runAsync(() -> items.forEach(item -> {
-            if (range() == null) {
-                table.deleteItem(hash(), item.get(hash()));
-            } else {
-                table.deleteItem(hash(), item.get(hash()), range(), item.get(range()));
-            }
-        }));
+        return runAsync(() -> Observable.fromIterable(items)
+                .buffer(25)
+                .map(list -> {
+                    TableWriteItems deleteItems = new TableWriteItems(table.getTableName());
+                    list.forEach(item -> {
+                        if (range() == null) {
+                            deleteItems.addHashOnlyPrimaryKeyToDelete(hash(), item.get(hash()));
+                        } else {
+                            deleteItems.addHashAndRangePrimaryKeyToDelete(hash(), item.get(hash()), range(), item.get(range()));
+                        }
+                    });
+                    return deleteItems;
+                })
+                .subscribe(documentClient::batchWriteItem)
+        );
     }
 
     /**

@@ -39,6 +39,7 @@ public class DynamoItApp extends Application {
                         }
                 )
         );
+        primaryStage.getScene().getStylesheets().add(getClass().getResource("/css/global.css").toExternalForm());
         primaryStage.show();
     }
 

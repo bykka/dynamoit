@@ -29,6 +29,8 @@ import javafx.scene.control.*;
 import javafx.scene.control.skin.TableViewSkin;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.KeyCode;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -53,6 +55,7 @@ public class TableGridView extends VBox {
 
     private final TableGridController controller;
     private Button deleteSelectedButton;
+    private Button clearFilterButton;
     private javafx.scene.control.TableView<Item> tableView;
 
     private Consumer<TableGridContext> onSearchInTable;
@@ -84,6 +87,7 @@ public class TableGridView extends VBox {
                                 }),
                                 new Separator(),
                                 DX.create(Button::new, button -> {
+                                    this.clearFilterButton = button;
                                     button.setTooltip(new Tooltip("Clear filter"));
                                     button.setGraphic(DX.icon("icons/filter_clear.png"));
                                     button.setOnAction(event -> clearFilter());
@@ -146,8 +150,7 @@ public class TableGridView extends VBox {
                             tableView.getColumns().add(DX.create((Supplier<TableColumn<Item, Number>>) TableColumn::new, column -> {
                                 column.setPrefWidth(35);
                                 column.setResizable(false);
-                                column.setStyle("-fx-alignment: CENTER-RIGHT;");
-                                column.getStyleClass().add("column-header");
+                                column.getStyleClass().add("column-index");
                                 column.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(tableModel.getRows().indexOf(param.getValue()) + 1));
                             }));
 
@@ -163,6 +166,12 @@ public class TableGridView extends VBox {
                                     }
                                 });
                                 return tableRow;
+                            });
+
+                            tableView.setOnKeyPressed(event -> {
+                                if (KeyCode.ENTER == event.getCode() && !tableView.getSelectionModel().isEmpty()) {
+                                    showItemDialog("Edit the item", tableView.getSelectionModel().getSelectedItem().toJSONPretty(), controller::onUpdateItem, controller::validateItem);
+                                }
                             });
 
                             deleteSelectedButton.disableProperty().bind(tableView.getSelectionModel().selectedItemProperty().isNull());
@@ -184,6 +193,18 @@ public class TableGridView extends VBox {
                     tableView.scrollTo(c.getFrom());
                 }
             }
+        });
+
+        Supplier<Boolean> isFilterClean = () -> tableModel.getAttributeFilterMap().values().stream()
+                .map(prop -> prop.get() == null || prop.get().isBlank())
+                .reduce(true, (a, b) -> a && b);
+
+        tableModel.getAttributeFilterMap().addListener((MapChangeListener<String, SimpleStringProperty>) change -> {
+            SimpleStringProperty valueAdded = change.getValueAdded();
+            valueAdded.addListener((observable, oldValue, newValue) -> {
+                this.clearFilterButton.setDisable(isFilterClean.get());
+            });
+            this.clearFilterButton.setDisable(isFilterClean.get());
         });
     }
 
@@ -240,7 +261,7 @@ public class TableGridView extends VBox {
             if (cell.getText() != null && cell.getText().trim().length() != 0) {
                 DX.contextMenu(contextMenu -> List.of(
                         DX.create(MenuItem::new, menuCopy -> {
-                            menuCopy.textProperty().bind(Bindings.concat("Copy '", cell.textProperty(), "'"));
+                            menuCopy.textProperty().bind(Bindings.concat("Copy   '", cell.textProperty(), "'"));
                             menuCopy.setGraphic(DX.icon("icons/page_copy.png"));
                             menuCopy.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
                             menuCopy.setOnAction(__ -> copyToClipboard(cell.textProperty().get()));
@@ -365,26 +386,38 @@ public class TableGridView extends VBox {
                 gridPane.setHgap(10);
                 gridPane.setVgap(10);
 
+                gridPane.getColumnConstraints().addAll(
+                        new ColumnConstraints(),
+                        DX.create(ColumnConstraints::new, c -> {
+                            c.setHgrow(Priority.ALWAYS);
+                        })
+                );
+
                 Function<Supplier<String>, Node> copyClipboardImage = stringSupplier -> DX.create(() -> DX.icon("icons/page_copy.png"), icon -> {
                     icon.setOnMouseClicked(__ -> copyToClipboard(stringSupplier.get()));
                     icon.setStyle("-fx-cursor: hand");
                 });
 
-                gridPane.add(DX.boldLabel("Name:"), 0, 0);
-                gridPane.add(new Label(tableModel.getOriginalTableDescription().getTableName().trim()), 1, 0);
-                gridPane.add(copyClipboardImage.apply(() -> tableModel.getOriginalTableDescription().getTableName()), 2, 0);
+                gridPane.addColumn(0,
+                        DX.boldLabel("Name:"),
+                        DX.boldLabel("Arn:"),
+                        DX.boldLabel("Creation date:"),
+                        DX.boldLabel("Size:")
+                );
 
-                gridPane.add(DX.boldLabel("Arn:"), 0, 1);
-                gridPane.add(new Label(tableModel.getOriginalTableDescription().getTableArn()), 1, 1);
-                gridPane.add(copyClipboardImage.apply(() -> tableModel.getOriginalTableDescription().getTableArn()), 2, 1);
+                gridPane.addColumn(1,
+                        new Label(tableModel.getOriginalTableDescription().getTableName().trim()),
+                        new Label(tableModel.getOriginalTableDescription().getTableArn()),
+                        new Label(DateFormat.getInstance().format(tableModel.getOriginalTableDescription().getCreationDateTime())),
+                        new Label(tableModel.getOriginalTableDescription().getTableSizeBytes() + " bytes")
+                );
 
-                gridPane.add(DX.boldLabel("Creation date:"), 0, 2);
-                gridPane.add(new Label(DateFormat.getInstance().format(tableModel.getOriginalTableDescription().getCreationDateTime())), 1, 2);
-                gridPane.add(copyClipboardImage.apply(() -> DateFormat.getInstance().format(tableModel.getOriginalTableDescription().getCreationDateTime())), 2, 2);
-
-                gridPane.add(DX.boldLabel("Size:"), 0, 3);
-                gridPane.add(new Label(tableModel.getOriginalTableDescription().getTableSizeBytes() + " bytes"), 1, 3);
-                gridPane.add(copyClipboardImage.apply(() -> "" + tableModel.getOriginalTableDescription().getTableSizeBytes()), 2, 3);
+                gridPane.addColumn(2,
+                        copyClipboardImage.apply(() -> tableModel.getOriginalTableDescription().getTableName()),
+                        copyClipboardImage.apply(() -> tableModel.getOriginalTableDescription().getTableArn()),
+                        copyClipboardImage.apply(() -> DateFormat.getInstance().format(tableModel.getOriginalTableDescription().getCreationDateTime())),
+                        copyClipboardImage.apply(() -> "" + tableModel.getOriginalTableDescription().getTableSizeBytes())
+                );
             }));
         });
     }

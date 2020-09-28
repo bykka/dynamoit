@@ -22,6 +22,7 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.rxjavafx.observables.JavaFxObservable;
 import io.reactivex.rxjavafx.observers.JavaFxObserver;
 import io.reactivex.rxjavafx.schedulers.JavaFxScheduler;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -55,13 +56,12 @@ import java.util.stream.Collectors;
 
 public class ItemDialog extends Dialog<String> {
 
-    private final VBox mainBox;
-    private final ToolBar toolBar;
     private Subscription validationSubscribe;
     private final JsonEditor textArea = new JsonEditor();
     private final TextField searchField = TextFields.createClearableTextField();
     private Disposable focusDisposable;
     private final List<Selection<Collection<String>, String, Collection<String>>> selections = new ArrayList<>();
+    private final SimpleBooleanProperty showSearch = new SimpleBooleanProperty(false);
 
     public ItemDialog(String title, String json, Function<EventStream<String>, EventStream<Boolean>> validator) {
         this.setTitle(title);
@@ -94,20 +94,6 @@ public class ItemDialog extends Dialog<String> {
             });
         });
 
-        this.toolBar = DX.toolBar(toolBar -> List.of(
-                DX.create(() -> this.searchField, textField -> {
-                    HBox.setHgrow(textField, Priority.ALWAYS);
-                }),
-                DX.create(Label::new, label -> {
-                    label.textProperty().bind(JavaFxObserver.toBinding(matches.map(list -> list.size() + " matches")));
-                }),
-                DX.create(Button::new, button -> {
-                    button.setTooltip(new Tooltip("Hide toolbar"));
-                    button.setGraphic(DX.icon("icons/cross.png"));
-                    button.setOnAction(event -> hideToolbar());
-                })
-        ));
-
         textArea.setPrefWidth(800);
         textArea.setPrefHeight(800);
         textArea.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
@@ -116,18 +102,42 @@ public class ItemDialog extends Dialog<String> {
             }
         });
 
-        this.mainBox = DX.create(VBox::new, vBox -> {
-            vBox.setPadding(new Insets(0, 0, 0, 0));
-            vBox.getChildren().addAll(
-                    DX.create(() -> new VirtualizedScrollPane<>(textArea), pane -> VBox.setVgrow(pane, Priority.ALWAYS))
-            );
-        });
-
+        this.getDialogPane().setContent(
+                DX.create(VBox::new, vBox -> {
+                    vBox.setPadding(new Insets(0, 0, 0, 0));
+                    vBox.getChildren().addAll(
+                            DX.toolBar(toolBar -> {
+                                        toolBar.visibleProperty().bind(showSearch);
+                                        toolBar.managedProperty().bind(showSearch);
+                                        return List.of(
+                                                DX.create(() -> this.searchField, textField -> {
+                                                    HBox.setHgrow(textField, Priority.ALWAYS);
+                                                    textField.setOnKeyPressed(event -> {
+                                                        if (KeyCode.ESCAPE == event.getCode()) {
+                                                            event.consume();
+                                                            hideToolbar();
+                                                        }
+                                                    });
+                                                }),
+                                                DX.create(Label::new, label -> {
+                                                    label.textProperty().bind(JavaFxObserver.toBinding(matches.map(list -> list.size() + " matches")));
+                                                }),
+                                                DX.create(Button::new, button -> {
+                                                    button.setTooltip(new Tooltip("Hide toolbar"));
+                                                    button.setGraphic(DX.icon("icons/cross.png"));
+                                                    button.setOnAction(event -> hideToolbar());
+                                                })
+                                        );
+                                    }
+                            ),
+                            DX.create(() -> new VirtualizedScrollPane<>(textArea), pane -> VBox.setVgrow(pane, Priority.ALWAYS))
+                    );
+                })
+        );
         ((Stage) this.getDialogPane().getScene().getWindow()).getIcons().add(new Image("icons/page.png"));
         ButtonType saveButton = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
         this.getDialogPane().getButtonTypes().addAll(saveButton, ButtonType.CLOSE);
 
-        this.getDialogPane().setContent(this.mainBox);
         this.initModality(Modality.NONE);
         this.setResizable(true);
         this.setResultConverter(param -> {
@@ -174,17 +184,15 @@ public class ItemDialog extends Dialog<String> {
     }
 
     private void showToolbar() {
-        if (!this.mainBox.getChildren().contains(this.toolBar)) {
-            this.mainBox.getChildren().add(0, this.toolBar);
+        this.showSearch.set(true);
 
-            focusDisposable = Observable.timer(100, TimeUnit.MILLISECONDS)
-                    .observeOn(JavaFxScheduler.platform())
-                    .subscribe(aLong -> this.searchField.requestFocus());
-        }
+        focusDisposable = Observable.timer(100, TimeUnit.MILLISECONDS)
+                .observeOn(JavaFxScheduler.platform())
+                .subscribe(aLong -> this.searchField.requestFocus());
     }
 
     private void hideToolbar() {
-        this.mainBox.getChildren().remove(this.toolBar);
+        this.showSearch.set(false);
         this.textArea.requestFocus();
         this.focusDisposable.dispose();
         this.searchField.clear();
