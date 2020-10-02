@@ -55,66 +55,62 @@ public class MainView extends VBox {
         allTables = new AllTreeItem();
 
         this.getChildren().addAll(
-                List.of(
-                        DX.splitPane(splitPane -> {
-                                    VBox.setVgrow(splitPane, Priority.ALWAYS);
-                                    splitPane.setDividerPositions(0.35);
-                                    return List.of(
-                                            DX.create(VBox::new, vBox1 -> {
-                                                SplitPane.setResizableWithParent(vBox1, false);
-                                                return List.of(
-                                                        DX.toolBar(toolBar -> List.of(
-                                                                DX.create(TextFields::createClearableTextField, textField -> {
-                                                                    HBox.setHgrow(textField, Priority.ALWAYS);
-                                                                    textField.setPromptText("Table name contains");
-                                                                    textField.textProperty().bindBidirectional(mainModel.filterProperty());
-                                                                    textField.disableProperty().bind(mainModel.selectedProfileProperty().isEmpty());
-                                                                }),
-                                                                DX.create(Button::new, button -> {
-                                                                    button.setTooltip(new Tooltip("Save current filter"));
-                                                                    button.setGraphic(DX.icon("icons/star.png"));
-                                                                    button.disableProperty().bind(mainModel.selectedProfileProperty().isEmpty());
-                                                                    button.setOnAction(event -> controller.onSaveFilter());
-                                                                }),
-                                                                DX.create((Supplier<ComboBox<String>>) ComboBox::new, comboBox -> {
-                                                                    comboBox.setItems(mainModel.getAvailableProfiles());
-                                                                    comboBox.valueProperty().bindBidirectional(mainModel.selectedProfileProperty());
-                                                                }),
-                                                                DX.create(Button::new, button -> {
-                                                                    button.setTooltip(new Tooltip("Reload list of tables"));
-                                                                    button.setGraphic(DX.icon("icons/arrow_refresh.png"));
-                                                                    button.disableProperty().bind(mainModel.selectedProfileProperty().isEmpty());
-                                                                    button.setOnAction(__ -> controller.onTablesRefresh());
-                                                                })
-                                                        )),
-                                                        DX.create((Supplier<TreeView<String>>) TreeView::new, treeView -> {
-                                                            VBox.setVgrow(treeView, Priority.ALWAYS);
-                                                            this.treeView = treeView;
-                                                            treeView.setRoot(new TreeItem<>());
-                                                            treeView.setShowRoot(false);
-                                                            treeView.getRoot().getChildren().add(allTables);
-                                                            treeView.setOnMouseClicked(event -> this.onTableSelect(event, treeView.getSelectionModel().getSelectedItem()));
+                DX.splitPane(splitPane -> {
+                            VBox.setVgrow(splitPane, Priority.ALWAYS);
+                            splitPane.setDividerPositions(0.35);
+                            return List.of(
+                                    DX.create(VBox::new, vBox1 -> {
+                                        SplitPane.setResizableWithParent(vBox1, false);
+                                        return List.of(
+                                                DX.toolBar(toolBar -> List.of(
+                                                        DX.create(TextFields::createClearableTextField, textField -> {
+                                                            HBox.setHgrow(textField, Priority.ALWAYS);
+                                                            textField.setPromptText("Table name contains");
+                                                            textField.textProperty().bindBidirectional(mainModel.filterProperty());
+                                                            textField.disableProperty().bind(mainModel.selectedProfileProperty().isEmpty());
+                                                        }),
+                                                        DX.create(Button::new, button -> {
+                                                            button.setTooltip(new Tooltip("Save current filter"));
+                                                            button.setGraphic(DX.icon("icons/star.png"));
+                                                            button.disableProperty().bind(mainModel.selectedProfileProperty().isEmpty());
+                                                            button.setOnAction(event -> controller.onSaveFilter());
+                                                        }),
+                                                        DX.create((Supplier<ComboBox<String>>) ComboBox::new, comboBox -> {
+                                                            comboBox.setItems(mainModel.getAvailableProfiles());
+                                                            comboBox.valueProperty().bindBidirectional(mainModel.selectedProfileProperty());
+                                                        }),
+                                                        DX.create(Button::new, button -> {
+                                                            button.setTooltip(new Tooltip("Reload list of tables"));
+                                                            button.setGraphic(DX.icon("icons/arrow_refresh.png"));
+                                                            button.disableProperty().bind(mainModel.selectedProfileProperty().isEmpty());
+                                                            button.setOnAction(__ -> controller.onTablesRefresh());
                                                         })
-                                                );
-                                            }),
-                                            DX.create(TabPane::new, tabPane -> {
-                                                this.tabPane = tabPane;
-                                            })
-                                    );
-                                }
-                        ),
-                        DX.create(HBox::new, hBox -> {
-                            hBox.setPadding(new Insets(3, 3, 3, 3));
-                            hBox.getChildren().addAll(
-                                    List.of(
-                                            DX.create(Pane::new, pane -> {
-                                                HBox.setHgrow(pane, Priority.ALWAYS);
-                                            }),
-                                            activityIndicator
-                                    )
+                                                )),
+                                                DX.create((Supplier<TreeView<String>>) TreeView::new, treeView -> {
+                                                    VBox.setVgrow(treeView, Priority.ALWAYS);
+                                                    this.treeView = treeView;
+                                                    treeView.setRoot(new TreeItem<>());
+                                                    treeView.setShowRoot(false);
+                                                    treeView.getRoot().getChildren().add(allTables);
+                                                    treeView.setOnMouseClicked(event -> this.onTableSelect(event, treeView.getSelectionModel().getSelectedItem()));
+                                                })
+                                        );
+                                    }),
+                                    DX.create(TabPane::new, tabPane -> {
+                                        this.tabPane = tabPane;
+                                    })
                             );
-                        })
-                )
+                        }
+                ),
+                DX.create(HBox::new, hBox -> {
+                    hBox.setPadding(new Insets(3, 3, 3, 3));
+                    hBox.getChildren().addAll(
+                            DX.create(Pane::new, pane -> {
+                                HBox.setHgrow(pane, Priority.ALWAYS);
+                            }),
+                            activityIndicator
+                    );
+                })
         );
 
         mainModel.getFilteredTables().addListener((ListChangeListener<TableDef>) c -> {
