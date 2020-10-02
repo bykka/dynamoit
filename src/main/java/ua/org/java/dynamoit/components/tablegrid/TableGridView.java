@@ -150,6 +150,7 @@ public class TableGridView extends VBox {
                             tableView.getColumns().add(DX.create((Supplier<TableColumn<Item, Number>>) TableColumn::new, column -> {
                                 column.setPrefWidth(35);
                                 column.setResizable(false);
+                                column.setSortable(false);
                                 column.getStyleClass().add("column-index");
                                 column.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(tableModel.getRows().indexOf(param.getValue()) + 1));
                             }));
