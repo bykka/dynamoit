@@ -7,7 +7,7 @@
   ~     the Free Software Foundation, either version 3 of the License, or
   ~     (at your option) any later version.
   ~
-  ~     Foobar is distributed in the hope that it will be useful,
+  ~     DynamoIt is distributed in the hope that it will be useful,
   ~     but WITHOUT ANY WARRANTY; without even the implied warranty of
   ~     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   ~     GNU General Public License for more details.
@@ -145,12 +145,6 @@
             <artifactId>rxjavafx</artifactId>
             <version>2.11.0-RC16</version>
         </dependency>
-        <dependency>
-            <groupId>org.jfxtras</groupId>
-            <artifactId>jmetro</artifactId>
-            <version>11.6.14</version>
-        </dependency>
-
         <!-- testing -->
         <dependency>
             <groupId>junit</groupId>
@@ -166,16 +160,5 @@
         </dependency>
 
     </dependencies>
-
-    <repositories>
-        <repository>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <id>bintray-dukke-maven</id>
-            <name>bintray</name>
-            <url>https://dl.bintray.com/dukke/maven</url>
-        </repository>
-    </repositories>
 
 </project>

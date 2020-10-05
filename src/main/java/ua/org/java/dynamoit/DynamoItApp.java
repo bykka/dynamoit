@@ -6,7 +6,7 @@
  *     the Free Software Foundation, either version 3 of the License, or
  *     (at your option) any later version.
  *
- *     Foobar is distributed in the hope that it will be useful,
+ *     DynamoIt is distributed in the hope that it will be useful,
  *     but WITHOUT ANY WARRANTY; without even the implied warranty of
  *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *     GNU General Public License for more details.
@@ -21,8 +21,6 @@ import javafx.application.Application;
 import javafx.scene.image.Image;
 import javafx.scene.layout.Region;
 import javafx.stage.Stage;
-import jfxtras.styles.jmetro.JMetro;
-import jfxtras.styles.jmetro.Style;
 import ua.org.java.dynamoit.utils.DX;
 
 public class DynamoItApp extends Application {
@@ -41,9 +39,6 @@ public class DynamoItApp extends Application {
                         }
                 )
         );
-
-        JMetro jMetro = new JMetro(Style.LIGHT);
-        jMetro.setScene(primaryStage.getScene());
 
         primaryStage.getScene().getStylesheets().add(getClass().getResource("/css/global.css").toExternalForm());
         primaryStage.show();
