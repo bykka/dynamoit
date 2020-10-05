@@ -1,22 +1,56 @@
+/*
+ * This file is part of DynamoIt.
+ *
+ *     DynamoIt is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     Foobar is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with DynamoIt.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package ua.org.java.dynamoit.components.profileviewer;
 
+import io.reactivex.rxjavafx.observables.JavaFxObservable;
+import javafx.beans.binding.Bindings;
+import javafx.collections.ListChangeListener;
 import javafx.scene.control.*;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.controlsfx.control.textfield.TextFields;
 import ua.org.java.dynamoit.MainController;
 import ua.org.java.dynamoit.MainModel;
+import ua.org.java.dynamoit.components.tablegrid.TableGridComponent;
+import ua.org.java.dynamoit.components.tablegrid.TableGridContext;
+import ua.org.java.dynamoit.components.tablegrid.TableGridView;
+import ua.org.java.dynamoit.model.TableDef;
 import ua.org.java.dynamoit.utils.DX;
 
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class ProfileView extends VBox {
 
     private TreeView<String> treeView;
 
+    private final TreeItem<String> allTables;
+    private MainModel model;
+    private MainController controller;
+
     public ProfileView(MainModel mainModel, MainController controller) {
+        model = mainModel;
+        this.controller = controller;
+        allTables = new AllTreeItem();
+
         this.getChildren().addAll(
                 DX.toolBar(toolBar -> List.of(
                         DX.create(TextFields::createClearableTextField, textField -> {
@@ -47,9 +81,73 @@ public class ProfileView extends VBox {
                     this.treeView = treeView;
                     treeView.setRoot(new TreeItem<>());
                     treeView.setShowRoot(false);
-//                    treeView.getRoot().getChildren().add(allTables);
-//                    treeView.setOnMouseClicked(event -> this.onTableSelect(event, treeView.getSelectionModel().getSelectedItem()));
+                    treeView.getRoot().getChildren().add(allTables);
+                    treeView.setOnMouseClicked(event -> this.onTableSelect(event, treeView.getSelectionModel().getSelectedItem()));
                 })
         );
+
+        mainModel.getFilteredTables().addListener((ListChangeListener<TableDef>) c -> {
+            allTables.getChildren().setAll(mainModel.getFilteredTables().stream().map(TableDef::getName).map(TableTreeItem::new).collect(Collectors.toList()));
+            allTables.setExpanded(true);
+        });
+
+        JavaFxObservable.additionsOf(mainModel.getSavedFilters())
+                .map(filter -> {
+                    FilterTreeItem filterTables = new FilterTreeItem(filter);
+                    filterTables.getChildren().addAll(mainModel.getAvailableTables()
+                            .stream()
+                            .filter(tableDef -> tableDef.getName().contains(filter))
+                            .map(TableDef::getName)
+                            .map(TableTreeItem::new)
+                            .collect(Collectors.toList()));
+                    filterTables.setExpanded(true);
+                    return filterTables;
+                });//fixme
+//                .subscribe(filterTreeItem -> this.treeView.getRoot().getChildren().add(filterTreeItem));
+    }
+
+    private void onTableSelect(MouseEvent event, TreeItem<String> selectedItem) {
+        if (event.getClickCount() == 2 && selectedItem != null) {
+            if (selectedItem instanceof AllTreeItem || selectedItem instanceof FilterTreeItem) {
+                return;
+            }
+
+            createAndOpenTab(new TableGridContext(model.getSelectedProfile(), selectedItem.getValue()));
+        }
+    }
+
+    private void createAndOpenTab(TableGridContext tableContext) {
+        TableGridComponent tableComponent = controller.buildTableGridComponent(tableContext);
+
+        TableGridView tableItemsView = tableComponent.view();
+        tableItemsView.setOnSearchInTable(this::createAndOpenTab);
+
+        Tab tab = new Tab(tableContext.getTableName(), tableItemsView);
+//        tabPane.getTabs().add(tab);
+//        tabPane.getSelectionModel().select(tab); fixme
+    }
+
+    private class AllTreeItem extends TreeItem<String> {
+
+        public AllTreeItem() {
+            super("All tables", DX.icon("icons/database.png"));
+            valueProperty().bind(Bindings.concat("All tables (", Bindings.size(model.getFilteredTables()), ")"));
+        }
+
+    }
+
+    private static class FilterTreeItem extends TreeItem<String> {
+
+        public FilterTreeItem(String filter) {
+            super("Contains: " + filter, DX.icon("icons/folder_star.png"));
+        }
+    }
+
+    private static class TableTreeItem extends TreeItem<String> {
+
+        public TableTreeItem(String text) {
+            super(text, DX.icon("icons/table.png"));
+        }
+
     }
 }
