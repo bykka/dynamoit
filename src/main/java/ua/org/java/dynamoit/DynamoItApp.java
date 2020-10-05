@@ -21,6 +21,8 @@ import javafx.application.Application;
 import javafx.scene.image.Image;
 import javafx.scene.layout.Region;
 import javafx.stage.Stage;
+import jfxtras.styles.jmetro.JMetro;
+import jfxtras.styles.jmetro.Style;
 import ua.org.java.dynamoit.utils.DX;
 
 public class DynamoItApp extends Application {
@@ -39,6 +41,10 @@ public class DynamoItApp extends Application {
                         }
                 )
         );
+
+        JMetro jMetro = new JMetro(Style.LIGHT);
+        jMetro.setScene(primaryStage.getScene());
+
         primaryStage.getScene().getStylesheets().add(getClass().getResource("/css/global.css").toExternalForm());
         primaryStage.show();
     }

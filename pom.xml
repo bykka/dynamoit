@@ -145,6 +145,12 @@
             <artifactId>rxjavafx</artifactId>
             <version>2.11.0-RC16</version>
         </dependency>
+        <dependency>
+            <groupId>org.jfxtras</groupId>
+            <artifactId>jmetro</artifactId>
+            <version>11.6.14</version>
+        </dependency>
+
         <!-- testing -->
         <dependency>
             <groupId>junit</groupId>
@@ -161,5 +167,15 @@
 
     </dependencies>
 
+    <repositories>
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>bintray-dukke-maven</id>
+            <name>bintray</name>
+            <url>https://dl.bintray.com/dukke/maven</url>
+        </repository>
+    </repositories>
 
 </project>
