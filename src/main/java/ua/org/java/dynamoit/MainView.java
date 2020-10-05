@@ -45,6 +45,7 @@ public class MainView extends VBox {
     private final TreeItem<String> allTables;
     private TabPane tabPane;
     private final ToggleGroup profileToggleGroup = new ToggleGroup();
+    private ToolBar profilesToolBar;
 
     public MainView(MainModel mainModel, MainController controller, ActivityIndicator activityIndicator) {
         this.model = mainModel;
@@ -58,19 +59,9 @@ public class MainView extends VBox {
                     VBox.setVgrow(hBox1, Priority.ALWAYS);
                     hBox1.getChildren().addAll(
                             DX.toolBar(toolBar -> {
+                                this.profilesToolBar = toolBar;
                                 toolBar.setOrientation(Orientation.VERTICAL);
-                                return List.of(
-                                        new Group(DX.create(ToggleButton::new, (ToggleButton button) -> {
-                                            button.setText("default");
-                                            button.setRotate(-90);
-                                            button.setToggleGroup(profileToggleGroup);
-                                        })),
-                                        new Group(DX.create(ToggleButton::new, (ToggleButton button) -> {
-                                            button.setText("prod");
-                                            button.setRotate(-90);
-                                            button.setToggleGroup(profileToggleGroup);
-                                        }))
-                                );
+                                return List.of();
                             }),
 
                             DX.splitPane(splitPane -> {
@@ -79,11 +70,7 @@ public class MainView extends VBox {
                                         return List.of(
                                                 DX.create(StackPane::new, stackPane -> {
                                                     SplitPane.setResizableWithParent(stackPane, false);
-                                                    stackPane.visibleProperty().bind(Bindings.isNotNull(profileToggleGroup.selectedToggleProperty()));
-                                                    stackPane.managedProperty().bind(Bindings.isNotNull(profileToggleGroup.selectedToggleProperty()));
                                                     return List.of(
-                                                            new Button("1"),
-                                                            new Button("2"),
                                                             new ProfileView(model, controller)
                                                     );
                                                 }),
@@ -107,6 +94,15 @@ public class MainView extends VBox {
                     );
                 })
         );
+
+        JavaFxObservable.additionsOf(mainModel.getAvailableProfiles())
+                .subscribe(profile -> profilesToolBar.getItems().add(
+                        new Group(DX.create(ToggleButton::new, (ToggleButton button) -> {
+                            button.setText(profile);
+                            button.setRotate(-90);
+                            button.setToggleGroup(profileToggleGroup);
+                        }))
+                ));
 
         mainModel.getFilteredTables().addListener((ListChangeListener<TableDef>) c -> {
             allTables.getChildren().setAll(mainModel.getFilteredTables().stream().map(TableDef::getName).map(TableTreeItem::new).collect(Collectors.toList()));
