@@ -286,19 +286,19 @@ public class TableGridView extends VBox {
                                         allTablesMenuItem.textProperty().bind(Bindings.concat("All tables"));
                                         allTablesMenuItem.setGraphic(DX.icon("icons/database.png"));
                                         allTablesMenuItem.getItems().addAll(
-                                                tableModel.getMainModel().getAvailableTables().stream().map(tableDef ->
+                                                tableModel.getMainModel().getAvailableProfiles().get(tableModel.getProfile()).getAvailableTables().stream().map(tableDef ->
                                                         buildContextMenuByTableDef(tableDef, cell.getText())
                                                 ).collect(Collectors.toList())
                                         );
                                     })
                             );
                             menuSearch.getItems().addAll(
-                                    tableModel.getMainModel().getSavedFilters().stream().map(filter ->
+                                    tableModel.getMainModel().getAvailableProfiles().get(tableModel.getProfile()).getSavedFilters().stream().map(filter ->
                                             DX.create(Menu::new, filterMenuItem -> {
                                                 filterMenuItem.textProperty().bind(Bindings.concat("Contains: " + filter));
                                                 filterMenuItem.setGraphic(DX.icon("icons/folder_star.png"));
                                                 filterMenuItem.getItems().addAll(
-                                                        tableModel.getMainModel().getAvailableTables().stream()
+                                                        tableModel.getMainModel().getAvailableProfiles().get(tableModel.getProfile()).getAvailableTables().stream()
                                                                 .filter(tableDef -> tableDef.getName().contains(filter))
                                                                 .map(tableDef ->
                                                                         buildContextMenuByTableDef(tableDef, cell.getText())
@@ -358,7 +358,7 @@ public class TableGridView extends VBox {
             menu.setOnAction(event -> {
                 //issue#1
                 if (onSearchInTable != null && event.getTarget().equals(event.getSource())) {
-                    onSearchInTable.accept(new TableGridContext(tableModel.getMainModel().getSelectedProfile(), tableDef.getName(), tableDef.getHashAttribute(), value));
+                    onSearchInTable.accept(new TableGridContext(tableModel.getProfile(), tableDef.getName(), tableDef.getHashAttribute(), value));
                 }
             });
             menu.getItems().addAll(
@@ -367,7 +367,7 @@ public class TableGridView extends VBox {
                                 menuItem.setText(attr);
                                 menuItem.setOnAction(__ -> {
                                     if (onSearchInTable != null) {
-                                        onSearchInTable.accept(new TableGridContext(tableModel.getMainModel().getSelectedProfile(), tableDef.getName(), attr, value));
+                                        onSearchInTable.accept(new TableGridContext(tableModel.getProfile(), tableDef.getName(), attr, value));
                                     }
                                 });
                             }))

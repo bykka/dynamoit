@@ -84,12 +84,13 @@ public class TableGridController {
         this.eventBus = eventBus;
         this.uiExecutor = uiExecutor;
 
-        tableModel.getMainModel().getAvailableTables().stream()
+        tableModel.getMainModel().getAvailableProfiles().get(context.getProfileName()).getAvailableTables().stream()
                 .filter(tableDef -> tableDef.getName().equals(context.getTableName()))
                 .findFirst()
                 .ifPresent(tableModel::setTableDef);
 
         tableModel.setTableName(context.getTableName());
+        tableModel.setProfile(context.getProfileName());
 
         dbClient = dynamoDBService.getOrCreateDynamoDBClient(context.getProfileName());
         documentClient = dynamoDBService.getOrCreateDocumentClient(context.getProfileName());

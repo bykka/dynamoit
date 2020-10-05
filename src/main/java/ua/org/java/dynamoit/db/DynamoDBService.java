@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 public class DynamoDBService {
 
@@ -35,8 +36,12 @@ public class DynamoDBService {
     private final Map<String, AmazonDynamoDB> profileDynamoDBClientMap = new HashMap<>();
     private final Map<String, DynamoDB> profileDocumentClientMap = new HashMap<>();
 
-    public Set<String> getAvailableProfiles() {
-        return profilesConfigFile.getAllBasicProfiles().keySet();
+    public Set<Profile> getAvailableProfiles() {
+        return profilesConfigFile.getAllBasicProfiles()
+                .values()
+                .stream()
+                .map(profile -> new Profile(profile.getProfileName(), profile.getRegion()))
+                .collect(Collectors.toSet());
     }
 
     public CompletableFuture<List<String>> getListOfTables(String profile) {
@@ -59,6 +64,25 @@ public class DynamoDBService {
             profileDocumentClientMap.put(profileName, dynamoDB);
         }
         return dynamoDB;
+    }
+
+    public static class Profile {
+
+        private final String name;
+        private final String region;
+
+        public Profile(String profile, String region) {
+            this.name = profile;
+            this.region = region;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getRegion() {
+            return region;
+        }
     }
 
 }

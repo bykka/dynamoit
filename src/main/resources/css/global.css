@@ -31,3 +31,10 @@
 .table-row-cell:hover:selected {
     -fx-background-color: -fx-background;
 }
+
+.toggle-button:focused {
+    -fx-background-insets: 0, 1, 2, 0, 2.6;
+}
+.toggle-button:selected:focused {
+    -fx-background-insets: 0, 1, 0, 2.6;
+}

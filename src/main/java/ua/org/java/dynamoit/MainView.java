@@ -27,7 +27,11 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import ua.org.java.dynamoit.components.activityindicator.ActivityIndicator;
+import ua.org.java.dynamoit.components.profileviewer.ProfileComponent;
 import ua.org.java.dynamoit.components.profileviewer.ProfileView;
+import ua.org.java.dynamoit.components.tablegrid.TableGridComponent;
+import ua.org.java.dynamoit.components.tablegrid.TableGridContext;
+import ua.org.java.dynamoit.components.tablegrid.TableGridView;
 import ua.org.java.dynamoit.utils.DX;
 
 import java.util.HashMap;
@@ -43,12 +47,13 @@ public class MainView extends VBox {
     private ToolBar profilesToolBar;
     private TabPane tabPane;
     private SplitPane splitPane;
-    private Map<String, ProfileView> profileViews = new HashMap<>();
+    private final Map<String, ProfileView> profileViews = new HashMap<>();
     private double dividerPosition = 0.35;
 
     public MainView(MainModel mainModel, MainController controller, ActivityIndicator activityIndicator) {
         this.model = mainModel;
         this.controller = controller;
+        this.controller.setSelectedTableConsumer(this::createAndOpenTab);
 
         this.getChildren().addAll(
 
@@ -89,16 +94,16 @@ public class MainView extends VBox {
 
         JavaFxObservable.additionsOf(mainModel.getAvailableProfiles())
                 .subscribe(profile -> {
+                    String profileName = profile.getKey();
+
                     profilesToolBar.getItems().add(
                             new Group(DX.create(ToggleButton::new, (ToggleButton button) -> {
-                                button.setText(profile);
-                                button.setUserData(profile);
+                                button.setText(profileName);
+                                button.setUserData(profileName);
                                 button.setRotate(-90);
                                 button.setToggleGroup(profileToggleGroup);
                             }))
                     );
-
-                    profileViews.put(profile, new ProfileView(model, controller));
                 });
 
         JavaFxObservable.changesOf(profileToggleGroup.selectedToggleProperty())
@@ -108,11 +113,30 @@ public class MainView extends VBox {
                         this.splitPane.getItems().remove(0);
                     }
                     if (toggleChange.getNewVal() != null) {
-                        this.splitPane.getItems().add(0, profileViews.get(toggleChange.getNewVal().getUserData().toString()));
+                        String profileName = toggleChange.getNewVal().getUserData().toString();
+
+                        ProfileView profileView = profileViews.computeIfAbsent(profileName, s -> {
+                            ProfileComponent profileComponent = controller.buildProfileComponent(profileName);
+                            return profileComponent.view();
+                        });
+
+                        this.splitPane.getItems().add(0, profileView);
                         splitPane.setDividerPositions(dividerPosition);
                     }
                 });
 
     }
+
+    private void createAndOpenTab(TableGridContext tableContext) {
+        TableGridComponent tableComponent = controller.buildTableGridComponent(tableContext);
+
+        TableGridView tableItemsView = tableComponent.view();
+        tableItemsView.setOnSearchInTable(this::createAndOpenTab);
+
+        Tab tab = new Tab(tableContext.getTableName(), tableItemsView);
+        tabPane.getTabs().add(tab);
+        tabPane.getSelectionModel().select(tab);
+    }
+
 
 }

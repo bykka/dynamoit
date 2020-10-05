@@ -19,7 +19,9 @@ package ua.org.java.dynamoit;
 
 import javafx.application.Platform;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.control.Alert;
+import ua.org.java.dynamoit.components.tablegrid.TableGridContext;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -27,6 +29,7 @@ import java.util.concurrent.Executor;
 public class EventBus {
 
     private final SimpleIntegerProperty activityCount = new SimpleIntegerProperty();
+    private final SimpleObjectProperty<TableGridContext> selectedTable = new SimpleObjectProperty();
     private final Executor uiExecutor;
 
     public EventBus(Executor uiExecutor) {
@@ -64,4 +67,11 @@ public class EventBus {
         });
     }
 
+    public void setSelectedTable(TableGridContext context) {
+        this.selectedTable.set(context);
+    }
+
+    public SimpleObjectProperty<TableGridContext> selectedTableProperty() {
+        return selectedTable;
+    }
 }

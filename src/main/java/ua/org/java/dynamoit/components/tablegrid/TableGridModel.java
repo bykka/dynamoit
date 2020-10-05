@@ -36,6 +36,7 @@ public class TableGridModel {
     private TableDef tableDef;
     private TableDescription originalTableDescription;
     private String tableName;
+    private String profile;
 
     private final ObservableList<Item> rows = FXCollections.observableArrayList();
     private final IntegerBinding rowsSize = Bindings.createIntegerBinding(rows::size, rows);
@@ -65,6 +66,14 @@ public class TableGridModel {
 
     public void setTableName(String tableName) {
         this.tableName = tableName;
+    }
+
+    public String getProfile() {
+        return profile;
+    }
+
+    public void setProfile(String profile) {
+        this.profile = profile;
     }
 
     public ObservableList<Item> getRows() {

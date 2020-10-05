@@ -17,22 +17,23 @@
 
 package ua.org.java.dynamoit;
 
-import com.amazonaws.util.StringUtils;
+import ua.org.java.dynamoit.components.profileviewer.DaggerProfileComponent;
+import ua.org.java.dynamoit.components.profileviewer.ProfileComponent;
 import ua.org.java.dynamoit.components.tablegrid.DaggerTableGridComponent;
 import ua.org.java.dynamoit.components.tablegrid.TableGridComponent;
 import ua.org.java.dynamoit.components.tablegrid.TableGridContext;
 import ua.org.java.dynamoit.db.DynamoDBService;
-import ua.org.java.dynamoit.model.TableDef;
 import ua.org.java.dynamoit.utils.FXExecutor;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
+import java.util.function.Consumer;
 
 public class MainController {
 
     private final DynamoDBService dynamoDBService;
     private final MainModel model;
     private final EventBus eventBus;
+    private Consumer<TableGridContext> selectedTableConsumer;
 
     public MainController(DynamoDBService dynamoDBService, MainModel model, EventBus eventBus) {
         this.dynamoDBService = dynamoDBService;
@@ -42,26 +43,17 @@ public class MainController {
         eventBus.activity(
                 CompletableFuture
                         .supplyAsync(this.dynamoDBService::getAvailableProfiles)
-                        .thenAcceptAsync(profiles -> model.getAvailableProfiles().addAll(profiles), FXExecutor.getInstance())
+                        .thenAcceptAsync(profiles -> profiles.forEach(profile -> model.addProfile(profile.getName(), profile.getRegion())), FXExecutor.getInstance())
         );
 
-        this.model.selectedProfileProperty().addListener((observable, oldValue, newValue) -> {
-            this.model.getAvailableTables().clear();
-            if (!StringUtils.isNullOrEmpty(newValue)) {
-                getListOfTables(newValue);
+        eventBus.selectedTableProperty().addListener((observable, oldValue, newValue) -> {
+            if (selectedTableConsumer != null) {
+                selectedTableConsumer.accept(newValue);
             }
         });
     }
 
-    public void onSaveFilter() {
-        this.model.getSavedFilters().add(model.getFilter());
-    }
-
-    public void onTablesRefresh() {
-        getListOfTables(model.getSelectedProfile());
-    }
-
-    public TableGridComponent buildTableGridComponent(TableGridContext tableContext){
+    public TableGridComponent buildTableGridComponent(TableGridContext tableContext) {
         return DaggerTableGridComponent.builder()
                 .mainModel(model)
                 .eventBus(eventBus)
@@ -69,12 +61,15 @@ public class MainController {
                 .build();
     }
 
-    private void getListOfTables(String profile) {
-        eventBus.activity(
-                this.dynamoDBService.getListOfTables(profile)
-                        .thenApply(tables -> tables.stream().map(TableDef::new).collect(Collectors.toList()))
-                        .thenAcceptAsync(tables -> this.model.getAvailableTables().setAll(tables), FXExecutor.getInstance())
-        );
+    public ProfileComponent buildProfileComponent(String profile) {
+        return DaggerProfileComponent.builder()
+                .mainModel(model)
+                .eventBus(eventBus)
+                .profile(profile)
+                .build();
     }
 
+    public void setSelectedTableConsumer(Consumer<TableGridContext> selectedTableConsumer) {
+        this.selectedTableConsumer = selectedTableConsumer;
+    }
 }
