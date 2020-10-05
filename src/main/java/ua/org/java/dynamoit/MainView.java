@@ -121,6 +121,7 @@ public class MainView extends VBox {
                         });
 
                         this.splitPane.getItems().add(0, profileView);
+                        SplitPane.setResizableWithParent(profileView, false);
                         splitPane.setDividerPositions(dividerPosition);
                     }
                 });
