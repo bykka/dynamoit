@@ -40,7 +40,6 @@ import java.util.Map;
 
 public class MainView extends VBox {
 
-    private final MainModel model;
     private final MainController controller;
 
     private final ToggleGroup profileToggleGroup = new ToggleGroup();
@@ -51,7 +50,6 @@ public class MainView extends VBox {
     private double dividerPosition = 0.35;
 
     public MainView(MainModel mainModel, MainController controller, ActivityIndicator activityIndicator) {
-        this.model = mainModel;
         this.controller = controller;
         this.controller.setSelectedTableConsumer(this::createAndOpenTab);
 

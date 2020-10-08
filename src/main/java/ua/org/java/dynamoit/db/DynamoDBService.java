@@ -26,9 +26,8 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class DynamoDBService {
 
@@ -36,12 +35,11 @@ public class DynamoDBService {
     private final Map<String, AmazonDynamoDB> profileDynamoDBClientMap = new HashMap<>();
     private final Map<String, DynamoDB> profileDocumentClientMap = new HashMap<>();
 
-    public Set<Profile> getAvailableProfiles() {
+    public Stream<Profile> getAvailableProfiles() {
         return profilesConfigFile.getAllBasicProfiles()
                 .values()
                 .stream()
-                .map(profile -> new Profile(profile.getProfileName(), profile.getRegion()))
-                .collect(Collectors.toSet());
+                .map(profile -> new Profile(profile.getProfileName(), profile.getRegion()));
     }
 
     public CompletableFuture<List<String>> getListOfTables(String profile) {
