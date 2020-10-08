@@ -33,8 +33,10 @@ import ua.org.java.dynamoit.components.tablegrid.TableGridComponent;
 import ua.org.java.dynamoit.components.tablegrid.TableGridContext;
 import ua.org.java.dynamoit.components.tablegrid.TableGridView;
 import ua.org.java.dynamoit.utils.DX;
+import ua.org.java.dynamoit.utils.HighlightColors;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -61,6 +63,7 @@ public class MainView extends VBox {
                             DX.toolBar(toolBar -> {
                                 this.profilesToolBar = toolBar;
                                 toolBar.setOrientation(Orientation.VERTICAL);
+                                toolBar.getStylesheets().add(getClass().getResource("/css/toggle-buttons.css").toExternalForm());
                                 return List.of();
                             }),
 
@@ -90,16 +93,19 @@ public class MainView extends VBox {
                 })
         );
 
+        Iterator<HighlightColors> colorsIterator = List.of(HighlightColors.values()).iterator();
         JavaFxObservable.additionsOf(mainModel.getAvailableProfiles())
                 .subscribe(profile -> {
                     String profileName = profile.getKey();
-
                     profilesToolBar.getItems().add(
                             new Group(DX.create(ToggleButton::new, (ToggleButton button) -> {
                                 button.setText(profileName);
                                 button.setUserData(profileName);
                                 button.setRotate(-90);
                                 button.setToggleGroup(profileToggleGroup);
+                                if (colorsIterator.hasNext()) {
+                                    button.getStyleClass().add(colorsIterator.next().toggleButtonClass());
+                                }
                             }))
                     );
                 });
