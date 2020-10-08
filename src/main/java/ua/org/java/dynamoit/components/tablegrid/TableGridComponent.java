@@ -34,7 +34,7 @@ public interface TableGridComponent {
     @Component.Builder
     interface Builder {
         @BindsInstance
-        Builder mainModel(MainModel mainModel);
+        Builder profileModel(MainModel.ProfileModel profileModel);
         @BindsInstance
         Builder eventBus(EventBus eventBus);
         @BindsInstance

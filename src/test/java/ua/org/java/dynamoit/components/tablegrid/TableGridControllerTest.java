@@ -23,12 +23,9 @@ import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Page;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import org.junit.Test;
-import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.MainModel;
 import ua.org.java.dynamoit.db.DynamoDBService;
 import ua.org.java.dynamoit.model.TableDef;
-
-import java.util.concurrent.ForkJoinPool;
 
 import static org.easymock.EasyMock.*;
 
@@ -37,11 +34,12 @@ public class TableGridControllerTest {
     @Test
     public void onRefreshData() {
         TableGridContext context = new TableGridContext("profile1", "table1");
-        EventBus eventBus = new EventBus(ForkJoinPool.commonPool());
         MainModel mainModel = new MainModel();
+        mainModel.addProfile("profile1", "region1");
+        mainModel.addProfile("profile2", "region2");
         TableDef tableDef = new TableDef("Table1");
         tableDef.setHashAttribute("hash_attr");
-        TableGridModel model = new TableGridModel(mainModel);
+        TableGridModel model = new TableGridModel(mainModel.getAvailableProfiles().get("profile1"));
         model.setTableDef(tableDef);
         model.getRows().add(new Item());
 

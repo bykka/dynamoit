@@ -286,19 +286,19 @@ public class TableGridView extends VBox {
                                         allTablesMenuItem.textProperty().bind(Bindings.concat("All tables"));
                                         allTablesMenuItem.setGraphic(DX.icon("icons/database.png"));
                                         allTablesMenuItem.getItems().addAll(
-                                                tableModel.getMainModel().getAvailableProfiles().get(tableModel.getProfile()).getAvailableTables().stream().map(tableDef ->
+                                                tableModel.getProfileModel().getAvailableTables().stream().map(tableDef ->
                                                         buildContextMenuByTableDef(tableDef, cell.getText())
                                                 ).collect(Collectors.toList())
                                         );
                                     })
                             );
                             menuSearch.getItems().addAll(
-                                    tableModel.getMainModel().getAvailableProfiles().get(tableModel.getProfile()).getSavedFilters().stream().map(filter ->
+                                    tableModel.getProfileModel().getSavedFilters().stream().map(filter ->
                                             DX.create(Menu::new, filterMenuItem -> {
                                                 filterMenuItem.textProperty().bind(Bindings.concat("Contains: " + filter));
                                                 filterMenuItem.setGraphic(DX.icon("icons/folder_star.png"));
                                                 filterMenuItem.getItems().addAll(
-                                                        tableModel.getMainModel().getAvailableProfiles().get(tableModel.getProfile()).getAvailableTables().stream()
+                                                        tableModel.getProfileModel().getAvailableTables().stream()
                                                                 .filter(tableDef -> tableDef.getName().contains(filter))
                                                                 .map(tableDef ->
                                                                         buildContextMenuByTableDef(tableDef, cell.getText())

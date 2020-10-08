@@ -31,8 +31,8 @@ public class TableGridModule {
 
     @Provides
     @Singleton
-    public TableGridModel model(MainModel mainModel) {
-        return new TableGridModel(mainModel);
+    public TableGridModel model(MainModel.ProfileModel profileModel) {
+        return new TableGridModel(profileModel);
     }
 
     @Provides

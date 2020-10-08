@@ -31,7 +31,7 @@ import ua.org.java.dynamoit.model.TableDef;
 
 public class TableGridModel {
 
-    private final MainModel mainModel;
+    private final MainModel.ProfileModel profileModel;
 
     private TableDef tableDef;
     private TableDescription originalTableDescription;
@@ -44,12 +44,12 @@ public class TableGridModel {
 
     private final ObservableMap<String, SimpleStringProperty> attributeFilterMap = FXCollections.observableHashMap();
 
-    public TableGridModel(MainModel mainModel) {
-        this.mainModel = mainModel;
+    public TableGridModel(MainModel.ProfileModel profileModel) {
+        this.profileModel = profileModel;
     }
 
-    public MainModel getMainModel() {
-        return mainModel;
+    public MainModel.ProfileModel getProfileModel() {
+        return profileModel;
     }
 
     public TableDef getTableDef() {

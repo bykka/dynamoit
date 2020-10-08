@@ -84,7 +84,7 @@ public class TableGridController {
         this.eventBus = eventBus;
         this.uiExecutor = uiExecutor;
 
-        tableModel.getMainModel().getAvailableProfiles().get(context.getProfileName()).getAvailableTables().stream()
+        tableModel.getProfileModel().getAvailableTables().stream()
                 .filter(tableDef -> tableDef.getName().equals(context.getTableName()))
                 .findFirst()
                 .ifPresent(tableModel::setTableDef);
