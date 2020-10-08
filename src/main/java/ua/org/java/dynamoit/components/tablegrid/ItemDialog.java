@@ -135,7 +135,7 @@ public class ItemDialog extends Dialog<String> {
                 })
         );
         ((Stage) this.getDialogPane().getScene().getWindow()).getIcons().add(new Image("icons/page.png"));
-        ButtonType saveButton = new ButtonType("Save", ButtonBar.ButtonData.APPLY);
+        ButtonType saveButton = new ButtonType("Save", ButtonBar.ButtonData.LEFT);
         this.getDialogPane().getButtonTypes().addAll(saveButton, ButtonType.CLOSE);
 
         this.initModality(Modality.NONE);
