@@ -17,7 +17,7 @@
 
 /*  ---=== LIGHTCYAN ===---  */
 .toggle-button-lightcyan {
-    -fx-background-color: -fx-shadow-highlight-color, -fx-outer-border, -fx-inner-border, lightcyan;
+    -fx-background-color: -fx-shadow-highlight-color, -fx-outer-border, lightcyan, lightcyan;
 }
 .toggle-button-lightcyan:focused {
     -fx-background-color: -fx-focus-color, -fx-inner-border, -fx-body-color, -fx-faint-focus-color, lightcyan;
@@ -47,7 +47,7 @@
 
 /*  ---=== ANTIQUEWHITE ===---  */
 .toggle-button-antiquewhite {
-    -fx-background-color: -fx-shadow-highlight-color, -fx-outer-border, -fx-inner-border, antiquewhite;
+    -fx-background-color: -fx-shadow-highlight-color, -fx-outer-border, antiquewhite, antiquewhite;
 }
 .toggle-button-antiquewhite:focused {
     -fx-background-color: -fx-focus-color, -fx-inner-border, -fx-body-color, -fx-faint-focus-color, antiquewhite;
@@ -77,7 +77,7 @@
 
 /*  ---=== LIGHTPINK ===---  */
 .toggle-button-lightpink {
-    -fx-background-color: -fx-shadow-highlight-color, -fx-outer-border, -fx-inner-border, lightpink;
+    -fx-background-color: -fx-shadow-highlight-color, -fx-outer-border, lightpink, lightpink;
 }
 .toggle-button-lightpink:focused {
     -fx-background-color: -fx-focus-color, -fx-inner-border, -fx-body-color, -fx-faint-focus-color, lightpink;

@@ -27,4 +27,8 @@ public enum HighlightColors {
         return "toggle-button-" + this.name();
     }
 
+    public String tabClass() {
+        return "tab-" + this.name();
+    }
+
 }

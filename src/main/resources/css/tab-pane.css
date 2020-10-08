@@ -1,0 +1,64 @@
+/*
+ * This file is part of DynamoIt.
+ *
+ *     DynamoIt is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     DynamoIt is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with DynamoIt.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/*  ---=== LIGHTCYAN ===---  */
+.tab-lightcyan {
+    -fx-background-color: -fx-outer-border,
+    linear-gradient(to bottom,
+            derive(lightcyan, -22%) 0%,
+            derive(lightcyan, -13%) 20%,
+            derive(lightcyan, -11%) 50%),
+    linear-gradient(to bottom,
+            derive(lightcyan, -22%) 0%,
+            derive(lightcyan, -13%) 20%,
+            derive(lightcyan, -11%) 50%);
+}
+.tab-lightcyan:selected {
+    -fx-background-color: -fx-outer-border, lightcyan, lightcyan;
+}
+
+/*  ---=== ANTIQUEWHITE ===---  */
+.tab-antiquewhite {
+    -fx-background-color: -fx-outer-border,
+    linear-gradient(to bottom,
+            derive(antiquewhite, -22%) 0%,
+            derive(antiquewhite, -13%) 20%,
+            derive(antiquewhite, -11%) 50%),
+    linear-gradient(to bottom,
+            derive(antiquewhite, -22%) 0%,
+            derive(antiquewhite, -13%) 20%,
+            derive(antiquewhite, -11%) 50%);
+}
+.tab-antiquewhite:selected {
+    -fx-background-color: -fx-outer-border, antiquewhite, antiquewhite;
+}
+
+/*  ---=== LIGHTPINK ===---  */
+.tab-lightpink {
+    -fx-background-color: -fx-outer-border,
+    linear-gradient(to bottom,
+            derive(lightpink, -22%) 0%,
+            derive(lightpink, -13%) 20%,
+            derive(lightpink, -11%) 50%),
+    linear-gradient(to bottom,
+            derive(lightpink, -22%) 0%,
+            derive(lightpink, -13%) 20%,
+            derive(lightpink, -11%) 50%);
+}
+.tab-lightpink:selected {
+    -fx-background-color: -fx-outer-border, lightpink, lightpink;
+}

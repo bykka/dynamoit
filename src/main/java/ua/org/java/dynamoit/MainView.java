@@ -42,6 +42,7 @@ import java.util.Map;
 
 public class MainView extends VBox {
 
+    private final MainModel mainModel;
     private final MainController controller;
 
     private final ToggleGroup profileToggleGroup = new ToggleGroup();
@@ -52,6 +53,7 @@ public class MainView extends VBox {
     private double dividerPosition = 0.35;
 
     public MainView(MainModel mainModel, MainController controller, ActivityIndicator activityIndicator) {
+        this.mainModel = mainModel;
         this.controller = controller;
         this.controller.setSelectedTableConsumer(this::createAndOpenTab);
 
@@ -74,6 +76,7 @@ public class MainView extends VBox {
                                         return List.of(
                                                 DX.create(TabPane::new, (TabPane tabPane) -> {
                                                     this.tabPane = tabPane;
+                                                    tabPane.getStylesheets().add(getClass().getResource("/css/tab-pane.css").toExternalForm());
                                                 })
                                         );
                                     }
@@ -97,15 +100,17 @@ public class MainView extends VBox {
         JavaFxObservable.additionsOf(mainModel.getAvailableProfiles())
                 .subscribe(profile -> {
                     String profileName = profile.getKey();
+                    if (colorsIterator.hasNext()) {
+                        profile.getValue().setColor(colorsIterator.next());
+                    }
+
                     profilesToolBar.getItems().add(
                             new Group(DX.create(ToggleButton::new, (ToggleButton button) -> {
                                 button.setText(profileName);
                                 button.setUserData(profileName);
                                 button.setRotate(-90);
                                 button.setToggleGroup(profileToggleGroup);
-                                if (colorsIterator.hasNext()) {
-                                    button.getStyleClass().add(colorsIterator.next().toggleButtonClass());
-                                }
+                                profile.getValue().getColor().ifPresent(color -> button.getStyleClass().add(color.toggleButtonClass()));
                             }))
                     );
                 });
@@ -139,6 +144,9 @@ public class MainView extends VBox {
         tableItemsView.setOnSearchInTable(this::createAndOpenTab);
 
         Tab tab = new Tab(tableContext.getTableName(), tableItemsView);
+        MainModel.ProfileModel profileModel = mainModel.getAvailableProfiles().get(tableContext.getProfileName());
+        profileModel.getColor().ifPresent(color -> tab.getStyleClass().add(color.tabClass()));
+
         tabPane.getTabs().add(tab);
         tabPane.getSelectionModel().select(tab);
     }

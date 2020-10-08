@@ -23,9 +23,11 @@ import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 import javafx.collections.transformation.FilteredList;
 import ua.org.java.dynamoit.model.TableDef;
+import ua.org.java.dynamoit.utils.HighlightColors;
 
 import java.util.LinkedHashMap;
 import java.util.Objects;
+import java.util.Optional;
 
 public class MainModel {
 
@@ -47,6 +49,7 @@ public class MainModel {
         private final ObservableList<String> savedFilters = FXCollections.observableArrayList();
         private final String profile;
         private final String region;
+        private HighlightColors color;
 
         public ProfileModel(String profile, String region) {
             this.profile = profile;
@@ -80,6 +83,14 @@ public class MainModel {
 
         public String getRegion() {
             return region;
+        }
+
+        public Optional<HighlightColors> getColor() {
+            return Optional.ofNullable(color);
+        }
+
+        public void setColor(HighlightColors color) {
+            this.color = color;
         }
     }
 
