@@ -45,3 +45,7 @@
 .main-selection {
     -fx-fill: lemonchiffon;
 }
+
+.paragraph-box:has-caret {
+    -fx-background-color: derive(-fx-cell-hover-color, 50%)
+}

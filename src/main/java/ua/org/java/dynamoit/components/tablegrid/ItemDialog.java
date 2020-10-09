@@ -22,7 +22,11 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.rxjavafx.observables.JavaFxObservable;
 import io.reactivex.rxjavafx.observers.JavaFxObserver;
 import io.reactivex.rxjavafx.schedulers.JavaFxScheduler;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.geometry.BoundingBox;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -44,6 +48,7 @@ import org.reactfx.EventStream;
 import org.reactfx.Subscription;
 import ua.org.java.dynamoit.components.jsoneditor.JsonEditor;
 import ua.org.java.dynamoit.utils.DX;
+import ua.org.java.dynamoit.utils.ObservableListIterator;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -62,6 +67,7 @@ public class ItemDialog extends Dialog<String> {
     private Disposable focusDisposable;
     private final List<Selection<Collection<String>, String, Collection<String>>> selections = new ArrayList<>();
     private final SimpleBooleanProperty showSearch = new SimpleBooleanProperty(false);
+    private final SimpleObjectProperty<ObservableListIterator<Pair<Integer, String>>> findIterator = new SimpleObjectProperty<>();
 
     public ItemDialog(String title, String json, Function<EventStream<String>, EventStream<Boolean>> validator) {
         this.setTitle(title);
@@ -79,17 +85,11 @@ public class ItemDialog extends Dialog<String> {
                 .observeOn(JavaFxScheduler.platform());
 
         matches.subscribe(list -> {
+            findIterator.set(new ObservableListIterator<>(list.listIterator()));
             cleanAllSelections();
             list.forEach(line -> {
-                Integer key = line.getKey();
-                textArea.moveTo(key, 0);
-                Selection<Collection<String>, String, Collection<String>> selection = new SelectionImpl<>("match" + key, textArea, path -> {
-                    path.setStroke(Color.GREEN);
-                    path.setStrokeWidth(1);
-                    path.setHighlightFill(Color.LIGHTYELLOW);
-                });
+                Selection<Collection<String>, String, Collection<String>> selection = createSelection(line);
                 textArea.addSelection(selection);
-                selection.selectRange(key, 0, key, line.getValue().length());
                 selections.add(selection);
             });
         });
@@ -104,7 +104,7 @@ public class ItemDialog extends Dialog<String> {
 
         this.getDialogPane().setContent(
                 DX.create(VBox::new, vBox -> {
-                    vBox.setPadding(new Insets(0, 0, 0, 0));
+                    vBox.setPadding(new Insets(1, 1, 1, 1));
                     vBox.getChildren().addAll(
                             DX.toolBar(toolBar -> {
                                         toolBar.visibleProperty().bind(showSearch);
@@ -112,19 +112,33 @@ public class ItemDialog extends Dialog<String> {
                                         return List.of(
                                                 DX.create(() -> this.searchField, textField -> {
                                                     HBox.setHgrow(textField, Priority.ALWAYS);
-                                                    textField.setOnKeyPressed(event -> {
-                                                        if (KeyCode.ESCAPE == event.getCode()) {
-                                                            event.consume();
-                                                            hideToolbar();
-                                                        }
-                                                    });
+                                                    textField.setOnKeyPressed(this::hideToolbarOnEscPress);
                                                 }),
                                                 DX.create(Label::new, label -> {
                                                     label.textProperty().bind(JavaFxObserver.toBinding(matches.map(list -> list.size() + " matches")));
                                                 }),
                                                 DX.create(Button::new, button -> {
+                                                    button.setGraphic(DX.icon("icons/arrow_up.png"));
+                                                    button.setDisable(true);
+                                                    button.setOnKeyPressed(this::hideToolbarOnEscPress);
+                                                    button.setOnAction(event -> scrollTo(findIterator.get().previous().getKey()));
+                                                    findIterator.addListener((__, ___, newValue) -> {
+                                                        button.disableProperty().bind(Bindings.not(newValue.hasPreviousProperty()));
+                                                    });
+                                                }),
+                                                DX.create(Button::new, button -> {
+                                                    button.setGraphic(DX.icon("icons/arrow_down.png"));
+                                                    button.setDisable(true);
+                                                    button.setOnKeyPressed(this::hideToolbarOnEscPress);
+                                                    button.setOnAction(event -> scrollTo(findIterator.get().next().getKey()));
+                                                    findIterator.addListener((observable, oldValue, newValue) -> {
+                                                        button.disableProperty().bind(Bindings.not(newValue.hasNextProperty()));
+                                                    });
+                                                }),
+                                                DX.create(Button::new, button -> {
                                                     button.setTooltip(new Tooltip("Hide toolbar"));
                                                     button.setGraphic(DX.icon("icons/cross.png"));
+                                                    button.setOnKeyPressed(this::hideToolbarOnEscPress);
                                                     button.setOnAction(event -> hideToolbar());
                                                 })
                                         );
@@ -156,16 +170,17 @@ public class ItemDialog extends Dialog<String> {
 
         saveButtonDisable.accept(true);
 
-        this.onShowingProperty().set(event -> {
+        this.setOnShowing(event -> {
             validationSubscribe = validator.apply(textArea.multiPlainChanges()
                     .map(__ -> textArea.getText()))
                     .subscribe(valid -> saveButtonDisable.accept(!valid));
 
             textArea.replaceText(json);
             textArea.requestFocus();
+            textArea.moveTo(0, 0);
         });
 
-        this.onCloseRequestProperty().set(event -> {
+        this.setOnCloseRequest(event -> {
             if (validationSubscribe != null) {
                 validationSubscribe.unsubscribe();
             }
@@ -198,4 +213,32 @@ public class ItemDialog extends Dialog<String> {
         this.searchField.clear();
         this.cleanAllSelections();
     }
+
+    private void hideToolbarOnEscPress(KeyEvent event) {
+        if (KeyCode.ESCAPE == event.getCode()) {
+            event.consume();
+            hideToolbar();
+        }
+    }
+
+    private void scrollTo(int lineNumber) {
+        Bounds bb = textArea.getLayoutBounds();
+        int percent = (int) (bb.getHeight() / 3);
+        textArea.showParagraphRegion(lineNumber, new BoundingBox(bb.getMinX() + percent, 0, 0, bb.getHeight() - percent));
+        textArea.moveTo(lineNumber, 0);
+    }
+
+    private Selection<Collection<String>, String, Collection<String>> createSelection(Pair<Integer, String> indexLine) {
+        Selection<Collection<String>, String, Collection<String>> selection = new SelectionImpl<>(
+                "match" + indexLine.getKey(),
+                textArea,
+                path -> {
+                    path.setStroke(Color.GREEN);
+                    path.setStrokeWidth(1);
+                    path.setHighlightFill(Color.LIGHTYELLOW);
+                });
+        selection.selectRange(indexLine.getKey(), 0, indexLine.getKey(), indexLine.getValue().length());
+        return selection;
+    }
+
 }

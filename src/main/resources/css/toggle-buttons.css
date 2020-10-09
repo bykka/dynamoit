@@ -20,7 +20,7 @@
     -fx-background-color: -fx-shadow-highlight-color, -fx-outer-border, lightcyan, lightcyan;
 }
 .toggle-button-lightcyan:focused {
-    -fx-background-color: -fx-focus-color, -fx-inner-border, -fx-body-color, -fx-faint-focus-color, lightcyan;
+    -fx-background-color: -fx-focus-color, -fx-inner-border, lightcyan, -fx-faint-focus-color, lightcyan;
 }
 .toggle-button-lightcyan:selected:focused {
     -fx-background-color:
@@ -50,7 +50,7 @@
     -fx-background-color: -fx-shadow-highlight-color, -fx-outer-border, antiquewhite, antiquewhite;
 }
 .toggle-button-antiquewhite:focused {
-    -fx-background-color: -fx-focus-color, -fx-inner-border, -fx-body-color, -fx-faint-focus-color, antiquewhite;
+    -fx-background-color: -fx-focus-color, -fx-inner-border, antiquewhite, -fx-faint-focus-color, antiquewhite;
 }
 .toggle-button-antiquewhite:selected:focused {
     -fx-background-color:
@@ -80,7 +80,7 @@
     -fx-background-color: -fx-shadow-highlight-color, -fx-outer-border, lightpink, lightpink;
 }
 .toggle-button-lightpink:focused {
-    -fx-background-color: -fx-focus-color, -fx-inner-border, -fx-body-color, -fx-faint-focus-color, lightpink;
+    -fx-background-color: -fx-focus-color, -fx-inner-border, lightpink, -fx-faint-focus-color, lightpink;
 }
 .toggle-button-lightpink:selected:focused {
     -fx-background-color:
