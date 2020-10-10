@@ -42,8 +42,8 @@ public class ProfileView extends VBox {
     private TreeView<String> treeView;
 
     private final TreeItem<String> allTables;
-    private MainModel.ProfileModel model;
-    private ProfileController controller;
+    private final MainModel.ProfileModel model;
+    private final ProfileController controller;
 
     public ProfileView(ProfileController controller, MainModel.ProfileModel model) {
         this.model = model;

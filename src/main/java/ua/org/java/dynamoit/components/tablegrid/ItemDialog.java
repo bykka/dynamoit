@@ -122,7 +122,7 @@ public class ItemDialog extends Dialog<String> {
                                                     button.setDisable(true);
                                                     button.setOnKeyPressed(this::hideToolbarOnEscPress);
                                                     button.setOnAction(event -> scrollTo(findIterator.get().previous().getKey()));
-                                                    findIterator.addListener((__, ___, newValue) -> {
+                                                    findIterator.addListener((observable, oldValue, newValue) -> {
                                                         button.disableProperty().bind(Bindings.not(newValue.hasPreviousProperty()));
                                                     });
                                                 }),

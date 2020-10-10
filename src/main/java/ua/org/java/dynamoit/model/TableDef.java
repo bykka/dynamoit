@@ -41,16 +41,8 @@ public class TableDef {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public String getHashAttribute() {
         return hashAttribute.get();
-    }
-
-    public SimpleStringProperty hashAttributeProperty() {
-        return hashAttribute;
     }
 
     public void setHashAttribute(String hashAttribute) {
@@ -61,20 +53,12 @@ public class TableDef {
         return rangeAttribute.get();
     }
 
-    public SimpleStringProperty rangeAttributeProperty() {
-        return rangeAttribute;
-    }
-
     public void setRangeAttribute(String rangeAttribute) {
         this.rangeAttribute.set(rangeAttribute);
     }
 
     public ObservableMap<String, Attributes.Type> getAttributeTypesMap() {
         return attributeTypesMap;
-    }
-
-    public long getTotalCount() {
-        return totalCount.get();
     }
 
     public SimpleLongProperty totalCountProperty() {
