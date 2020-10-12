@@ -1,4 +1,4 @@
-# DynamoIt
+##Overview
 It's a simple DynamoDB graphical client written on JavaFX.
 
 This client allows easily to view, edit, create, and delete data.
@@ -22,7 +22,6 @@ Execute the next command to build
 ```
 mvn clean package
 ```
-
 A jar file with all dependencies will be created in the _target_ directory.
 
 To run the application simply execute the command
@@ -31,6 +30,6 @@ java -jar target/DynamoIt-<version>.jar
 ```
 
 ## Screenshots:
-![main screen](./docs/images/main_screen.png)
+![main screen](./images/main_screen.png)
 
-![edit screen](./docs/images/edit_screen.png)
+![edit screen](./images/edit_screen.png)
