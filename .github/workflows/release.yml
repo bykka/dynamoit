@@ -5,25 +5,87 @@ on:
     tags:
       - '*'
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  build:
+  build-release:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v2
+
+          - name: Set up Java
+            uses: actions/setup-java@v1
+            with:
+              java-version: 15
+
+          - name: Build Package
+            run: mvn clean package
+
+          - name: Create Release
+            uses: actions/create-release@v1
+            env:
+              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            with:
+              tag_name: ${{ github.ref }}
+              release_name: Release ${{ github.ref }}
+              draft: false
+              prerelease: false
+
+  build-linux-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
       - name: Set up Java
         uses: actions/setup-java@v1
         with:
-          java-version: 11
-      - name: Build package
+          java-version: 15
+
+      - name: Build Package
         run: mvn clean package
-      - name: Create Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Linux
+        uses: actions/upload-artifact@v2
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
+          name: DynamoIt-linux
+          path: target/DynamoIt/*
+
+  build-windows-package:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 15
+
+      - name: Build Package
+        run: mvn clean package
+
+      - name: Upload Windows
+        uses: actions/upload-artifact@v2
+        with:
+          name: DynamoIt-windows
+          path: target/DynamoIt/*
+
+  build-macos-package:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 15
+
+      - name: Build Package
+        run: mvn clean package
+
+      - name: Upload MacOS
+        uses: actions/upload-artifact@v2
+        with:
+          name: DynamoIt-macos
+          path: target/DynamoIt/*
