@@ -25,7 +25,7 @@ A jar file with all dependencies will be created in the _target_ directory.
 
 To run the application simply execute the command
 ```
-java -jar target/DynamoIt-<version>.jar 
+java -jar target/fatJar/DynamoIt-<version>.jar 
 ```
 
 ## Screenshots:

@@ -42,7 +42,7 @@ jobs:
           java-version: 15
 
       - name: Build Package
-        run: mvn clean package
+        run: mvn clean package -Ppackage
 
       - name: Upload Linux
         uses: actions/upload-artifact@v2
@@ -62,7 +62,7 @@ jobs:
           java-version: 15
 
       - name: Build Package
-        run: mvn clean package
+        run: mvn clean package -Ppackage
 
       - name: Upload Windows
         uses: actions/upload-artifact@v2
@@ -82,7 +82,7 @@ jobs:
           java-version: 15
 
       - name: Build Package
-        run: mvn clean package
+        run: mvn clean package -Ppackage
 
       - name: Upload MacOS
         uses: actions/upload-artifact@v2
