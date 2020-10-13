@@ -6,6 +6,66 @@ on:
       - '*'
 
 jobs:
+  build-linux-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 15
+
+      - name: Build Package
+        run: mvn clean package -Ppackage
+
+      - name: Upload Linux
+        uses: actions/upload-artifact@v2
+        with:
+          name: DynamoIt-linux
+          path: target/DynamoIt/
+
+  build-windows-package:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 15
+
+      - name: Build Package
+        run: mvn clean package -Ppackage
+
+      - name: Upload Windows
+        uses: actions/upload-artifact@v2
+        with:
+          name: DynamoIt-windows
+          path: target/DynamoIt/
+
+  build-macos-package:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 15
+
+      - name: Build Package
+        run: mvn clean package -Ppackage
+
+      - name: Upload MacOS
+        uses: actions/upload-artifact@v2
+        with:
+          name: DynamoIt-macos
+          path: target/DynamoIt.app/
+
   build-release:
     runs-on: ubuntu-latest
     steps:
@@ -29,63 +89,3 @@ jobs:
           release_name: Release ${{ github.ref }}
           draft: false
           prerelease: false
-
-  build-linux-package:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-
-      - name: Set up Java
-        uses: actions/setup-java@v1
-        with:
-          java-version: 15
-
-      - name: Build Package
-        run: mvn clean package -Ppackage
-
-      - name: Upload Linux
-        uses: actions/upload-artifact@v2
-        with:
-          name: DynamoIt-linux
-          path: target/DynamoIt/*
-
-  build-windows-package:
-    runs-on: windows-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-
-      - name: Set up Java
-        uses: actions/setup-java@v1
-        with:
-          java-version: 15
-
-      - name: Build Package
-        run: mvn clean package -Ppackage
-
-      - name: Upload Windows
-        uses: actions/upload-artifact@v2
-        with:
-          name: DynamoIt-windows
-          path: target/DynamoIt/*
-
-  build-macos-package:
-    runs-on: macos-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-
-      - name: Set up Java
-        uses: actions/setup-java@v1
-        with:
-          java-version: 15
-
-      - name: Build Package
-        run: mvn clean package -Ppackage
-
-      - name: Upload MacOS
-        uses: actions/upload-artifact@v2
-        with:
-          name: DynamoIt-macos
-          path: target/DynamoIt.app/*
