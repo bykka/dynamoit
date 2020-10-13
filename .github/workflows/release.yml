@@ -12,23 +12,23 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
 
-          - name: Set up Java
-            uses: actions/setup-java@v1
-            with:
-              java-version: 15
+      - name: Set up Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 15
 
-          - name: Build Package
-            run: mvn clean package
+      - name: Build Package
+        run: mvn clean package
 
-          - name: Create Release
-            uses: actions/create-release@v1
-            env:
-              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            with:
-              tag_name: ${{ github.ref }}
-              release_name: Release ${{ github.ref }}
-              draft: false
-              prerelease: false
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
 
   build-linux-package:
     runs-on: ubuntu-latest
