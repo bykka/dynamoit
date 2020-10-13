@@ -85,48 +85,55 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>3.0.0</version>
-                <executions>
-                    <execution>
-                        <id>create-package</id>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <phase>package</phase>
-                        <configuration>
-                            <executable>jpackage</executable>
-                            <arguments>
-                                <argument>--verbose</argument>
-                                <argument>--input</argument>
-                                <argument>${fatJar.dir}</argument>
-                                <argument>--name</argument>
-                                <argument>DynamoIt</argument>
-                                <argument>--main-class</argument>
-                                <argument>${main.class}</argument>
-                                <argument>--main-jar</argument>
-                                <argument>${project.build.finalName}.jar</argument>
-                                <argument>--type</argument>
-                                <argument>app-image</argument>
-                                <argument>--dest</argument>
-                                <argument>${project.build.directory}</argument>
-                                <argument>--copyright</argument>
-                                <argument>GPLv3</argument>
-                                <argument>--vendor</argument>
-                                <argument>Pavlo Iatsiuk</argument>
-                                <argument>--icon</argument>
-                                <argument>${project.basedir}/src/main/resources/icons/${icon}</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
 
     <profiles>
+        <profile>
+            <id>package</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.0.0</version>
+                        <executions>
+                            <execution>
+                                <id>create-package</id>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <phase>package</phase>
+                                <configuration>
+                                    <executable>jpackage</executable>
+                                    <arguments>
+                                        <argument>--verbose</argument>
+                                        <argument>--input</argument>
+                                        <argument>${fatJar.dir}</argument>
+                                        <argument>--name</argument>
+                                        <argument>DynamoIt</argument>
+                                        <argument>--main-class</argument>
+                                        <argument>${main.class}</argument>
+                                        <argument>--main-jar</argument>
+                                        <argument>${project.build.finalName}.jar</argument>
+                                        <argument>--type</argument>
+                                        <argument>app-image</argument>
+                                        <argument>--dest</argument>
+                                        <argument>${project.build.directory}</argument>
+                                        <argument>--copyright</argument>
+                                        <argument>GPLv3</argument>
+                                        <argument>--vendor</argument>
+                                        <argument>Pavlo Iatsiuk</argument>
+                                        <argument>--icon</argument>
+                                        <argument>${project.basedir}/src/main/resources/icons/${icon}</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
         <profile>
             <id>windows</id>
             <activation>
