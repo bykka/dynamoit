@@ -22,7 +22,7 @@
 
     <groupId>ua.org.java</groupId>
     <artifactId>DynamoIt</artifactId>
-    <version>0.1.5</version>
+    <version>0.1.6</version>
     <packaging>jar</packaging>
 
     <description>
