@@ -6,7 +6,7 @@
  *     the Free Software Foundation, either version 3 of the License, or
  *     (at your option) any later version.
  *
- *     Foobar is distributed in the hope that it will be useful,
+ *     DynamoIt is distributed in the hope that it will be useful,
  *     but WITHOUT ANY WARRANTY; without even the implied warranty of
  *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *     GNU General Public License for more details.
@@ -20,58 +20,78 @@ package ua.org.java.dynamoit;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableMap;
 import javafx.collections.transformation.FilteredList;
 import ua.org.java.dynamoit.model.TableDef;
+import ua.org.java.dynamoit.utils.HighlightColors;
 
+import java.util.LinkedHashMap;
 import java.util.Objects;
+import java.util.Optional;
 
 public class MainModel {
 
-    private ObservableList<TableDef> availableTables = FXCollections.observableArrayList();
-    private SimpleStringProperty filter = new SimpleStringProperty("");
-    private FilteredList<TableDef> filteredTables = availableTables.filtered(Objects::nonNull);
-    private ObservableList<String> savedFilters = FXCollections.observableArrayList();
-    private SimpleStringProperty selectedProfile = new SimpleStringProperty();
-    private ObservableList<String> availableProfiles = FXCollections.observableArrayList();
+    private final ObservableMap<String, ProfileModel> availableProfiles = FXCollections.observableMap(new LinkedHashMap<>());
 
-    public MainModel() {
-        filter.addListener((observable, oldValue, newValue) -> filteredTables.setPredicate(value -> value.getName().contains(filter.get())));
-    }
-
-    public ObservableList<TableDef> getAvailableTables() {
-        return availableTables;
-    }
-
-    public String getFilter() {
-        return filter.get();
-    }
-
-    public SimpleStringProperty filterProperty() {
-        return filter;
-    }
-
-    public FilteredList<TableDef> getFilteredTables(){
-         return this.filteredTables;
-    }
-
-    public ObservableList<String> getSavedFilters() {
-        return savedFilters;
-    }
-
-    public String getSelectedProfile() {
-        return selectedProfile.get();
-    }
-
-    public SimpleStringProperty selectedProfileProperty() {
-        return selectedProfile;
-    }
-
-    public ObservableList<String> getAvailableProfiles() {
+    public ObservableMap<String, ProfileModel> getAvailableProfiles() {
         return availableProfiles;
     }
 
-    public void setAvailableProfiles(ObservableList<String> availableProfiles) {
-        this.availableProfiles = availableProfiles;
+    public void addProfile(String profile, String region) {
+        this.availableProfiles.put(profile, new ProfileModel(profile, region));
+    }
+
+    public static class ProfileModel {
+
+        private final ObservableList<TableDef> availableTables = FXCollections.observableArrayList();
+        private final SimpleStringProperty filter = new SimpleStringProperty("");
+        private final FilteredList<TableDef> filteredTables = availableTables.filtered(Objects::nonNull);
+        private final ObservableList<String> savedFilters = FXCollections.observableArrayList();
+        private final String profile;
+        private final String region;
+        private HighlightColors color;
+
+        public ProfileModel(String profile, String region) {
+            this.profile = profile;
+            this.region = region;
+            filter.addListener((observable, oldValue, newValue) -> filteredTables.setPredicate(value -> value.getName().contains(filter.get())));
+        }
+
+        public ObservableList<TableDef> getAvailableTables() {
+            return availableTables;
+        }
+
+        public String getFilter() {
+            return filter.get();
+        }
+
+        public SimpleStringProperty filterProperty() {
+            return filter;
+        }
+
+        public FilteredList<TableDef> getFilteredTables(){
+            return this.filteredTables;
+        }
+
+        public ObservableList<String> getSavedFilters() {
+            return savedFilters;
+        }
+
+        public String getProfile() {
+            return profile;
+        }
+
+        public String getRegion() {
+            return region;
+        }
+
+        public Optional<HighlightColors> getColor() {
+            return Optional.ofNullable(color);
+        }
+
+        public void setColor(HighlightColors color) {
+            this.color = color;
+        }
     }
 
 }

@@ -9,10 +9,11 @@ The main idea of the client is to reach the required data in a few clicks.
  * No login required. The client uses AWS cli profiles.
  * Group tables by keywords
  * Automatically detects when to use scan or query requests
- * Supports pagination to view data
+ * Supports pagination to view the data
  * Fast data filtering
  * Edit or delete the selected records
- * Search (Ctrl+F) in the edit dialog 
+ * Import / Export data as json file 
+ * Search (Ctrl+F) in the edit dialog
 
 ## System requirements, building and running
 Java 11 and maven are required to build and run the application.

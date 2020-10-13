@@ -6,7 +6,7 @@
  *     the Free Software Foundation, either version 3 of the License, or
  *     (at your option) any later version.
  *
- *     Foobar is distributed in the hope that it will be useful,
+ *     DynamoIt is distributed in the hope that it will be useful,
  *     but WITHOUT ANY WARRANTY; without even the implied warranty of
  *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *     GNU General Public License for more details.
@@ -84,12 +84,13 @@ public class TableGridController {
         this.eventBus = eventBus;
         this.uiExecutor = uiExecutor;
 
-        tableModel.getMainModel().getAvailableTables().stream()
+        tableModel.getProfileModel().getAvailableTables().stream()
                 .filter(tableDef -> tableDef.getName().equals(context.getTableName()))
                 .findFirst()
                 .ifPresent(tableModel::setTableDef);
 
         tableModel.setTableName(context.getTableName());
+        tableModel.setProfile(context.getProfileName());
 
         dbClient = dynamoDBService.getOrCreateDynamoDBClient(context.getProfileName());
         documentClient = dynamoDBService.getOrCreateDocumentClient(context.getProfileName());

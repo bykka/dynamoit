@@ -15,16 +15,31 @@
  *     along with DynamoIt.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ua.org.java.dynamoit.components.activityindicator;
+package ua.org.java.dynamoit.components.profileviewer;
 
-import javafx.beans.binding.Bindings;
-import javafx.scene.control.ProgressIndicator;
+import dagger.BindsInstance;
+import dagger.Component;
 import ua.org.java.dynamoit.EventBus;
+import ua.org.java.dynamoit.MainModel;
+import ua.org.java.dynamoit.db.DynamoDBModule;
 
-public class ActivityIndicator extends ProgressIndicator {
+import javax.inject.Singleton;
 
-    public ActivityIndicator(EventBus eventBus) {
-        setPrefSize(16, 16);
-        visibleProperty().bind(Bindings.greaterThan(eventBus.activityCountProperty(), 0));
+@Component(modules = {ProfileModule.class, DynamoDBModule.class})
+@Singleton
+public interface ProfileComponent {
+
+    ProfileView view();
+
+    @Component.Builder
+    interface Builder {
+        @BindsInstance
+        ProfileComponent.Builder mainModel(MainModel mainModel);
+        @BindsInstance
+        ProfileComponent.Builder profile(String profile);
+        @BindsInstance
+        ProfileComponent.Builder eventBus(EventBus eventBus);
+        ProfileComponent build();
     }
+
 }

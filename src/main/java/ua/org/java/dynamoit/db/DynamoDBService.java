@@ -6,7 +6,7 @@
  *     the Free Software Foundation, either version 3 of the License, or
  *     (at your option) any later version.
  *
- *     Foobar is distributed in the hope that it will be useful,
+ *     DynamoIt is distributed in the hope that it will be useful,
  *     but WITHOUT ANY WARRANTY; without even the implied warranty of
  *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *     GNU General Public License for more details.
@@ -26,8 +26,8 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 
 public class DynamoDBService {
 
@@ -35,8 +35,11 @@ public class DynamoDBService {
     private final Map<String, AmazonDynamoDB> profileDynamoDBClientMap = new HashMap<>();
     private final Map<String, DynamoDB> profileDocumentClientMap = new HashMap<>();
 
-    public Set<String> getAvailableProfiles() {
-        return profilesConfigFile.getAllBasicProfiles().keySet();
+    public Stream<Profile> getAvailableProfiles() {
+        return profilesConfigFile.getAllBasicProfiles()
+                .values()
+                .stream()
+                .map(profile -> new Profile(profile.getProfileName(), profile.getRegion()));
     }
 
     public CompletableFuture<List<String>> getListOfTables(String profile) {
@@ -59,6 +62,25 @@ public class DynamoDBService {
             profileDocumentClientMap.put(profileName, dynamoDB);
         }
         return dynamoDB;
+    }
+
+    public static class Profile {
+
+        private final String name;
+        private final String region;
+
+        public Profile(String profile, String region) {
+            this.name = profile;
+            this.region = region;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getRegion() {
+            return region;
+        }
     }
 
 }

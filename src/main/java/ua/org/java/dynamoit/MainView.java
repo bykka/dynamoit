@@ -6,7 +6,7 @@
  *     the Free Software Foundation, either version 3 of the License, or
  *     (at your option) any later version.
  *
- *     Foobar is distributed in the hope that it will be useful,
+ *     DynamoIt is distributed in the hope that it will be useful,
  *     but WITHOUT ANY WARRANTY; without even the implied warranty of
  *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *     GNU General Public License for more details.
@@ -18,133 +18,123 @@
 package ua.org.java.dynamoit;
 
 import io.reactivex.rxjavafx.observables.JavaFxObservable;
-import javafx.beans.binding.Bindings;
-import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
+import javafx.scene.Group;
 import javafx.scene.control.*;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import org.controlsfx.control.textfield.TextFields;
 import ua.org.java.dynamoit.components.activityindicator.ActivityIndicator;
+import ua.org.java.dynamoit.components.profileviewer.ProfileComponent;
+import ua.org.java.dynamoit.components.profileviewer.ProfileView;
 import ua.org.java.dynamoit.components.tablegrid.TableGridComponent;
 import ua.org.java.dynamoit.components.tablegrid.TableGridContext;
 import ua.org.java.dynamoit.components.tablegrid.TableGridView;
-import ua.org.java.dynamoit.model.TableDef;
 import ua.org.java.dynamoit.utils.DX;
+import ua.org.java.dynamoit.utils.HighlightColors;
 
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 public class MainView extends VBox {
 
-    private final MainModel model;
+    private final MainModel mainModel;
     private final MainController controller;
 
-    private final TreeItem<String> allTables;
+    private final ToggleGroup profileToggleGroup = new ToggleGroup();
+    private ToolBar profilesToolBar;
     private TabPane tabPane;
-    private TreeView<String> treeView;
+    private SplitPane splitPane;
+    private final Map<String, ProfileView> profileViews = new HashMap<>();
+    private double dividerPosition = 0.35;
 
     public MainView(MainModel mainModel, MainController controller, ActivityIndicator activityIndicator) {
-        this.model = mainModel;
+        this.mainModel = mainModel;
         this.controller = controller;
-
-        allTables = new AllTreeItem();
+        this.controller.setSelectedTableConsumer(this::createAndOpenTab);
 
         this.getChildren().addAll(
-                List.of(
-                        DX.splitPane(splitPane -> {
-                                    VBox.setVgrow(splitPane, Priority.ALWAYS);
-                                    splitPane.setDividerPositions(0.35);
-                                    return List.of(
-                                            DX.create(VBox::new, vBox1 -> {
-                                                SplitPane.setResizableWithParent(vBox1, false);
-                                                return List.of(
-                                                        DX.toolBar(toolBar -> List.of(
-                                                                DX.create(TextFields::createClearableTextField, textField -> {
-                                                                    HBox.setHgrow(textField, Priority.ALWAYS);
-                                                                    textField.setPromptText("Table name contains");
-                                                                    textField.textProperty().bindBidirectional(mainModel.filterProperty());
-                                                                    textField.disableProperty().bind(mainModel.selectedProfileProperty().isEmpty());
-                                                                }),
-                                                                DX.create(Button::new, button -> {
-                                                                    button.setTooltip(new Tooltip("Save current filter"));
-                                                                    button.setGraphic(DX.icon("icons/star.png"));
-                                                                    button.disableProperty().bind(mainModel.selectedProfileProperty().isEmpty());
-                                                                    button.setOnAction(event -> controller.onSaveFilter());
-                                                                }),
-                                                                DX.create((Supplier<ComboBox<String>>) ComboBox::new, comboBox -> {
-                                                                    comboBox.setItems(mainModel.getAvailableProfiles());
-                                                                    comboBox.valueProperty().bindBidirectional(mainModel.selectedProfileProperty());
-                                                                }),
-                                                                DX.create(Button::new, button -> {
-                                                                    button.setTooltip(new Tooltip("Reload list of tables"));
-                                                                    button.setGraphic(DX.icon("icons/arrow_refresh.png"));
-                                                                    button.disableProperty().bind(mainModel.selectedProfileProperty().isEmpty());
-                                                                    button.setOnAction(__ -> controller.onTablesRefresh());
-                                                                })
-                                                        )),
-                                                        DX.create((Supplier<TreeView<String>>) TreeView::new, treeView -> {
-                                                            VBox.setVgrow(treeView, Priority.ALWAYS);
-                                                            this.treeView = treeView;
-                                                            treeView.setRoot(new TreeItem<>());
-                                                            treeView.setShowRoot(false);
-                                                            treeView.getRoot().getChildren().add(allTables);
-                                                            treeView.setOnMouseClicked(event -> this.onTableSelect(event, treeView.getSelectionModel().getSelectedItem()));
-                                                        })
-                                                );
-                                            }),
-                                            DX.create(TabPane::new, tabPane -> {
-                                                this.tabPane = tabPane;
-                                            })
-                                    );
-                                }
-                        ),
-                        DX.create(HBox::new, hBox -> {
-                            hBox.setPadding(new Insets(3, 3, 3, 3));
-                            hBox.getChildren().addAll(
-                                    List.of(
-                                            DX.create(Pane::new, pane -> {
-                                                HBox.setHgrow(pane, Priority.ALWAYS);
-                                            }),
-                                            activityIndicator
-                                    )
-                            );
-                        })
-                )
+
+                DX.create(HBox::new, (HBox hBox1) -> {
+                    VBox.setVgrow(hBox1, Priority.ALWAYS);
+                    hBox1.getChildren().addAll(
+                            DX.toolBar(toolBar -> {
+                                this.profilesToolBar = toolBar;
+                                toolBar.setOrientation(Orientation.VERTICAL);
+                                toolBar.getStylesheets().add(getClass().getResource("/css/toggle-buttons.css").toExternalForm());
+                                return List.of();
+                            }),
+
+                            DX.splitPane(splitPane -> {
+                                        this.splitPane = splitPane;
+                                        HBox.setHgrow(splitPane, Priority.ALWAYS);
+                                        splitPane.setDividerPositions(dividerPosition);
+                                        return List.of(
+                                                DX.create(TabPane::new, (TabPane tabPane) -> {
+                                                    this.tabPane = tabPane;
+                                                    tabPane.getStylesheets().add(getClass().getResource("/css/tab-pane.css").toExternalForm());
+                                                })
+                                        );
+                                    }
+                            )
+                    );
+                }),
+
+
+                DX.create(HBox::new, hBox -> {
+                    hBox.setPadding(new Insets(3, 3, 3, 3));
+                    hBox.getChildren().addAll(
+                            DX.create(Pane::new, pane -> {
+                                HBox.setHgrow(pane, Priority.ALWAYS);
+                            }),
+                            activityIndicator
+                    );
+                })
         );
 
-        mainModel.getFilteredTables().addListener((ListChangeListener<TableDef>) c -> {
-            allTables.getChildren().setAll(mainModel.getFilteredTables().stream().map(TableDef::getName).map(TableTreeItem::new).collect(Collectors.toList()));
-            allTables.setExpanded(true);
-        });
+        Iterator<HighlightColors> colorsIterator = List.of(HighlightColors.values()).iterator();
+        JavaFxObservable.additionsOf(mainModel.getAvailableProfiles())
+                .subscribe(profile -> {
+                    String profileName = profile.getKey();
+                    if (colorsIterator.hasNext()) {
+                        profile.getValue().setColor(colorsIterator.next());
+                    }
 
-        JavaFxObservable.additionsOf(mainModel.getSavedFilters())
-                .map(filter -> {
-                    FilterTreeItem filterTables = new FilterTreeItem(filter);
-                    filterTables.getChildren().addAll(mainModel.getAvailableTables()
-                            .stream()
-                            .filter(tableDef -> tableDef.getName().contains(filter))
-                            .map(TableDef::getName)
-                            .map(TableTreeItem::new)
-                            .collect(Collectors.toList()));
-                    filterTables.setExpanded(true);
-                    return filterTables;
-                })
-                .subscribe(filterTreeItem -> this.treeView.getRoot().getChildren().add(filterTreeItem));
-    }
+                    profilesToolBar.getItems().add(
+                            new Group(DX.create(ToggleButton::new, (ToggleButton button) -> {
+                                button.setText(profileName);
+                                button.setUserData(profileName);
+                                button.setRotate(-90);
+                                button.setToggleGroup(profileToggleGroup);
+                                profile.getValue().getColor().ifPresent(color -> button.getStyleClass().add(color.toggleButtonClass()));
+                            }))
+                    );
+                });
 
-    private void onTableSelect(MouseEvent event, TreeItem<String> selectedItem) {
-        if (event.getClickCount() == 2 && selectedItem != null) {
-            if (selectedItem instanceof AllTreeItem || selectedItem instanceof FilterTreeItem) {
-                return;
-            }
+        JavaFxObservable.changesOf(profileToggleGroup.selectedToggleProperty())
+                .subscribe(toggleChange -> {
+                    if (toggleChange.getOldVal() != null) {
+                        dividerPosition = splitPane.getDividerPositions()[0];
+                        this.splitPane.getItems().remove(0);
+                    }
+                    if (toggleChange.getNewVal() != null) {
+                        String profileName = toggleChange.getNewVal().getUserData().toString();
 
-            createAndOpenTab(new TableGridContext(model.getSelectedProfile(), selectedItem.getValue()));
-        }
+                        ProfileView profileView = profileViews.computeIfAbsent(profileName, s -> {
+                            ProfileComponent profileComponent = controller.buildProfileComponent(profileName);
+                            return profileComponent.view();
+                        });
+
+                        this.splitPane.getItems().add(0, profileView);
+                        SplitPane.setResizableWithParent(profileView, false);
+                        splitPane.setDividerPositions(dividerPosition);
+                    }
+                });
+
     }
 
     private void createAndOpenTab(TableGridContext tableContext) {
@@ -154,32 +144,12 @@ public class MainView extends VBox {
         tableItemsView.setOnSearchInTable(this::createAndOpenTab);
 
         Tab tab = new Tab(tableContext.getTableName(), tableItemsView);
+        MainModel.ProfileModel profileModel = mainModel.getAvailableProfiles().get(tableContext.getProfileName());
+        profileModel.getColor().ifPresent(color -> tab.getStyleClass().add(color.tabClass()));
+
         tabPane.getTabs().add(tab);
         tabPane.getSelectionModel().select(tab);
     }
 
-    private class AllTreeItem extends TreeItem<String> {
-
-        public AllTreeItem() {
-            super("All tables", DX.icon("icons/database.png"));
-            valueProperty().bind(Bindings.concat("All tables (", Bindings.size(model.getFilteredTables()), ")"));
-        }
-
-    }
-
-    private static class FilterTreeItem extends TreeItem<String> {
-
-        public FilterTreeItem(String filter) {
-            super("Contains: " + filter, DX.icon("icons/folder_star.png"));
-        }
-    }
-
-    private static class TableTreeItem extends TreeItem<String> {
-
-        public TableTreeItem(String text) {
-            super(text, DX.icon("icons/table.png"));
-        }
-
-    }
 
 }

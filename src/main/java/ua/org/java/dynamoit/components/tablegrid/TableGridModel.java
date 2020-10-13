@@ -6,7 +6,7 @@
  *     the Free Software Foundation, either version 3 of the License, or
  *     (at your option) any later version.
  *
- *     Foobar is distributed in the hope that it will be useful,
+ *     DynamoIt is distributed in the hope that it will be useful,
  *     but WITHOUT ANY WARRANTY; without even the implied warranty of
  *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *     GNU General Public License for more details.
@@ -31,11 +31,12 @@ import ua.org.java.dynamoit.model.TableDef;
 
 public class TableGridModel {
 
-    private final MainModel mainModel;
+    private final MainModel.ProfileModel profileModel;
 
     private TableDef tableDef;
     private TableDescription originalTableDescription;
     private String tableName;
+    private String profile;
 
     private final ObservableList<Item> rows = FXCollections.observableArrayList();
     private final IntegerBinding rowsSize = Bindings.createIntegerBinding(rows::size, rows);
@@ -43,12 +44,12 @@ public class TableGridModel {
 
     private final ObservableMap<String, SimpleStringProperty> attributeFilterMap = FXCollections.observableHashMap();
 
-    public TableGridModel(MainModel mainModel) {
-        this.mainModel = mainModel;
+    public TableGridModel(MainModel.ProfileModel profileModel) {
+        this.profileModel = profileModel;
     }
 
-    public MainModel getMainModel() {
-        return mainModel;
+    public MainModel.ProfileModel getProfileModel() {
+        return profileModel;
     }
 
     public TableDef getTableDef() {
@@ -65,6 +66,14 @@ public class TableGridModel {
 
     public void setTableName(String tableName) {
         this.tableName = tableName;
+    }
+
+    public String getProfile() {
+        return profile;
+    }
+
+    public void setProfile(String profile) {
+        this.profile = profile;
     }
 
     public ObservableList<Item> getRows() {

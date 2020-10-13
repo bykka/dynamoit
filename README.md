@@ -9,9 +9,10 @@ The main idea of the client is to reach the required data in a few clicks.
  * No login required. The client uses AWS cli profiles.
  * Group tables by keywords
  * Automatically detects when to use scan or query requests
- * Supports pagination to view data
+ * Supports pagination to view the data
  * Fast data filtering
- * Edit or delete the selected records 
+ * Edit or delete the selected records
+ * Import / Export data as json file 
  * Search (Ctrl+F) in the edit dialog
 
 ## System requirements, building and running
@@ -26,10 +27,10 @@ A jar file with all dependencies will be created in the _target_ directory.
 
 To run the application simply execute the command
 ```
-java -jar target/DynamoIt-<version>.jar 
+java -jar target/fatJar/DynamoIt-<version>.jar 
 ```
 
 ## Screenshots:
-![main screen](./src/site/resources/images/main_screen.png)
+![main screen](./docs/images/main_screen.png)
 
-![edit screen](./src/site/resources/images/edit_screen.png)
+![edit screen](./docs/images/edit_screen.png)

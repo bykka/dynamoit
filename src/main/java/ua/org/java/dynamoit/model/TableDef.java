@@ -6,7 +6,7 @@
  *     the Free Software Foundation, either version 3 of the License, or
  *     (at your option) any later version.
  *
- *     Foobar is distributed in the hope that it will be useful,
+ *     DynamoIt is distributed in the hope that it will be useful,
  *     but WITHOUT ANY WARRANTY; without even the implied warranty of
  *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *     GNU General Public License for more details.
@@ -41,16 +41,8 @@ public class TableDef {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public String getHashAttribute() {
         return hashAttribute.get();
-    }
-
-    public SimpleStringProperty hashAttributeProperty() {
-        return hashAttribute;
     }
 
     public void setHashAttribute(String hashAttribute) {
@@ -61,20 +53,12 @@ public class TableDef {
         return rangeAttribute.get();
     }
 
-    public SimpleStringProperty rangeAttributeProperty() {
-        return rangeAttribute;
-    }
-
     public void setRangeAttribute(String rangeAttribute) {
         this.rangeAttribute.set(rangeAttribute);
     }
 
     public ObservableMap<String, Attributes.Type> getAttributeTypesMap() {
         return attributeTypesMap;
-    }
-
-    public long getTotalCount() {
-        return totalCount.get();
     }
 
     public SimpleLongProperty totalCountProperty() {

@@ -15,45 +15,33 @@
  *     along with DynamoIt.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ua.org.java.dynamoit;
+package ua.org.java.dynamoit.components.profileviewer;
 
 import dagger.Module;
 import dagger.Provides;
-import javafx.scene.layout.Region;
-import ua.org.java.dynamoit.components.activityindicator.ActivityIndicator;
+import ua.org.java.dynamoit.EventBus;
+import ua.org.java.dynamoit.MainModel;
 import ua.org.java.dynamoit.db.DynamoDBService;
-import ua.org.java.dynamoit.utils.FXExecutor;
 
 import javax.inject.Singleton;
 
 @Module
-public class MainModule {
-
-    @Provides
-    public static ActivityIndicator activityIndicator(EventBus eventBus){
-        return new ActivityIndicator(eventBus);
-    }
-
-    @Provides
-    public static Region mainView(MainModel model, MainController controller, ActivityIndicator activityIndicator) {
-        return new MainView(model, controller, activityIndicator);
-    }
+public class ProfileModule {
 
     @Provides
     @Singleton
-    public static MainModel model() {
-        return new MainModel();
+    public MainModel.ProfileModel model(MainModel mainModel, String profile) {
+        return mainModel.getAvailableProfiles().get(profile);
     }
 
     @Provides
-    @Singleton
-    public static EventBus eventBus(){
-        return new EventBus(FXExecutor.getInstance());
+    public ProfileView view(ProfileController controller, MainModel.ProfileModel model){
+        return new ProfileView(controller, model);
     }
 
     @Provides
-    public static MainController controller(DynamoDBService dynamoDBService, MainModel model, EventBus eventBus) {
-        return new MainController(dynamoDBService, model, eventBus);
+    public ProfileController controller(MainModel.ProfileModel model, DynamoDBService dynamoDBService, EventBus eventBus){
+        return new ProfileController(model, dynamoDBService, eventBus);
     }
 
 }

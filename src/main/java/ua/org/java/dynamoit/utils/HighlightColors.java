@@ -17,21 +17,18 @@
 
 package ua.org.java.dynamoit.utils;
 
-import javafx.application.Platform;
+public enum HighlightColors {
 
-import java.util.concurrent.Executor;
+    lightcyan,
+    antiquewhite,
+    lightpink;
 
-public class FXExecutor implements Executor {
-
-    private static final FXExecutor INSTANCE = new FXExecutor();
-
-    public static Executor getInstance() {
-        return INSTANCE;
+    public String toggleButtonClass() {
+        return "toggle-button-" + this.name();
     }
 
-    @Override
-    public void execute(Runnable command) {
-        Platform.runLater(command);
+    public String tabClass() {
+        return "tab-" + this.name();
     }
 
 }
