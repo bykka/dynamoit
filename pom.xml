@@ -22,7 +22,7 @@
 
     <groupId>ua.org.java</groupId>
     <artifactId>DynamoIt</artifactId>
-    <version>0.1.6</version>
+    <version>0.1.6.4</version>
     <packaging>jar</packaging>
 
     <description>
@@ -111,7 +111,7 @@
                                         <argument>--input</argument>
                                         <argument>${fatJar.dir}</argument>
                                         <argument>--name</argument>
-                                        <argument>DynamoIt</argument>
+                                        <argument>${project.build.finalName}</argument>
                                         <argument>--main-class</argument>
                                         <argument>${main.class}</argument>
                                         <argument>--main-jar</argument>
@@ -127,6 +127,26 @@
                                         <argument>--icon</argument>
                                         <argument>${project.basedir}/src/main/resources/icons/${icon}</argument>
                                     </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.0.0</version>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <zip destfile="${project.build.directory}/${project.build.finalName}.zip"
+                                             basedir="${project.build.directory}/${project.build.finalName}"
+                                             update="true"/>
+                                    </target>
                                 </configuration>
                             </execution>
                         </executions>
