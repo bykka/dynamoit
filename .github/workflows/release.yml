@@ -146,9 +146,6 @@ jobs:
         with:
           name: DynamoIt-macos
 
-      - name: Display structure of downloaded files
-        run: ls -R
-
       - name: Upload Release Asset for Macos
         uses: actions/upload-release-asset@v1
         env:

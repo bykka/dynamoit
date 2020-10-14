@@ -119,7 +119,7 @@
                                         <argument>--type</argument>
                                         <argument>app-image</argument>
                                         <argument>--dest</argument>
-                                        <argument>${project.build.directory}</argument>
+                                        <argument>${project.build.directory}/${project.name}</argument>
                                         <argument>--copyright</argument>
                                         <argument>GPLv3</argument>
                                         <argument>--vendor</argument>
