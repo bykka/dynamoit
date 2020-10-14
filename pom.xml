@@ -111,7 +111,7 @@
                                         <argument>--input</argument>
                                         <argument>${fatJar.dir}</argument>
                                         <argument>--name</argument>
-                                        <argument>${project.build.finalName}</argument>
+                                        <argument>${project.name}</argument>
                                         <argument>--main-class</argument>
                                         <argument>${main.class}</argument>
                                         <argument>--main-jar</argument>
@@ -143,8 +143,8 @@
                                 </goals>
                                 <configuration>
                                     <target>
-                                        <zip destfile="${project.build.directory}/${project.build.finalName}.zip"
-                                             basedir="${project.build.directory}/${project.build.finalName}"
+                                        <zip destfile="${project.build.directory}/${project.name}.zip"
+                                             basedir="${project.build.directory}/${project.name}"
                                              update="true"/>
                                     </target>
                                 </configuration>

@@ -24,7 +24,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: DynamoIt-linux
-          path: target/DynamoIt-${{ github.ref }}.zip
+          path: target/DynamoIt.zip
 
 #  build-windows-package:
 #    runs-on: windows-latest
