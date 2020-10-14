@@ -36,7 +36,6 @@ jobs:
 
   build-windows-package:
     runs-on: windows-latest
-    needs: build-release
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
