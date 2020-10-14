@@ -62,30 +62,37 @@ jobs:
           name: DynamoIt-windows
           path: target/DynamoIt.zip
 
-#  build-macos-package:
-#    runs-on: macos-latest
-#    needs: build-release
-#    steps:
-#      - name: Checkout Code
-#        uses: actions/checkout@v2
-#
-#      - name: Set up Java
-#        uses: actions/setup-java@v1
-#        with:
-#          java-version: 15
-#
-#      - name: Build Package
-#        run: mvn clean package -Ppackage
-#
-#      - name: Upload MacOS
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: DynamoIt-macos
-#          path: target/DynamoIt.app/
+  build-macos-package:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 15
+
+      - name: Cache local Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Build Package
+        run: mvn clean package -Ppackage
+
+      - name: Upload MacOS
+        uses: actions/upload-artifact@v2
+        with:
+          name: DynamoIt-macos
+          path: target/DynamoIt.zip
 
   build-release:
     runs-on: ubuntu-latest
-    needs: [build-linux-package, build-windows-package]
+    needs: [build-linux-package, build-windows-package, build-macos-package]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -132,4 +139,22 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./DynamoIt.zip
           asset_name: DynamoIt-windows.zip
+          asset_content_type: application/zip
+
+      - name: Download macos artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: DynamoIt-macos
+
+      - name: Display structure of downloaded files
+        run: ls -R
+
+      - name: Upload Release Asset for Macos
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./DynamoIt.zip
+          asset_name: DynamoIt-macos.zip
           asset_content_type: application/zip
