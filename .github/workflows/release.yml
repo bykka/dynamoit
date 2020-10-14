@@ -6,34 +6,8 @@ on:
       - '*'
 
 jobs:
-  build-release:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-
-      - name: Set up Java
-        uses: actions/setup-java@v1
-        with:
-          java-version: 15
-
-      - name: Build Package
-        run: mvn clean package
-
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: true
-          prerelease: false
-
   build-linux-package:
     runs-on: ubuntu-latest
-    needs: build-release
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -52,12 +26,51 @@ jobs:
           name: DynamoIt-linux
           path: target/DynamoIt/
 
-      - name: show upload url
-        run: echo ${{ jobs.build-release.steps.create_release.outputs.upload_url }}
+#  build-windows-package:
+#    runs-on: windows-latest
+#    needs: build-release
+#    steps:
+#      - name: Checkout Code
+#        uses: actions/checkout@v2
+#
+#      - name: Set up Java
+#        uses: actions/setup-java@v1
+#        with:
+#          java-version: 15
+#
+#      - name: Build Package
+#        run: mvn clean package -Ppackage
+#
+#      - name: Upload Windows
+#        uses: actions/upload-artifact@v2
+#        with:
+#          name: DynamoIt-windows
+#          path: target/DynamoIt/
 
-  build-windows-package:
-    runs-on: windows-latest
-    needs: build-release
+#  build-macos-package:
+#    runs-on: macos-latest
+#    needs: build-release
+#    steps:
+#      - name: Checkout Code
+#        uses: actions/checkout@v2
+#
+#      - name: Set up Java
+#        uses: actions/setup-java@v1
+#        with:
+#          java-version: 15
+#
+#      - name: Build Package
+#        run: mvn clean package -Ppackage
+#
+#      - name: Upload MacOS
+#        uses: actions/upload-artifact@v2
+#        with:
+#          name: DynamoIt-macos
+#          path: target/DynamoIt.app/
+
+  build-release:
+    runs-on: ubuntu-latest
+    needs: [build-linux-package]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -68,31 +81,22 @@ jobs:
           java-version: 15
 
       - name: Build Package
-        run: mvn clean package -Ppackage
+        run: mvn clean package
 
-      - name: Upload Windows
-        uses: actions/upload-artifact@v2
+      - uses: actions/download-artifact@v2
         with:
-          name: DynamoIt-windows
-          path: target/DynamoIt/
+          name: DynamoIt-linux
 
-  build-macos-package:
-    runs-on: macos-latest
-    needs: build-release
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
+      - name: Display structure of downloaded files
+        run: ls -R
 
-      - name: Set up Java
-        uses: actions/setup-java@v1
-        with:
-          java-version: 15
-
-      - name: Build Package
-        run: mvn clean package -Ppackage
-
-      - name: Upload MacOS
-        uses: actions/upload-artifact@v2
-        with:
-          name: DynamoIt-macos
-          path: target/DynamoIt.app/
+#      - name: Create Release
+#        id: create_release
+#        uses: actions/create-release@v1
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        with:
+#          tag_name: ${{ github.ref }}
+#          release_name: Release ${{ github.ref }}
+#          draft: true
+#          prerelease: false
