@@ -62,8 +62,10 @@ public final class Attributes {
 
     public static Type fromDynamoDBType(String dynamoDBType) {
         switch (dynamoDBType) {
-            case "N": return Type.NUMBER;
-            case "BOOL": return Type.BOOLEAN;
+            case "N":
+                return Type.NUMBER;
+            case "BOOL":
+                return Type.BOOLEAN;
         }
         return Attributes.Type.STRING;
     }
@@ -71,15 +73,27 @@ public final class Attributes {
     public static <T extends Filter<T>> T attributeValueToFilter(String attribute, String value, Type type, Function<String, T> filterProvider) {
         T filter = filterProvider.apply(attribute);
 
+        if (value == null || value.isBlank()) {
+            return filter;
+        }
+
         if (type == Attributes.Type.NUMBER) {
             filter.eq(new BigDecimal(value));
         } else if (type == Attributes.Type.BOOLEAN) {
             filter.eq(Boolean.valueOf(value));
         } else {
-            if (value.startsWith(ASTERISK) && value.endsWith(ASTERISK)) {
-                filter.contains(value);
+            if (value.startsWith(ASTERISK) && value.endsWith(ASTERISK) && value.length() >= 2) {
+                String trim = value.substring(1, value.length() - 1);
+                if (trim.isBlank()) {
+                    return filter;
+                }
+                filter.contains(trim);
             } else if (value.endsWith(ASTERISK)) {
-                filter.beginsWith(value.substring(0, value.length() - 1));
+                String trim = value.substring(0, value.length() - 1);
+                if (trim.isBlank()) {
+                    return filter;
+                }
+                filter.beginsWith(trim);
             } else {
                 filter.eq(value);
             }
