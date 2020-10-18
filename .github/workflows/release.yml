@@ -32,7 +32,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: DynamoIt-linux
-          path: target/DynamoIt.zip
+          path: target/DynamoIt.tar.gz
 
   build-windows-package:
     runs-on: windows-latest
@@ -60,7 +60,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: DynamoIt-windows
-          path: target/DynamoIt.zip
+          path: target/DynamoIt.tar.gz
 
   build-macos-package:
     runs-on: macos-latest
@@ -88,7 +88,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: DynamoIt-macos
-          path: target/DynamoIt.zip
+          path: target/DynamoIt.tar.gz
 
   build-release:
     runs-on: ubuntu-latest
@@ -119,9 +119,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./DynamoIt.zip
-          asset_name: DynamoIt-linux.zip
-          asset_content_type: application/zip
+          asset_path: ./DynamoIt.tar.gz
+          asset_name: DynamoIt-linux.tar.gz
+          asset_content_type: application/gzip
 
       - name: Download windows artifact
         uses: actions/download-artifact@v2
@@ -137,9 +137,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./DynamoIt.zip
-          asset_name: DynamoIt-windows.zip
-          asset_content_type: application/zip
+          asset_path: ./DynamoIt.tar.gz
+          asset_name: DynamoIt-windows.tar.gz
+          asset_content_type: application/gzip
 
       - name: Download macos artifact
         uses: actions/download-artifact@v2
@@ -152,6 +152,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./DynamoIt.zip
-          asset_name: DynamoIt-macos.zip
-          asset_content_type: application/zip
+          asset_path: ./DynamoIt.tar.gz
+          asset_name: DynamoIt-macos.tar.gz
+          asset_content_type: application/gzip

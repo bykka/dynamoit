@@ -41,6 +41,7 @@
         <aws.sdk.version>1.11.822</aws.sdk.version>
         <main.class>ua.org.java.dynamoit.Launcher</main.class>
         <fatJar.dir>${project.build.directory}/fatJar/</fatJar.dir>
+        <destination.dir>${project.build.directory}/${project.name}</destination.dir>
         <icon/><!-- defined in the profile -->
     </properties>
 
@@ -119,7 +120,7 @@
                                         <argument>--type</argument>
                                         <argument>app-image</argument>
                                         <argument>--dest</argument>
-                                        <argument>${project.build.directory}/${project.name}</argument>
+                                        <argument>${destination.dir}</argument>
                                         <argument>--copyright</argument>
                                         <argument>GPLv3</argument>
                                         <argument>--vendor</argument>
@@ -129,24 +130,20 @@
                                     </arguments>
                                 </configuration>
                             </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-antrun-plugin</artifactId>
-                        <version>3.0.0</version>
-                        <executions>
                             <execution>
                                 <phase>package</phase>
                                 <goals>
-                                    <goal>run</goal>
+                                    <goal>exec</goal>
                                 </goals>
                                 <configuration>
-                                    <target>
-                                        <zip destfile="${project.build.directory}/${project.name}.zip"
-                                             basedir="${project.build.directory}/${project.name}"
-                                             update="true"/>
-                                    </target>
+                                    <executable>tar</executable>
+                                    <arguments>
+                                        <argument>-czf</argument>
+                                        <argument>${project.build.directory}/${project.name}.tar.gz</argument>
+                                        <argument>-C</argument>
+                                        <argument>${destination.dir}</argument>
+                                        <argument>${project.name}</argument>
+                                    </arguments>
                                 </configuration>
                             </execution>
                         </executions>
