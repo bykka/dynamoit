@@ -42,6 +42,7 @@
         <main.class>ua.org.java.dynamoit.Launcher</main.class>
         <fatJar.dir>${project.build.directory}/fatJar/</fatJar.dir>
         <destination.dir>${project.build.directory}/${project.name}</destination.dir>
+        <destination.name>${project.name}</destination.name>
         <icon/><!-- defined in the profile -->
     </properties>
 
@@ -142,7 +143,7 @@
                                         <argument>${project.build.directory}/${project.name}.tar.gz</argument>
                                         <argument>-C</argument>
                                         <argument>${destination.dir}</argument>
-                                        <argument>${project.name}</argument>
+                                        <argument>${destination.name}</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
@@ -182,6 +183,7 @@
             </activation>
             <properties>
                 <icon>dynamite.icns</icon>
+                <destination.name>${project.name}.app</destination.name>
             </properties>
         </profile>
     </profiles>
