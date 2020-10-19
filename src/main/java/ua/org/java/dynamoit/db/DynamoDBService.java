@@ -31,12 +31,11 @@ import java.util.stream.Stream;
 
 public class DynamoDBService {
 
-    private final ProfilesConfigFile profilesConfigFile = new ProfilesConfigFile();
     private final Map<String, AmazonDynamoDB> profileDynamoDBClientMap = new HashMap<>();
     private final Map<String, DynamoDB> profileDocumentClientMap = new HashMap<>();
 
     public Stream<Profile> getAvailableProfiles() {
-        return profilesConfigFile.getAllBasicProfiles()
+        return new ProfilesConfigFile().getAllBasicProfiles()
                 .values()
                 .stream()
                 .map(profile -> new Profile(profile.getProfileName(), profile.getRegion()));
