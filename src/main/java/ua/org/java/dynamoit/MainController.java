@@ -43,7 +43,9 @@ public class MainController {
         eventBus.activity(
                 CompletableFuture
                         .supplyAsync(this.dynamoDBService::getAvailableProfiles)
-                        .thenAcceptAsync(profiles -> profiles.forEach(profile -> model.addProfile(profile.getName(), profile.getRegion())), FXExecutor.getInstance())
+                        .thenAcceptAsync(profiles -> profiles.forEach(profile -> model.addProfile(profile.getName(), profile.getRegion())), FXExecutor.getInstance()),
+                "AWS configuration settings has not been discovered",
+                "Please check that your aws cli is properly configured https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html"
         );
 
         eventBus.selectedTableProperty().addListener((observable, oldValue, newValue) -> {

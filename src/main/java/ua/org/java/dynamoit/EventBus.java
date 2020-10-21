@@ -20,7 +20,7 @@ package ua.org.java.dynamoit;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.scene.control.Alert;
+import ua.org.java.dynamoit.components.dialog.ExceptionDialog;
 import ua.org.java.dynamoit.components.tablegrid.TableGridContext;
 
 import java.util.concurrent.CompletableFuture;
@@ -57,12 +57,16 @@ public class EventBus {
     }
 
     public <T> CompletableFuture<T> activity(CompletableFuture<T> completableFuture) {
+        return activity(completableFuture, null, null);
+    }
+
+    public <T> CompletableFuture<T> activity(CompletableFuture<T> completableFuture, String errorMessage, String errorDescription) {
         startActivity();
         return completableFuture.whenComplete((o, throwable) -> {
             stopActivity();
             if (throwable != null) {
                 throwable.printStackTrace();
-                CompletableFuture.runAsync(() -> new Alert(Alert.AlertType.ERROR, throwable.getLocalizedMessage()).show(), uiExecutor);
+                CompletableFuture.runAsync(() -> new ExceptionDialog(errorMessage, errorDescription, throwable).show(), uiExecutor);
             }
         });
     }
