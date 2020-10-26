@@ -175,9 +175,7 @@ public class TableGridController {
     public void onSaveToFile(File file) {
         eventBus.activity(
                 executeQueryOrSearch().thenAccept(items -> {
-                    BufferedWriter writer = null;
-                    try {
-                        writer = Files.newBufferedWriter(file.toPath(), StandardCharsets.UTF_8);
+                    try (BufferedWriter writer = Files.newBufferedWriter(file.toPath(), StandardCharsets.UTF_8)) {
                         JsonGenerator generator = new JsonFactory(new ObjectMapper()).createGenerator(writer);
                         generator.writeStartArray();
                         asStream(items).forEach(o -> {
@@ -191,15 +189,7 @@ public class TableGridController {
                         generator.flush();
                     } catch (Exception e) {
                         LOG.log(Level.SEVERE, e.getMessage(), e);
-                    } finally {
-                        if (writer != null) {
-                            try {
-                                writer.flush();
-                                writer.close();
-                            } catch (IOException e) {
-                                LOG.log(Level.SEVERE, e.getMessage(), e);
-                            }
-                        }
+                        throw new RuntimeException(e);
                     }
                 })
         );
@@ -208,9 +198,7 @@ public class TableGridController {
     public void onLoadFromFile(File file) {
         eventBus.activity(
                 runAsync(() -> {
-                    BufferedReader reader = null;
-                    try {
-                        reader = Files.newBufferedReader(file.toPath(), StandardCharsets.UTF_8);
+                    try (BufferedReader reader = Files.newBufferedReader(file.toPath(), StandardCharsets.UTF_8)) {
                         JsonNode root = new ObjectMapper().readTree(reader);
                         Observable.fromIterable(root::elements)
                                 .map(jsonNode -> Item.fromJSON(jsonNode.toString()))
@@ -222,17 +210,12 @@ public class TableGridController {
                                 })
                                 .subscribe(documentClient::batchWriteItem);
                     } catch (Exception e) {
-                        e.printStackTrace();
-                    } finally {
-                        if (reader != null) {
-                            try {
-                                reader.close();
-                            } catch (IOException e) {
-                                LOG.log(Level.SEVERE, e.getMessage(), e);
-                            }
-                        }
+                        LOG.log(Level.SEVERE, e.getMessage(), e);
+                        throw new RuntimeException(e);
                     }
-                })
+                }),
+                "Can't load json data from the file",
+                "Data in the file is not properly formatted or does not correspond to the db schema."
         ).whenComplete((v, throwable) -> onRefreshData());
     }
 
