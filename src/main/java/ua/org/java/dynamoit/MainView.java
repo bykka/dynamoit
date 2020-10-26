@@ -20,6 +20,7 @@ package ua.org.java.dynamoit;
 import io.reactivex.rxjavafx.observables.JavaFxObservable;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
@@ -87,6 +88,8 @@ public class MainView extends VBox {
 
                 DX.create(HBox::new, hBox -> {
                     hBox.setPadding(new Insets(3, 3, 3, 3));
+                    hBox.setAlignment(Pos.CENTER);
+                    hBox.setMinHeight(22);
                     hBox.getChildren().addAll(
                             DX.create(Pane::new, pane -> {
                                 HBox.setHgrow(pane, Priority.ALWAYS);
