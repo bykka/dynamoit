@@ -74,7 +74,7 @@ public class TableGridView extends VBox {
         this.getChildren().addAll(
                 DX.toolBar(toolBar -> List.of(
                         DX.create(Button::new, button -> {
-                            button.setTooltip(new Tooltip("Create a new item"));
+                            button.setTooltip(new Tooltip("Create a new document"));
                             button.setGraphic(DX.icon("icons/table_row_insert.png"));
                             button.setOnAction(event -> showItemDialog(String.format("[%1s] Create a new item", tableModel.getTableName()), "", controller::onCreateItem, controller::validateItem));
                         }),
@@ -162,7 +162,7 @@ public class TableGridView extends VBox {
                         TableRow<Item> tableRow = new TableRow<>();
                         tableRow.setOnMouseClicked(event -> {
                             if (event.getClickCount() == 2 && tableRow.getItem() != null) {
-                                showItemDialog(String.format("[%1s] Edit the item", tableModel.getTableName()), tableRow.getItem().toJSONPretty(), controller::onUpdateItem, controller::validateItem);
+                                showItemDialog(String.format("[%1s] Edit the document", tableModel.getTableName()), tableRow.getItem().toJSONPretty(), controller::onUpdateItem, controller::validateItem);
                             }
                         });
                         return tableRow;
@@ -170,7 +170,7 @@ public class TableGridView extends VBox {
 
                     tableView.setOnKeyPressed(event -> {
                         if (KeyCode.ENTER == event.getCode() && !tableView.getSelectionModel().isEmpty()) {
-                            showItemDialog(String.format("[%1s] Edit the item", tableModel.getTableName()), tableView.getSelectionModel().getSelectedItem().toJSONPretty(), controller::onUpdateItem, controller::validateItem);
+                            showItemDialog(String.format("[%1s] Edit the document", tableModel.getTableName()), tableView.getSelectionModel().getSelectedItem().toJSONPretty(), controller::onUpdateItem, controller::validateItem);
                         }
                     });
 
