@@ -31,7 +31,7 @@ public class DynamoItApp extends Application {
         primaryStage.setTitle("DynamoIt");
         primaryStage.setScene(
                 DX.scene(() -> {
-                            AppFactory appFactory = DaggerAppFactory.create();
+                            AppFactory appFactory = DaggerAppFactory.builder().application(this).build();
                             Region mainView = appFactory.mainView();
                             mainView.setPrefWidth(1000);
                             mainView.setPrefHeight(600);

@@ -401,22 +401,38 @@ public class TableGridView extends VBox {
                         DX.boldLabel("Name:"),
                         DX.boldLabel("Arn:"),
                         DX.boldLabel("Creation date:"),
-                        DX.boldLabel("Size:")
+                        DX.boldLabel("Size:"),
+                        DX.boldLabel("Region:")
                 );
 
                 gridPane.addColumn(1,
-                        new Label(tableModel.getOriginalTableDescription().getTableName().trim()),
+                        DX.create(Hyperlink::new, link -> {
+                            String tableLink = String.format(
+                                    "https://%1$s.console.aws.amazon.com/dynamodb/home?region=%1$s#tables:selected=%2$s;tab=overview",
+                                    tableModel.getProfileModel().getRegion(),
+                                    tableModel.getTableName()
+                            );
+                            link.setText(tableModel.getOriginalTableDescription().getTableName().trim());
+                            link.setOnMouseClicked(event -> controller.openUrl(tableLink));
+                        }),
                         new Label(tableModel.getOriginalTableDescription().getTableArn()),
                         new Label(DateFormat.getInstance().format(tableModel.getOriginalTableDescription().getCreationDateTime())),
-                        new Label(tableModel.getOriginalTableDescription().getTableSizeBytes() + " bytes")
+                        new Label(tableModel.getOriginalTableDescription().getTableSizeBytes() + " bytes"),
+                        new Label(tableModel.getProfileModel().getRegion())
                 );
 
                 gridPane.addColumn(2,
                         copyClipboardImage.apply(() -> tableModel.getOriginalTableDescription().getTableName()),
                         copyClipboardImage.apply(() -> tableModel.getOriginalTableDescription().getTableArn()),
                         copyClipboardImage.apply(() -> DateFormat.getInstance().format(tableModel.getOriginalTableDescription().getCreationDateTime())),
-                        copyClipboardImage.apply(() -> "" + tableModel.getOriginalTableDescription().getTableSizeBytes())
+                        copyClipboardImage.apply(() -> "" + tableModel.getOriginalTableDescription().getTableSizeBytes()),
+                        copyClipboardImage.apply(() -> tableModel.getProfileModel().getRegion())
                 );
+
+                String streamArn = tableModel.getOriginalTableDescription().getLatestStreamArn();
+                if (streamArn != null && !streamArn.isBlank()) {
+                    gridPane.addRow(gridPane.getRowCount(), DX.boldLabel("Stream:"), new Label(streamArn), copyClipboardImage.apply(() -> streamArn));
+                }
             }));
         });
     }

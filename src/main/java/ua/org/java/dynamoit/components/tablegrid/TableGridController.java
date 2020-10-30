@@ -30,6 +30,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.reactivex.Observable;
+import javafx.application.HostServices;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.util.Pair;
 import org.reactfx.EventStream;
@@ -71,18 +72,21 @@ public class TableGridController {
     private final TableGridModel tableModel;
     private final EventBus eventBus;
     private final Executor uiExecutor;
+    private final HostServices hostServices;
     private final DynamoDB documentClient;
 
     public TableGridController(TableGridContext context,
                                TableGridModel tableModel,
                                DynamoDBService dynamoDBService,
                                EventBus eventBus,
-                               Executor uiExecutor
+                               Executor uiExecutor,
+                               HostServices hostServices
     ) {
         this.context = context;
         this.tableModel = tableModel;
         this.eventBus = eventBus;
         this.uiExecutor = uiExecutor;
+        this.hostServices = hostServices;
 
         tableModel.getProfileModel().getAvailableTables().stream()
                 .filter(tableDef -> tableDef.getName().equals(context.getTableName()))
@@ -360,4 +364,7 @@ public class TableGridController {
         return tableModel.getTableDef().getRangeAttribute();
     }
 
+    public void openUrl(String url) {
+        hostServices.showDocument(url);
+    }
 }

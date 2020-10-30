@@ -19,6 +19,7 @@ package ua.org.java.dynamoit.components.tablegrid;
 
 import dagger.Module;
 import dagger.Provides;
+import javafx.application.HostServices;
 import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.MainModel;
 import ua.org.java.dynamoit.db.DynamoDBService;
@@ -41,13 +42,14 @@ public class TableGridModule {
     }
 
     @Provides
-    public TableGridController controller(TableGridContext tableContext, TableGridModel tableModel, DynamoDBService dynamoDBService, EventBus eventBus) {
+    public TableGridController controller(TableGridContext tableContext, TableGridModel tableModel, DynamoDBService dynamoDBService, EventBus eventBus, HostServices hostServices) {
         TableGridController controller = new TableGridController(
                 tableContext,
                 tableModel,
                 dynamoDBService,
                 eventBus,
-                FXExecutor.getInstance()
+                FXExecutor.getInstance(),
+                hostServices
         );
         controller.init();
         return controller;

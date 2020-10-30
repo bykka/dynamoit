@@ -19,6 +19,7 @@ package ua.org.java.dynamoit.db;
 
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.auth.profile.ProfilesConfigFile;
+import com.amazonaws.profile.path.AwsProfileFileLocationProvider;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
@@ -27,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class DynamoDBService {
@@ -35,10 +37,18 @@ public class DynamoDBService {
     private final Map<String, DynamoDB> profileDocumentClientMap = new HashMap<>();
 
     public Stream<Profile> getAvailableProfiles() {
+        // config file contains profile and region values
+        Map<String, Profile> profileMap = new ProfilesConfigFile(AwsProfileFileLocationProvider.DEFAULT_CONFIG_LOCATION_PROVIDER.getLocation()).getAllBasicProfiles()
+                .values()
+                .stream()
+                .map(profile -> new Profile(profile.getProfileName(), profile.getRegion()))
+                .collect(Collectors.toMap(Profile::getName, profile -> profile));
+
+        // by default it uses credentials config with contains profile and access keys
         return new ProfilesConfigFile().getAllBasicProfiles()
                 .values()
                 .stream()
-                .map(profile -> new Profile(profile.getProfileName(), profile.getRegion()));
+                .map(profile -> profileMap.computeIfAbsent(profile.getProfileName(), profileName -> new Profile(profileName, null)));
     }
 
     public CompletableFuture<List<String>> getListOfTables(String profile) {

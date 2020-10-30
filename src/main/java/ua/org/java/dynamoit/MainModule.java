@@ -19,6 +19,8 @@ package ua.org.java.dynamoit;
 
 import dagger.Module;
 import dagger.Provides;
+import javafx.application.Application;
+import javafx.application.HostServices;
 import javafx.scene.layout.Region;
 import ua.org.java.dynamoit.components.activityindicator.ActivityIndicator;
 import ua.org.java.dynamoit.db.DynamoDBService;
@@ -28,6 +30,12 @@ import javax.inject.Singleton;
 
 @Module
 public class MainModule {
+
+    @Provides
+    @Singleton
+    public static HostServices hostServices(Application application){
+        return application.getHostServices();
+    }
 
     @Provides
     public static ActivityIndicator activityIndicator(EventBus eventBus){
@@ -52,8 +60,8 @@ public class MainModule {
     }
 
     @Provides
-    public static MainController controller(DynamoDBService dynamoDBService, MainModel model, EventBus eventBus) {
-        return new MainController(dynamoDBService, model, eventBus);
+    public static MainController controller(DynamoDBService dynamoDBService, MainModel model, EventBus eventBus, HostServices hostServices) {
+        return new MainController(dynamoDBService, model, eventBus, hostServices);
     }
 
 }
