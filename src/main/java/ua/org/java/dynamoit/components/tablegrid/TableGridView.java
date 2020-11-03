@@ -227,6 +227,7 @@ public class TableGridView extends VBox {
             filter.setGraphic(DX.create(ClearableTextField::new, textField -> {
                 textField.textProperty().bindBidirectional(filterProperty);
                 textField.setOnAction(event -> controller.onRefreshData());
+                textField.setOnClear(event -> controller.onRefreshData());
             }));
             filter.getColumns().add(DX.create((Supplier<TableColumn<Item, String>>) TableColumn::new, column -> {
                 if (attrName.equals(tableModel.getTableDef().getHashAttribute())) {

@@ -19,7 +19,10 @@ package ua.org.java.dynamoit.widgets;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ObjectPropertyBase;
 import javafx.event.Event;
+import javafx.event.EventHandler;
 import javafx.event.EventType;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
@@ -29,6 +32,24 @@ import javafx.scene.layout.StackPane;
 import org.controlsfx.control.textfield.CustomTextField;
 
 public class ClearableTextField extends CustomTextField {
+
+    private final ObjectProperty<EventHandler<ClearEvent>> onClear = new ObjectPropertyBase<>() {
+
+        @Override
+        protected void invalidated() {
+            setEventHandler(ClearEvent.CLEAR, get());
+        }
+
+        @Override
+        public Object getBean() {
+            return ClearableTextField.this;
+        }
+
+        @Override
+        public String getName() {
+            return "onClear";
+        }
+    };
 
     public ClearableTextField() {
         setRight(buildClearNode());
@@ -57,8 +78,19 @@ public class ClearableTextField extends CustomTextField {
             icon.setImage(grey);
         });
 
-
         return pane;
+    }
+
+    public EventHandler<ClearEvent> getOnClear() {
+        return onClearProperty().get();
+    }
+
+    public ObjectProperty<EventHandler<ClearEvent>> onClearProperty() {
+        return onClear;
+    }
+
+    public void setOnClear(EventHandler<ClearEvent> onClear) {
+        this.onClearProperty().set(onClear);
     }
 
     public static class ClearEvent extends Event {
