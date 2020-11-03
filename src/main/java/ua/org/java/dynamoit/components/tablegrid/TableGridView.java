@@ -35,10 +35,10 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
-import org.controlsfx.control.textfield.TextFields;
 import org.reactfx.EventStream;
 import ua.org.java.dynamoit.model.TableDef;
 import ua.org.java.dynamoit.utils.DX;
+import ua.org.java.dynamoit.widgets.ClearableTextField;
 
 import java.io.File;
 import java.text.DateFormat;
@@ -224,7 +224,7 @@ public class TableGridView extends VBox {
 
         return DX.create(TableColumn::new, filter -> {
             filter.setId(attrName);
-            filter.setGraphic(DX.create(TextFields::createClearableTextField, textField -> {
+            filter.setGraphic(DX.create(ClearableTextField::new, textField -> {
                 textField.textProperty().bindBidirectional(filterProperty);
                 textField.setOnAction(event -> controller.onRefreshData());
             }));

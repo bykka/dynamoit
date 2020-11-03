@@ -28,10 +28,10 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import org.controlsfx.control.textfield.TextFields;
 import ua.org.java.dynamoit.MainModel;
 import ua.org.java.dynamoit.model.TableDef;
 import ua.org.java.dynamoit.utils.DX;
+import ua.org.java.dynamoit.widgets.ClearableTextField;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -52,7 +52,7 @@ public class ProfileView extends VBox {
 
         this.getChildren().addAll(
                 DX.toolBar(toolBar -> List.of(
-                        DX.create(TextFields::createClearableTextField, textField -> {
+                        DX.create(ClearableTextField::new, textField -> {
                             HBox.setHgrow(textField, Priority.ALWAYS);
                             textField.setPromptText("Table name contains");
                             textField.textProperty().bindBidirectional(model.filterProperty());
