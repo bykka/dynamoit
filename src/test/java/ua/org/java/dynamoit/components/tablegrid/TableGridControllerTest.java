@@ -22,8 +22,12 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Page;
 import com.amazonaws.services.dynamodbv2.document.Table;
+import javafx.application.HostServices;
 import javafx.util.Pair;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.MainModel;
 import ua.org.java.dynamoit.db.DynamoDBService;
@@ -36,6 +40,8 @@ import java.util.concurrent.ForkJoinPool;
 import static org.easymock.EasyMock.*;
 import static org.junit.Assert.assertEquals;
 
+@PrepareForTest(HostServices.class)
+@RunWith(PowerMockRunner.class)
 public class TableGridControllerTest {
 
     @Test
@@ -59,13 +65,14 @@ public class TableGridControllerTest {
         expect(dynamoDBService.getOrCreateDocumentClient(context.getProfileName())).andReturn(dynamoDB);
 
         Page<Item, Object> page = mock(Page.class);
+        HostServices hostServices = mock(HostServices.class);
 
         EventBus eventBus = new EventBus(ForkJoinPool.commonPool());
 
         replay(table, amazonDynamoDB, dynamoDB, dynamoDBService, page);
 
         TableGridController controller = partialMockBuilder(TableGridController.class)
-                .withConstructor(context, model, dynamoDBService, eventBus, ForkJoinPool.commonPool())
+                .withConstructor(context, model, dynamoDBService, eventBus, ForkJoinPool.commonPool(), hostServices)
                 .addMockedMethod("queryPageItems")
                 .createMock();
 

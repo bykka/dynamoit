@@ -22,7 +22,7 @@
 
     <groupId>ua.org.java</groupId>
     <artifactId>DynamoIt</artifactId>
-    <version>0.1.9</version>
+    <version>0.2.0</version>
     <packaging>jar</packaging>
 
     <description>
@@ -254,6 +254,19 @@
             <version>4.2</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-module-junit4</artifactId>
+            <version>2.0.7</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-api-easymock</artifactId>
+            <version>2.0.7</version>
+            <scope>test</scope>
+        </dependency>
+
 
     </dependencies>
 

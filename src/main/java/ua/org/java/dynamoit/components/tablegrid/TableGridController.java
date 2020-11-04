@@ -30,6 +30,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.reactivex.Observable;
+import javafx.application.HostServices;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.util.Pair;
 import org.reactfx.EventStream;
@@ -71,18 +72,21 @@ public class TableGridController {
     private final TableGridModel tableModel;
     private final EventBus eventBus;
     private final Executor uiExecutor;
+    private final HostServices hostServices;
     private final DynamoDB documentClient;
 
     public TableGridController(TableGridContext context,
                                TableGridModel tableModel,
                                DynamoDBService dynamoDBService,
                                EventBus eventBus,
-                               Executor uiExecutor
+                               Executor uiExecutor,
+                               HostServices hostServices
     ) {
         this.context = context;
         this.tableModel = tableModel;
         this.eventBus = eventBus;
         this.uiExecutor = uiExecutor;
+        this.hostServices = hostServices;
 
         tableModel.getProfileModel().getAvailableTables().stream()
                 .filter(tableDef -> tableDef.getName().equals(context.getTableName()))
@@ -175,9 +179,7 @@ public class TableGridController {
     public void onSaveToFile(File file) {
         eventBus.activity(
                 executeQueryOrSearch().thenAccept(items -> {
-                    BufferedWriter writer = null;
-                    try {
-                        writer = Files.newBufferedWriter(file.toPath(), StandardCharsets.UTF_8);
+                    try (BufferedWriter writer = Files.newBufferedWriter(file.toPath(), StandardCharsets.UTF_8)) {
                         JsonGenerator generator = new JsonFactory(new ObjectMapper()).createGenerator(writer);
                         generator.writeStartArray();
                         asStream(items).forEach(o -> {
@@ -191,15 +193,7 @@ public class TableGridController {
                         generator.flush();
                     } catch (Exception e) {
                         LOG.log(Level.SEVERE, e.getMessage(), e);
-                    } finally {
-                        if (writer != null) {
-                            try {
-                                writer.flush();
-                                writer.close();
-                            } catch (IOException e) {
-                                LOG.log(Level.SEVERE, e.getMessage(), e);
-                            }
-                        }
+                        throw new RuntimeException(e);
                     }
                 })
         );
@@ -208,9 +202,7 @@ public class TableGridController {
     public void onLoadFromFile(File file) {
         eventBus.activity(
                 runAsync(() -> {
-                    BufferedReader reader = null;
-                    try {
-                        reader = Files.newBufferedReader(file.toPath(), StandardCharsets.UTF_8);
+                    try (BufferedReader reader = Files.newBufferedReader(file.toPath(), StandardCharsets.UTF_8)) {
                         JsonNode root = new ObjectMapper().readTree(reader);
                         Observable.fromIterable(root::elements)
                                 .map(jsonNode -> Item.fromJSON(jsonNode.toString()))
@@ -222,17 +214,12 @@ public class TableGridController {
                                 })
                                 .subscribe(documentClient::batchWriteItem);
                     } catch (Exception e) {
-                        e.printStackTrace();
-                    } finally {
-                        if (reader != null) {
-                            try {
-                                reader.close();
-                            } catch (IOException e) {
-                                LOG.log(Level.SEVERE, e.getMessage(), e);
-                            }
-                        }
+                        LOG.log(Level.SEVERE, e.getMessage(), e);
+                        throw new RuntimeException(e);
                     }
-                })
+                }),
+                "Can't load json data from the file",
+                "Data in the file is not properly formatted or does not correspond to the db schema."
         ).whenComplete((v, throwable) -> onRefreshData());
     }
 
@@ -377,4 +364,7 @@ public class TableGridController {
         return tableModel.getTableDef().getRangeAttribute();
     }
 
+    public void openUrl(String url) {
+        hostServices.showDocument(url);
+    }
 }

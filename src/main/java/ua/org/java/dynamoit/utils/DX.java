@@ -78,7 +78,11 @@ public class DX {
     }
 
     public static ImageView icon(String icon){
-        return new ImageView(new Image(icon, 16, 16, true, true));
+        return icon(icon, 16);
+    }
+
+    public static ImageView icon(String icon, double size){
+        return new ImageView(new Image(icon, size, size, true, false));
     }
 
     public static Label boldLabel(String title) {

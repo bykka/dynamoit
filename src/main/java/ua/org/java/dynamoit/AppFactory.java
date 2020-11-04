@@ -17,7 +17,9 @@
 
 package ua.org.java.dynamoit;
 
+import dagger.BindsInstance;
 import dagger.Component;
+import javafx.application.Application;
 import javafx.scene.layout.Region;
 import ua.org.java.dynamoit.db.DynamoDBModule;
 
@@ -28,5 +30,12 @@ import javax.inject.Singleton;
 public interface AppFactory {
 
     Region mainView();
+
+    @Component.Builder
+    interface Builder {
+        @BindsInstance
+        AppFactory.Builder application(Application application);
+        AppFactory build();
+    }
 
 }

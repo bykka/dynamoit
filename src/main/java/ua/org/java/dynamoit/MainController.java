@@ -17,6 +17,7 @@
 
 package ua.org.java.dynamoit;
 
+import javafx.application.HostServices;
 import ua.org.java.dynamoit.components.profileviewer.DaggerProfileComponent;
 import ua.org.java.dynamoit.components.profileviewer.ProfileComponent;
 import ua.org.java.dynamoit.components.tablegrid.DaggerTableGridComponent;
@@ -33,17 +34,21 @@ public class MainController {
     private final DynamoDBService dynamoDBService;
     private final MainModel model;
     private final EventBus eventBus;
+    private HostServices hostServices;
     private Consumer<TableGridContext> selectedTableConsumer;
 
-    public MainController(DynamoDBService dynamoDBService, MainModel model, EventBus eventBus) {
+    public MainController(DynamoDBService dynamoDBService, MainModel model, EventBus eventBus, HostServices hostServices) {
         this.dynamoDBService = dynamoDBService;
         this.model = model;
         this.eventBus = eventBus;
+        this.hostServices = hostServices;
 
         eventBus.activity(
                 CompletableFuture
                         .supplyAsync(this.dynamoDBService::getAvailableProfiles)
-                        .thenAcceptAsync(profiles -> profiles.forEach(profile -> model.addProfile(profile.getName(), profile.getRegion())), FXExecutor.getInstance())
+                        .thenAcceptAsync(profiles -> profiles.forEach(profile -> model.addProfile(profile.getName(), profile.getRegion())), FXExecutor.getInstance()),
+                "AWS configuration settings has not been discovered",
+                "Please check that your aws cli is properly configured https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html"
         );
 
         eventBus.selectedTableProperty().addListener((observable, oldValue, newValue) -> {
@@ -58,6 +63,7 @@ public class MainController {
                 .profileModel(model.getAvailableProfiles().get(tableContext.getProfileName()))
                 .eventBus(eventBus)
                 .tableContext(tableContext)
+                .hostServices(hostServices)
                 .build();
     }
 

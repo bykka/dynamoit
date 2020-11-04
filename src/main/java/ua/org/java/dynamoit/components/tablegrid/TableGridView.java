@@ -35,10 +35,10 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
-import org.controlsfx.control.textfield.TextFields;
 import org.reactfx.EventStream;
 import ua.org.java.dynamoit.model.TableDef;
 import ua.org.java.dynamoit.utils.DX;
+import ua.org.java.dynamoit.widgets.ClearableTextField;
 
 import java.io.File;
 import java.text.DateFormat;
@@ -74,7 +74,7 @@ public class TableGridView extends VBox {
         this.getChildren().addAll(
                 DX.toolBar(toolBar -> List.of(
                         DX.create(Button::new, button -> {
-                            button.setTooltip(new Tooltip("Create a new item"));
+                            button.setTooltip(new Tooltip("Create a new document"));
                             button.setGraphic(DX.icon("icons/table_row_insert.png"));
                             button.setOnAction(event -> showItemDialog(String.format("[%1s] Create a new item", tableModel.getTableName()), "", controller::onCreateItem, controller::validateItem));
                         }),
@@ -162,7 +162,7 @@ public class TableGridView extends VBox {
                         TableRow<Item> tableRow = new TableRow<>();
                         tableRow.setOnMouseClicked(event -> {
                             if (event.getClickCount() == 2 && tableRow.getItem() != null) {
-                                showItemDialog(String.format("[%1s] Edit the item", tableModel.getTableName()), tableRow.getItem().toJSONPretty(), controller::onUpdateItem, controller::validateItem);
+                                showItemDialog(String.format("[%1s] Edit the document", tableModel.getTableName()), tableRow.getItem().toJSONPretty(), controller::onUpdateItem, controller::validateItem);
                             }
                         });
                         return tableRow;
@@ -170,7 +170,7 @@ public class TableGridView extends VBox {
 
                     tableView.setOnKeyPressed(event -> {
                         if (KeyCode.ENTER == event.getCode() && !tableView.getSelectionModel().isEmpty()) {
-                            showItemDialog(String.format("[%1s] Edit the item", tableModel.getTableName()), tableView.getSelectionModel().getSelectedItem().toJSONPretty(), controller::onUpdateItem, controller::validateItem);
+                            showItemDialog(String.format("[%1s] Edit the document", tableModel.getTableName()), tableView.getSelectionModel().getSelectedItem().toJSONPretty(), controller::onUpdateItem, controller::validateItem);
                         }
                     });
 
@@ -224,9 +224,10 @@ public class TableGridView extends VBox {
 
         return DX.create(TableColumn::new, filter -> {
             filter.setId(attrName);
-            filter.setGraphic(DX.create(TextFields::createClearableTextField, textField -> {
+            filter.setGraphic(DX.create(ClearableTextField::new, textField -> {
                 textField.textProperty().bindBidirectional(filterProperty);
                 textField.setOnAction(event -> controller.onRefreshData());
+                textField.setOnClear(event -> controller.onRefreshData());
             }));
             filter.getColumns().add(DX.create((Supplier<TableColumn<Item, String>>) TableColumn::new, column -> {
                 if (attrName.equals(tableModel.getTableDef().getHashAttribute())) {
@@ -401,22 +402,38 @@ public class TableGridView extends VBox {
                         DX.boldLabel("Name:"),
                         DX.boldLabel("Arn:"),
                         DX.boldLabel("Creation date:"),
-                        DX.boldLabel("Size:")
+                        DX.boldLabel("Size:"),
+                        DX.boldLabel("Region:")
                 );
 
                 gridPane.addColumn(1,
-                        new Label(tableModel.getOriginalTableDescription().getTableName().trim()),
+                        DX.create(Hyperlink::new, link -> {
+                            String tableLink = String.format(
+                                    "https://%1$s.console.aws.amazon.com/dynamodb/home?region=%1$s#tables:selected=%2$s;tab=overview",
+                                    tableModel.getProfileModel().getRegion(),
+                                    tableModel.getTableName()
+                            );
+                            link.setText(tableModel.getOriginalTableDescription().getTableName().trim());
+                            link.setOnMouseClicked(event -> controller.openUrl(tableLink));
+                        }),
                         new Label(tableModel.getOriginalTableDescription().getTableArn()),
                         new Label(DateFormat.getInstance().format(tableModel.getOriginalTableDescription().getCreationDateTime())),
-                        new Label(tableModel.getOriginalTableDescription().getTableSizeBytes() + " bytes")
+                        new Label(tableModel.getOriginalTableDescription().getTableSizeBytes() + " bytes"),
+                        new Label(tableModel.getProfileModel().getRegion())
                 );
 
                 gridPane.addColumn(2,
                         copyClipboardImage.apply(() -> tableModel.getOriginalTableDescription().getTableName()),
                         copyClipboardImage.apply(() -> tableModel.getOriginalTableDescription().getTableArn()),
                         copyClipboardImage.apply(() -> DateFormat.getInstance().format(tableModel.getOriginalTableDescription().getCreationDateTime())),
-                        copyClipboardImage.apply(() -> "" + tableModel.getOriginalTableDescription().getTableSizeBytes())
+                        copyClipboardImage.apply(() -> "" + tableModel.getOriginalTableDescription().getTableSizeBytes()),
+                        copyClipboardImage.apply(() -> tableModel.getProfileModel().getRegion())
                 );
+
+                String streamArn = tableModel.getOriginalTableDescription().getLatestStreamArn();
+                if (streamArn != null && !streamArn.isBlank()) {
+                    gridPane.addRow(gridPane.getRowCount(), DX.boldLabel("Stream:"), new Label(streamArn), copyClipboardImage.apply(() -> streamArn));
+                }
             }));
         });
     }

@@ -18,13 +18,14 @@
 package ua.org.java.dynamoit.components.activityindicator;
 
 import javafx.beans.binding.Bindings;
-import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.ProgressBar;
 import ua.org.java.dynamoit.EventBus;
 
-public class ActivityIndicator extends ProgressIndicator {
+public class ActivityIndicator extends ProgressBar {
 
     public ActivityIndicator(EventBus eventBus) {
-        setPrefSize(16, 16);
+        setPrefHeight(12);
+        setPrefWidth(150);
         visibleProperty().bind(Bindings.greaterThan(eventBus.activityCountProperty(), 0));
     }
 }
