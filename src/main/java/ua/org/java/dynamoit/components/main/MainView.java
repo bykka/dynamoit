@@ -35,6 +35,7 @@
 package ua.org.java.dynamoit.components.main;
 
 import io.reactivex.rxjavafx.observables.JavaFxObservable;
+import javafx.event.Event;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
@@ -44,7 +45,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import ua.org.java.dynamoit.widgets.ActivityIndicator;
 import ua.org.java.dynamoit.components.profileviewer.ProfileComponent;
 import ua.org.java.dynamoit.components.profileviewer.ProfileView;
 import ua.org.java.dynamoit.components.tablegrid.TableGridComponent;
@@ -52,11 +52,10 @@ import ua.org.java.dynamoit.components.tablegrid.TableGridContext;
 import ua.org.java.dynamoit.components.tablegrid.TableGridView;
 import ua.org.java.dynamoit.utils.DX;
 import ua.org.java.dynamoit.utils.HighlightColors;
+import ua.org.java.dynamoit.widgets.ActivityIndicator;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class MainView extends VBox {
 
@@ -163,13 +162,47 @@ public class MainView extends VBox {
         TableGridView tableItemsView = tableComponent.view();
         tableItemsView.setOnSearchInTable(this::createAndOpenTab);
 
-        Tab tab = new Tab(tableContext.getTableName(), tableItemsView);
-        MainModel.ProfileModel profileModel = mainModel.getAvailableProfiles().get(tableContext.getProfileName());
-        profileModel.getColor().ifPresent(color -> tab.getStyleClass().add(color.tabClass()));
-
-        tabPane.getTabs().add(tab);
-        tabPane.getSelectionModel().select(tab);
+        tabPane.getTabs().add(
+                DX.create(() -> new Tab(tableContext.getTableName(), tableItemsView), tab -> {
+                    MainModel.ProfileModel profileModel = mainModel.getAvailableProfiles().get(tableContext.getProfileName());
+                    profileModel.getColor().ifPresent(color -> tab.getStyleClass().add(color.tabClass()));
+                    tab.setContextMenu(DX.contextMenu(contextMenu -> List.of(
+                            DX.create(MenuItem::new, menu -> {
+                                menu.setText("Close");
+                                menu.setOnAction(__ -> closeTab(tab));
+                            }),
+                            DX.create(MenuItem::new, menu -> {
+                                menu.setText("Close others");
+                                menu.setOnAction(__ -> closeOtherTabs(tab));
+                            }),
+                            DX.create(MenuItem::new, menu -> {
+                                menu.setText("Close all");
+                                menu.setOnAction(__ -> closeAllTabs());
+                            })
+                    )));
+                })
+        );
+        tabPane.getSelectionModel().selectLast();
     }
 
+    private void closeTab(Tab tab) {
+        tabPane.getTabs().remove(tab);
+        if (tab.getOnClosed() != null) {
+            Event.fireEvent(tab, new Event(Tab.CLOSED_EVENT));
+        }
+    }
+
+    private void closeOtherTabs(Tab tabToKeep) {
+        List<Tab> tabs = tabPane.getTabs().stream()
+                .filter(tab -> tab != tabToKeep)
+                .collect(Collectors.toList());
+
+        tabs.forEach(this::closeTab);
+    }
+
+    private void closeAllTabs() {
+        List<Tab> tabs = new ArrayList<>(tabPane.getTabs());
+        tabs.forEach(this::closeTab);
+    }
 
 }
