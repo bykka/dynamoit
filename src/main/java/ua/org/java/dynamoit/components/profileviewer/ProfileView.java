@@ -19,6 +19,7 @@ package ua.org.java.dynamoit.components.profileviewer;
 
 import io.reactivex.rxjavafx.observables.JavaFxObservable;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.ObjectBinding;
 import javafx.collections.ListChangeListener;
 import javafx.scene.control.Button;
 import javafx.scene.control.Tooltip;
@@ -86,12 +87,20 @@ public class ProfileView extends VBox {
         JavaFxObservable.additionsOf(model.getSavedFilters())
                 .map(filter -> {
                     FilterTreeItem filterTables = new FilterTreeItem(filter);
-                    filterTables.getChildren().addAll(model.getAvailableTables()
-                            .stream()
+
+                    ObjectBinding<List<TableTreeItem>> tableItems = Bindings.createObjectBinding(() -> model.getAvailableTables().stream()
                             .filter(tableDef -> tableDef.getName().contains(filter))
                             .map(TableDef::getName)
                             .map(TableTreeItem::new)
-                            .collect(Collectors.toList()));
+                            .collect(Collectors.toList()), model.getAvailableTables());
+
+                    filterTables.getChildren().addAll(tableItems.get());
+
+                    tableItems.addListener(observable -> {
+                        filterTables.getChildren().clear();
+                        filterTables.getChildren().addAll(tableItems.get());
+                    });
+
                     filterTables.setExpanded(true);
                     return filterTables;
                 })
