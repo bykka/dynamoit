@@ -29,7 +29,7 @@ import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import ua.org.java.dynamoit.EventBus;
-import ua.org.java.dynamoit.MainModel;
+import ua.org.java.dynamoit.components.main.MainModel;
 import ua.org.java.dynamoit.db.DynamoDBService;
 import ua.org.java.dynamoit.model.TableDef;
 

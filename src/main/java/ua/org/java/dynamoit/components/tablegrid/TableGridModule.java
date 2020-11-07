@@ -21,7 +21,7 @@ import dagger.Module;
 import dagger.Provides;
 import javafx.application.HostServices;
 import ua.org.java.dynamoit.EventBus;
-import ua.org.java.dynamoit.MainModel;
+import ua.org.java.dynamoit.components.main.MainModel;
 import ua.org.java.dynamoit.db.DynamoDBService;
 import ua.org.java.dynamoit.utils.FXExecutor;
 

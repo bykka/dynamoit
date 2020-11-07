@@ -28,7 +28,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import ua.org.java.dynamoit.MainModel;
+import ua.org.java.dynamoit.components.main.MainModel;
 import ua.org.java.dynamoit.model.TableDef;
 import ua.org.java.dynamoit.utils.DX;
 import ua.org.java.dynamoit.widgets.ClearableTextField;

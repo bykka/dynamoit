@@ -20,7 +20,7 @@ package ua.org.java.dynamoit.components.profileviewer;
 import dagger.BindsInstance;
 import dagger.Component;
 import ua.org.java.dynamoit.EventBus;
-import ua.org.java.dynamoit.MainModel;
+import ua.org.java.dynamoit.components.main.MainModel;
 import ua.org.java.dynamoit.db.DynamoDBModule;
 
 import javax.inject.Singleton;
