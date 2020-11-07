@@ -20,7 +20,7 @@ package ua.org.java.dynamoit;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import ua.org.java.dynamoit.components.dialog.ExceptionDialog;
+import ua.org.java.dynamoit.widgets.ExceptionDialog;
 import ua.org.java.dynamoit.components.tablegrid.TableGridContext;
 
 import java.util.concurrent.CompletableFuture;

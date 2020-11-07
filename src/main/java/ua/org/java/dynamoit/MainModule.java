@@ -22,7 +22,7 @@ import dagger.Provides;
 import javafx.application.Application;
 import javafx.application.HostServices;
 import javafx.scene.layout.Region;
-import ua.org.java.dynamoit.components.activityindicator.ActivityIndicator;
+import ua.org.java.dynamoit.widgets.ActivityIndicator;
 import ua.org.java.dynamoit.db.DynamoDBService;
 import ua.org.java.dynamoit.utils.FXExecutor;
 

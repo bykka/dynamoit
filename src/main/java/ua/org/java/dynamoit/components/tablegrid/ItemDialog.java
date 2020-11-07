@@ -46,7 +46,7 @@ import org.fxmisc.richtext.Selection;
 import org.fxmisc.richtext.SelectionImpl;
 import org.reactfx.EventStream;
 import org.reactfx.Subscription;
-import ua.org.java.dynamoit.components.jsoneditor.JsonEditor;
+import ua.org.java.dynamoit.widgets.JsonEditor;
 import ua.org.java.dynamoit.utils.DX;
 import ua.org.java.dynamoit.utils.ObservableListIterator;
 
