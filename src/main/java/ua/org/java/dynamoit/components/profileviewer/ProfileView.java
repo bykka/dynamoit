@@ -129,7 +129,8 @@ public class ProfileView extends VBox {
     private static class FilterTreeItem extends TreeItem<String> {
 
         public FilterTreeItem(String filter) {
-            super("Contains: " + filter, DX.icon("icons/folder_star.png"));
+            valueProperty().bind(Bindings.concat("Contains: ", filter, " (", Bindings.size(getChildren()), ")"));
+            setGraphic(DX.icon("icons/folder_star.png"));
         }
     }
 
