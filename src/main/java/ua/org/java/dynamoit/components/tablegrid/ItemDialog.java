@@ -40,15 +40,15 @@ import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Pair;
-import org.controlsfx.control.textfield.TextFields;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.Selection;
 import org.fxmisc.richtext.SelectionImpl;
 import org.reactfx.EventStream;
 import org.reactfx.Subscription;
-import ua.org.java.dynamoit.widgets.JsonEditor;
 import ua.org.java.dynamoit.utils.DX;
 import ua.org.java.dynamoit.utils.ObservableListIterator;
+import ua.org.java.dynamoit.widgets.ClearableTextField;
+import ua.org.java.dynamoit.widgets.JsonEditor;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -63,7 +63,7 @@ public class ItemDialog extends Dialog<String> {
 
     private Subscription validationSubscribe;
     private final JsonEditor textArea = new JsonEditor();
-    private final TextField searchField = TextFields.createClearableTextField();
+    private final TextField searchField = new ClearableTextField();
     private Disposable focusDisposable;
     private final List<Selection<Collection<String>, String, Collection<String>>> selections = new ArrayList<>();
     private final SimpleBooleanProperty showSearch = new SimpleBooleanProperty(false);
