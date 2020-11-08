@@ -63,4 +63,7 @@ public class ProfileController {
     }
 
 
+    public void onDeleteFilter(String filter) {
+        this.model.getSavedFilters().remove(filter);
+    }
 }
