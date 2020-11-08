@@ -41,7 +41,9 @@ public class ProfileController {
     }
 
     public void onSaveFilter() {
-        this.model.getSavedFilters().add(model.getFilter());
+        if (model.getFilter() != null && !model.getFilter().isBlank()) {
+            this.model.getSavedFilters().add(model.getFilter());
+        }
     }
 
     public void onTablesRefresh() {

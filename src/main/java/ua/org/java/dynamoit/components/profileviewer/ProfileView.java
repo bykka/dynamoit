@@ -57,6 +57,7 @@ public class ProfileView extends VBox {
                             HBox.setHgrow(textField, Priority.ALWAYS);
                             textField.setPromptText("Table name contains");
                             textField.textProperty().bindBidirectional(model.filterProperty());
+                            textField.setOnAction(event -> controller.onSaveFilter());
                         }),
                         DX.create(Button::new, button -> {
                             button.setTooltip(new Tooltip("Save current filter"));
