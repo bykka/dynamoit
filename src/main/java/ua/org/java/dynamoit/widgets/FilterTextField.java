@@ -17,13 +17,13 @@
 
 package ua.org.java.dynamoit.widgets;
 
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Bounds;
 import javafx.scene.Cursor;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.Label;
-import javafx.scene.control.RadioMenuItem;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.*;
 import javafx.scene.layout.StackPane;
+import javafx.util.Duration;
 import ua.org.java.dynamoit.utils.DX;
 
 import java.util.stream.Collectors;
@@ -31,23 +31,31 @@ import java.util.stream.Stream;
 
 public class FilterTextField extends ClearableTextField {
 
-    private final int TWO_CHARS_SIZE = 14;
-    private final Label label = new Label(Operation.EQUALS.label);
+    private static final int TWO_CHARS_SIZE = 14;
+
+    private final SimpleObjectProperty<Operation> operation = new SimpleObjectProperty<>(Operation.EQUALS);
 
     public FilterTextField() {
         ToggleGroup toggleGroup = new ToggleGroup();
         ContextMenu contextMenu = DX.contextMenu(__ ->
                 Stream.of(Operation.values())
-                        .map(operation -> DX.create(RadioMenuItem::new, menu -> {
-                            menu.setText(operation.getText());
-                            menu.setGraphic(new Label(operation.getLabel()));
-                            menu.setOnAction(___ -> label.setText(operation.getLabel()));
+                        .map(opr -> DX.create(RadioMenuItem::new, menu -> {
+                            menu.setText(opr.getText());
+                            menu.setGraphic(new Label(opr.getLabel()));
+                            menu.setOnAction(___ -> operation.set(opr));
                             menu.setToggleGroup(toggleGroup);
-                            menu.setUserData(operation);
-                            menu.setSelected(operation == Operation.EQUALS);
+                            menu.setUserData(opr);
+                            menu.setSelected(opr == Operation.EQUALS);
                         }))
                         .collect(Collectors.toList())
         );
+
+        Label label = new Label();
+        Tooltip tooltip = new Tooltip();
+        label.setTooltip(tooltip);
+        label.textProperty().bind(Bindings.select(operation, "label"));
+        tooltip.textProperty().bind(Bindings.select(operation, "text"));
+        tooltip.setShowDelay(Duration.millis(300));
 
         StackPane pane = new StackPane(label);
         pane.setMinWidth(TWO_CHARS_SIZE);
@@ -61,7 +69,7 @@ public class FilterTextField extends ClearableTextField {
         setLeft(pane);
     }
 
-    private enum Operation {
+    public enum Operation {
         EQUALS("==", "equals"),
         NOT_EQUALS("!=", "not equals"),
         LESS_THAN("<", "less than"),
