@@ -19,8 +19,10 @@ package ua.org.java.dynamoit.widgets;
 
 import javafx.geometry.Bounds;
 import javafx.scene.Cursor;
-import javafx.scene.control.CheckMenuItem;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.RadioMenuItem;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.StackPane;
 import ua.org.java.dynamoit.utils.DX;
 
@@ -29,23 +31,29 @@ import java.util.stream.Stream;
 
 public class FilterTextField extends ClearableTextField {
 
+    private final Label label = new Label(Operation.EQUALS.label);
+
     public FilterTextField() {
-        Label label = new Label("==");
+        ToggleGroup toggleGroup = new ToggleGroup();
+        ContextMenu contextMenu = DX.contextMenu(__ ->
+                Stream.of(Operation.values())
+                        .map(operation -> DX.create(RadioMenuItem::new, menu -> {
+                            menu.setText(operation.getText());
+                            menu.setGraphic(new Label(operation.getLabel()));
+                            menu.setOnAction(___ -> label.setText(operation.getLabel()));
+                            menu.setToggleGroup(toggleGroup);
+                            menu.setUserData(operation);
+                            menu.setSelected(operation == Operation.EQUALS);
+                        }))
+                        .collect(Collectors.toList())
+        );
+
         StackPane pane = new StackPane(label);
         pane.setCursor(Cursor.DEFAULT);
         pane.setOnMouseClicked(event -> {
             Bounds localBounds = this.getBoundsInLocal();
             Bounds screenBounds = this.localToScreen(localBounds);
-            DX.contextMenu(contextMenu ->
-                    Stream.of(Operation.values())
-                            .map(operation -> DX.create(CheckMenuItem::new, menu -> {
-                                menu.setText(operation.getText());
-                                menu.setGraphic(new Label(operation.getLabel()));
-                                menu.setOnAction(__ -> label.setText(operation.getLabel()));
-//                                menu.selectedProperty().bind(Bindings.equal(label.textProperty(), operation.getLabel()));
-                            }))
-                            .collect(Collectors.toList())
-            ).show(pane, screenBounds.getMinX(), screenBounds.getMinY() + getHeight());
+            contextMenu.show(pane, screenBounds.getMinX(), screenBounds.getMinY() + getHeight());
         });
 
         setLeft(pane);
@@ -58,7 +66,7 @@ public class FilterTextField extends ClearableTextField {
         LESS_THAN_OR_EQUALS("<=", "less than or equals"),
         MORE_THAN(">", "more than"),
         MORE_THAN_OR_EQUALS("=>", "more than or equals"),
-        BETWEEN("...", "between"),
+        BETWEEN("..", "between"),
         EXISTS("$", "exists"),
         NOT_EXISTS("!$", "not exists"),
         CONTAINS("~", "contains"),
