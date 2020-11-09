@@ -76,7 +76,7 @@ public class TableGridView extends VBox {
                         DX.create(Button::new, button -> {
                             button.setTooltip(new Tooltip("Create a new document"));
                             button.setGraphic(DX.icon("icons/table_row_insert.png"));
-                            button.setOnAction(event -> showItemDialog(String.format("[%1s] Create a new item", tableModel.getTableName()), "", controller::onCreateItem, controller::validateItem));
+                            button.setOnAction(event -> showCreateItemDialog(""));
                         }),
                         DX.create(Button::new, button -> {
                             deleteSelectedButton = button;
@@ -162,7 +162,7 @@ public class TableGridView extends VBox {
                         TableRow<Item> tableRow = new TableRow<>();
                         tableRow.setOnMouseClicked(event -> {
                             if (event.getClickCount() == 2 && tableRow.getItem() != null) {
-                                showItemDialog(String.format("[%1s] Edit the document", tableModel.getTableName()), tableRow.getItem().toJSONPretty(), controller::onUpdateItem, controller::validateItem);
+                                showEditItemDialog(tableRow.getItem().toJSONPretty());
                             }
                         });
                         return tableRow;
@@ -170,7 +170,7 @@ public class TableGridView extends VBox {
 
                     tableView.setOnKeyPressed(event -> {
                         if (KeyCode.ENTER == event.getCode() && !tableView.getSelectionModel().isEmpty()) {
-                            showItemDialog(String.format("[%1s] Edit the document", tableModel.getTableName()), tableView.getSelectionModel().getSelectedItem().toJSONPretty(), controller::onUpdateItem, controller::validateItem);
+                            showEditItemDialog(tableView.getSelectionModel().getSelectedItem().toJSONPretty());
                         }
                     });
 
@@ -308,6 +308,23 @@ public class TableGridView extends VBox {
                                             })
                                     ).collect(Collectors.toList())
                             );
+                        }),
+                        DX.create(Menu::new, menuEdit -> {
+                            menuEdit.setText("Edit document");
+                            menuEdit.setGraphic(DX.icon("icons/page_edit.png"));
+                            menuEdit.setOnAction(editEvent -> {
+                                if (editEvent.getTarget().equals(editEvent.getSource())) {
+                                    showEditItemDialog(cell.getTableRow().getItem().toJSONPretty());
+                                }
+                            });
+                            menuEdit.getItems().add(
+                                    DX.create(MenuItem::new, menuEditAsNew -> {
+                                        menuEditAsNew.setText("Edit as new document");
+                                        menuEditAsNew.setOnAction(__ -> {
+                                            showCreateItemDialog(cell.getTableRow().getItem().toJSONPretty());
+                                        });
+                                    })
+                            );
                         })
                 )).show(cell, event.getScreenX(), event.getScreenY());
             }
@@ -317,6 +334,14 @@ public class TableGridView extends VBox {
 
     private void clearFilter() {
         controller.onClearFilters();
+    }
+
+    private void showEditItemDialog(String json) {
+        showItemDialog(String.format("[%1s] Edit the document", tableModel.getTableName()), json, controller::onUpdateItem, controller::validateItem);
+    }
+
+    private void showCreateItemDialog(String json) {
+        showItemDialog(String.format("[%1s] Create a new item", tableModel.getTableName()), json, controller::onCreateItem, controller::validateItem);
     }
 
     private void showItemDialog(String title, String json, Consumer<String> onSaveConsumer, Function<EventStream<String>, EventStream<Boolean>> validator) {
