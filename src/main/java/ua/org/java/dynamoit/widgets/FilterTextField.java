@@ -31,6 +31,7 @@ import java.util.stream.Stream;
 
 public class FilterTextField extends ClearableTextField {
 
+    private final int TWO_CHARS_SIZE = 14;
     private final Label label = new Label(Operation.EQUALS.label);
 
     public FilterTextField() {
@@ -49,6 +50,7 @@ public class FilterTextField extends ClearableTextField {
         );
 
         StackPane pane = new StackPane(label);
+        pane.setMinWidth(TWO_CHARS_SIZE);
         pane.setCursor(Cursor.DEFAULT);
         pane.setOnMouseClicked(event -> {
             Bounds localBounds = this.getBoundsInLocal();
