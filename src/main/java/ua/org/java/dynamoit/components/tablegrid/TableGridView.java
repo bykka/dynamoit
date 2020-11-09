@@ -38,7 +38,7 @@ import javafx.stage.FileChooser;
 import org.reactfx.EventStream;
 import ua.org.java.dynamoit.model.TableDef;
 import ua.org.java.dynamoit.utils.DX;
-import ua.org.java.dynamoit.widgets.FilterTextField;
+import ua.org.java.dynamoit.widgets.ClearableTextField;
 
 import java.io.File;
 import java.text.DateFormat;
@@ -224,7 +224,7 @@ public class TableGridView extends VBox {
 
         return DX.create(TableColumn::new, filter -> {
             filter.setId(attrName);
-            filter.setGraphic(DX.create(FilterTextField::new, textField -> {
+            filter.setGraphic(DX.create(ClearableTextField::new, textField -> {
                 textField.textProperty().bindBidirectional(filterProperty);
                 textField.setOnAction(event -> controller.onRefreshData());
                 textField.setOnClear(event -> controller.onRefreshData());
