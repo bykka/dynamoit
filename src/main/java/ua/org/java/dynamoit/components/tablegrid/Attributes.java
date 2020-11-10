@@ -20,10 +20,7 @@ package ua.org.java.dynamoit.components.tablegrid;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.internal.Filter;
 import javafx.util.Pair;
-import ua.org.java.dynamoit.components.tablegrid.parser.BaseValueToFilterParser;
-import ua.org.java.dynamoit.components.tablegrid.parser.BeginsWithParser;
-import ua.org.java.dynamoit.components.tablegrid.parser.ContainsParser;
-import ua.org.java.dynamoit.components.tablegrid.parser.EqualsParser;
+import ua.org.java.dynamoit.components.tablegrid.parser.*;
 import ua.org.java.dynamoit.utils.Utils;
 
 import java.util.List;
@@ -33,8 +30,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class Attributes {
-
-    public static final String ASTERISK = "*";
 
     public enum Type {
         STRING, NUMBER, BOOLEAN
@@ -84,6 +79,9 @@ public final class Attributes {
         Stream.of(
                 new ContainsParser<>(value, filter),
                 new BeginsWithParser<>(value, filter),
+                new ExistsParser<>(value, filter),
+                new NotContainsParser<>(value, filter),
+                new NotExistsParser<>(value, filter),
                 new EqualsParser<>(value, type, filter) // last parser
         )
                 .filter(BaseValueToFilterParser::matches)

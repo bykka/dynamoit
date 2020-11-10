@@ -20,6 +20,9 @@ The main idea of the client is to reach the required data in a few clicks.
  * __EQ__ - default operator
  * __BEGINS_WITH__ - for values with asterisk at the end
  * __CONTAINS__ - for value with asterisk at the begin and at the end
+ * __NOT_CONTAINS__ - for value with ! and asterisk at the begin and asterisk at the end
+ * __EXITS__ - $ as value 
+ * __NOT_EXITS__ - !$ as value 
 
 ## System requirements, building and running
 At least Java 11 and maven to build and run the application.
