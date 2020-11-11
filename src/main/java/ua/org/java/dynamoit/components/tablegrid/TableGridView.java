@@ -23,6 +23,7 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ListChangeListener;
 import javafx.collections.MapChangeListener;
+import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -36,6 +37,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import org.reactfx.EventStream;
+import ua.org.java.dynamoit.components.tablegrid.highlight.Highlightor;
 import ua.org.java.dynamoit.model.TableDef;
 import ua.org.java.dynamoit.utils.DX;
 import ua.org.java.dynamoit.widgets.ClearableTextField;
@@ -59,6 +61,8 @@ public class TableGridView extends VBox {
     private javafx.scene.control.TableView<Item> tableView;
 
     private Consumer<TableGridContext> onSearchInTable;
+
+    private final Highlightor highlightor = new Highlightor();
 
     public TableGridView(TableGridController controller, TableGridModel tableModel) {
         this.controller = controller;
@@ -90,6 +94,11 @@ public class TableGridView extends VBox {
                             button.setTooltip(new Tooltip("Clear filter"));
                             button.setGraphic(DX.icon("icons/filter_clear.png"));
                             button.setOnAction(event -> clearFilter());
+                        }),
+                        DX.create(Button::new, button -> {
+                            button.setTooltip(new Tooltip("Clear highlighting"));
+                            button.setGraphic(DX.icon("icons/color_swatches.png"));
+                            button.setOnAction(event -> highlightor.clear());
                         }),
                         DX.create(Button::new, button -> {
                             button.setTooltip(new Tooltip("Refresh rows"));
@@ -250,10 +259,23 @@ public class TableGridView extends VBox {
                     }
                     cell.textProperty().bind(cell.itemProperty());
                     attachCellContextMenu(cell, attrName);
+
+                    highlightor.getCriteria(attrName).addListener((ListChangeListener<Highlightor.Criteria>) c -> highlightCellValue(highlightor.getCriteria(attrName), cell));
+                    cell.textProperty().addListener(observable -> highlightCellValue(highlightor.getCriteria(attrName), cell));
+
                     return cell;
                 });
             }));
         });
+    }
+
+    private void highlightCellValue(ObservableList<Highlightor.Criteria> criteriaList, TableCell<Item, String> cell) {
+        criteriaList.stream()
+                .filter(criteria -> criteria.match(cell.getText()))
+                .findFirst()
+                .ifPresentOrElse(criteria -> cell.setStyle(
+                        String.format("-fx-background-color: %1s; -fx-text-fill: %2s", criteria.getBackgroundColor(), criteria.getTextColor())
+                ), () -> cell.setStyle(null));
     }
 
     private void attachCellContextMenu(TableCell<Item, String> cell, String attrName) {
@@ -261,13 +283,13 @@ public class TableGridView extends VBox {
             if (cell.getText() != null && cell.getText().trim().length() != 0) {
                 DX.contextMenu(contextMenu -> List.of(
                         DX.create(MenuItem::new, menuCopy -> {
-                            menuCopy.textProperty().bind(Bindings.concat("Copy   '", cell.textProperty(), "'"));
+                            menuCopy.textProperty().bind(Bindings.concat("Copy      '", cell.textProperty(), "'"));
                             menuCopy.setGraphic(DX.icon("icons/page_copy.png"));
                             menuCopy.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
                             menuCopy.setOnAction(__ -> copyToClipboard(cell.textProperty().get()));
                         }),
                         DX.create(MenuItem::new, menuFilter -> {
-                            menuFilter.textProperty().bind(Bindings.concat("Filter '", cell.textProperty(), "'"));
+                            menuFilter.textProperty().bind(Bindings.concat("Filter    '", cell.textProperty(), "'"));
                             menuFilter.setGraphic(DX.icon("icons/filter_add.png"));
                             menuFilter.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
                             menuFilter.setOnAction(__ -> {
@@ -278,8 +300,19 @@ public class TableGridView extends VBox {
                                 }
                             });
                         }),
+                        DX.create(MenuItem::new, menuHighlight -> {
+                            menuHighlight.textProperty().bind(Bindings.concat("Highlight '", cell.textProperty(), "'"));
+                            menuHighlight.setGraphic(DX.icon("icons/select_by_color.png"));
+                            menuHighlight.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
+                            menuHighlight.setOnAction(__ -> {
+                                SimpleStringProperty property = this.tableModel.getAttributeFilterMap().get(attrName);
+                                if (property != null) {
+                                    highlightor.addEqHighlighting(attrName, cell.getText());
+                                }
+                            });
+                        }),
                         DX.create(Menu::new, menuSearch -> {
-                            menuSearch.textProperty().bind(Bindings.concat("Search '", cell.textProperty(), "' in"));
+                            menuSearch.textProperty().bind(Bindings.concat("Search    '", cell.textProperty(), "' in"));
                             menuSearch.setGraphic(DX.icon("icons/table_tab_search.png"));
                             menuSearch.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
                             menuSearch.getItems().add(

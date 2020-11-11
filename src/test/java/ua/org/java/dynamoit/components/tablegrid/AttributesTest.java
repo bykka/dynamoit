@@ -31,11 +31,11 @@ public class AttributesTest {
         assertEquals(ComparisonOperator.EQ, scanFilter.getComparisonOperator());
         assertArrayEquals(new Object[]{"John"}, scanFilter.getValues());
 
-        scanFilter = Attributes.attributeValueToFilter("name", "John*", Attributes.Type.STRING, ScanFilter::new);
+        scanFilter = Attributes.attributeValueToFilter("name", "^John", Attributes.Type.STRING, ScanFilter::new);
         assertEquals(ComparisonOperator.BEGINS_WITH, scanFilter.getComparisonOperator());
         assertArrayEquals(new Object[]{"John"}, scanFilter.getValues());
 
-        scanFilter = Attributes.attributeValueToFilter("name", "*John*", Attributes.Type.STRING, ScanFilter::new);
+        scanFilter = Attributes.attributeValueToFilter("name", "~John", Attributes.Type.STRING, ScanFilter::new);
         assertEquals(ComparisonOperator.CONTAINS, scanFilter.getComparisonOperator());
         assertArrayEquals(new Object[]{"John"}, scanFilter.getValues());
 
@@ -46,10 +46,10 @@ public class AttributesTest {
         assertNull(scanFilter.getComparisonOperator());
 
         scanFilter = Attributes.attributeValueToFilter("name", "*", Attributes.Type.STRING, ScanFilter::new);
-        assertNull(scanFilter.getComparisonOperator());
+        assertEquals(ComparisonOperator.EQ, scanFilter.getComparisonOperator());
 
         scanFilter = Attributes.attributeValueToFilter("name", "**", Attributes.Type.STRING, ScanFilter::new);
-        assertNull(scanFilter.getComparisonOperator());
+        assertEquals(ComparisonOperator.EQ, scanFilter.getComparisonOperator());
     }
 }
 

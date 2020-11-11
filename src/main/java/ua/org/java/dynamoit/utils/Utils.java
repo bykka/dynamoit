@@ -91,4 +91,11 @@ public class Utils {
         }
         return String.valueOf(value);
     }
+
+    public static String trimToBlank(String s) {
+        if (s == null) {
+            return "";
+        }
+        return s.trim();
+    }
 }
