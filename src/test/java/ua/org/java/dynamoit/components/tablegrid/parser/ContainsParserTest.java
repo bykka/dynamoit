@@ -29,14 +29,13 @@ public class ContainsParserTest {
     public void testBlank() {
         assertFalse(new ContainsParser<QueryFilter>("", null).matches());
         assertFalse(new ContainsParser<QueryFilter>(" ", null).matches());
-        assertFalse(new ContainsParser<QueryFilter>("*", null).matches());
-        assertTrue(new ContainsParser<QueryFilter>("**", null).matches());
+        assertTrue(new ContainsParser<QueryFilter>("~", null).matches());
     }
 
     @Test
     public void testValue() {
         QueryFilter filter = new QueryFilter("attr");
-        ContainsParser<QueryFilter> parser = new ContainsParser<>("*hello*", filter);
+        ContainsParser<QueryFilter> parser = new ContainsParser<>("~hello", filter);
         assertTrue(parser.matches());
 
         parser.parse();

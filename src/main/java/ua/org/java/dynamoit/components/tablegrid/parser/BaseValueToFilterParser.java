@@ -29,7 +29,7 @@ public abstract class BaseValueToFilterParser<T extends Filter<T>> implements Va
     protected T filter;
 
     public BaseValueToFilterParser(String value, T filter) {
-        matcher = regPattern().matcher(value);
+        matcher = regPattern().matcher(value.trim());
         this.filter = filter;
     }
 

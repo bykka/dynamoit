@@ -29,15 +29,14 @@ public class NotContainsParserTest {
     public void testBlank() {
         assertFalse(new NotContainsParser<QueryFilter>("", null).matches());
         assertFalse(new NotContainsParser<QueryFilter>(" ", null).matches());
-        assertFalse(new NotContainsParser<QueryFilter>("*", null).matches());
-        assertFalse(new NotContainsParser<QueryFilter>("**", null).matches());
-        assertTrue(new NotContainsParser<QueryFilter>("!**", null).matches());
+        assertFalse(new NotContainsParser<QueryFilter>("~", null).matches());
+        assertTrue(new NotContainsParser<QueryFilter>("!~", null).matches());
     }
 
     @Test
     public void testValue() {
         QueryFilter filter = new QueryFilter("attr");
-        NotContainsParser<QueryFilter> parser = new NotContainsParser<>("!*hello*", filter);
+        NotContainsParser<QueryFilter> parser = new NotContainsParser<>("!~hello", filter);
         assertTrue(parser.matches());
 
         parser.parse();
