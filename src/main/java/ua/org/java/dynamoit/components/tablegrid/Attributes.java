@@ -80,6 +80,7 @@ public final class Attributes {
                 new ContainsParser<>(value, filter),
                 new BeginsWithParser<>(value, filter),
                 new ExistsParser<>(value, filter),
+                new NotEqualsParser<>(value, type, filter),
                 new NotContainsParser<>(value, filter),
                 new NotExistsParser<>(value, filter),
                 new EqualsParser<>(value, type, filter) // last parser

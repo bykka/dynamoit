@@ -22,6 +22,7 @@ Examples are based on "hello world"
 |Filter name|Example|
 |-----------|:------|
 |__EQUALS__ |hello world|
+|__NOT_EQUALS__ |!=hello world|
 |__BEGINS_WITH__|^hello|
 |__CONTAINS__|~world|
 |__NOT_CONTAINS__|!~something|
