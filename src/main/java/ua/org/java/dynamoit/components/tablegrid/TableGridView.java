@@ -37,7 +37,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import org.reactfx.EventStream;
-import ua.org.java.dynamoit.components.tablegrid.highlight.Highlightor;
+import ua.org.java.dynamoit.components.tablegrid.highlight.Highlighter;
 import ua.org.java.dynamoit.model.TableDef;
 import ua.org.java.dynamoit.utils.DX;
 import ua.org.java.dynamoit.widgets.ClearableTextField;
@@ -62,7 +62,7 @@ public class TableGridView extends VBox {
 
     private Consumer<TableGridContext> onSearchInTable;
 
-    private final Highlightor highlightor = new Highlightor();
+    private final Highlighter highlighter = new Highlighter();
 
     public TableGridView(TableGridController controller, TableGridModel tableModel) {
         this.controller = controller;
@@ -98,7 +98,7 @@ public class TableGridView extends VBox {
                         DX.create(Button::new, button -> {
                             button.setTooltip(new Tooltip("Clear highlighting"));
                             button.setGraphic(DX.icon("icons/color_swatches.png"));
-                            button.setOnAction(event -> highlightor.clear());
+                            button.setOnAction(event -> highlighter.clear());
                         }),
                         DX.create(Button::new, button -> {
                             button.setTooltip(new Tooltip("Refresh rows"));
@@ -260,8 +260,8 @@ public class TableGridView extends VBox {
                     cell.textProperty().bind(cell.itemProperty());
                     attachCellContextMenu(cell, attrName);
 
-                    highlightor.getCriteria(attrName).addListener((ListChangeListener<Highlightor.Criteria>) c -> highlightCellValue(highlightor.getCriteria(attrName), cell));
-                    cell.textProperty().addListener(observable -> highlightCellValue(highlightor.getCriteria(attrName), cell));
+                    highlighter.getCriteria(attrName).addListener((ListChangeListener<Highlighter.Criteria>) c -> highlightCellValue(highlighter.getCriteria(attrName), cell));
+                    cell.textProperty().addListener(observable -> highlightCellValue(highlighter.getCriteria(attrName), cell));
 
                     return cell;
                 });
@@ -269,7 +269,7 @@ public class TableGridView extends VBox {
         });
     }
 
-    private void highlightCellValue(ObservableList<Highlightor.Criteria> criteriaList, TableCell<Item, String> cell) {
+    private void highlightCellValue(ObservableList<Highlighter.Criteria> criteriaList, TableCell<Item, String> cell) {
         criteriaList.stream()
                 .filter(criteria -> criteria.match(cell.getText()))
                 .findFirst()
@@ -307,7 +307,7 @@ public class TableGridView extends VBox {
                             menuHighlight.setOnAction(__ -> {
                                 SimpleStringProperty property = this.tableModel.getAttributeFilterMap().get(attrName);
                                 if (property != null) {
-                                    highlightor.addEqHighlighting(attrName, cell.getText());
+                                    highlighter.addEqHighlighting(attrName, cell.getText());
                                 }
                             });
                         }),
