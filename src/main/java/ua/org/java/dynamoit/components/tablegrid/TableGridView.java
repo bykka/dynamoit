@@ -40,6 +40,7 @@ import org.reactfx.EventStream;
 import ua.org.java.dynamoit.components.tablegrid.highlight.Highlighter;
 import ua.org.java.dynamoit.model.TableDef;
 import ua.org.java.dynamoit.utils.DX;
+import ua.org.java.dynamoit.utils.Utils;
 import ua.org.java.dynamoit.widgets.ClearableTextField;
 
 import java.io.File;
@@ -281,15 +282,16 @@ public class TableGridView extends VBox {
     private void attachCellContextMenu(TableCell<Item, String> cell, String attrName) {
         cell.setOnContextMenuRequested(event -> {
             if (cell.getText() != null && cell.getText().trim().length() != 0) {
+                String value = Utils.truncateWithDots(cell.textProperty().get());
                 DX.contextMenu(contextMenu -> List.of(
                         DX.create(MenuItem::new, menuCopy -> {
-                            menuCopy.textProperty().bind(Bindings.concat("Copy      '", cell.textProperty(), "'"));
+                            menuCopy.textProperty().set("Copy      '" + value + "'");
                             menuCopy.setGraphic(DX.icon("icons/page_copy.png"));
                             menuCopy.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
                             menuCopy.setOnAction(__ -> copyToClipboard(cell.textProperty().get()));
                         }),
                         DX.create(MenuItem::new, menuFilter -> {
-                            menuFilter.textProperty().bind(Bindings.concat("Filter    '", cell.textProperty(), "'"));
+                            menuFilter.textProperty().set("Filter    '" + value + "'");
                             menuFilter.setGraphic(DX.icon("icons/filter_add.png"));
                             menuFilter.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
                             menuFilter.setOnAction(__ -> {
@@ -301,7 +303,7 @@ public class TableGridView extends VBox {
                             });
                         }),
                         DX.create(MenuItem::new, menuHighlight -> {
-                            menuHighlight.textProperty().bind(Bindings.concat("Highlight '", cell.textProperty(), "'"));
+                            menuHighlight.textProperty().set("Highlight '" + value + "'");
                             menuHighlight.setGraphic(DX.icon("icons/select_by_color.png"));
                             menuHighlight.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
                             menuHighlight.setOnAction(__ -> {
@@ -312,7 +314,7 @@ public class TableGridView extends VBox {
                             });
                         }),
                         DX.create(Menu::new, menuSearch -> {
-                            menuSearch.textProperty().bind(Bindings.concat("Search    '", cell.textProperty(), "' in"));
+                            menuSearch.textProperty().set("Search    '" + value + "' in");
                             menuSearch.setGraphic(DX.icon("icons/table_tab_search.png"));
                             menuSearch.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
                             menuSearch.getItems().add(

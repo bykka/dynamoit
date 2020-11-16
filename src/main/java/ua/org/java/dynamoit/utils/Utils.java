@@ -98,4 +98,11 @@ public class Utils {
         }
         return s.trim();
     }
+
+    public static String truncateWithDots(String value) {
+        if (value.length() > 40) {
+            return value.substring(0, 40) + "..";
+        }
+        return value;
+    }
 }
