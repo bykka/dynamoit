@@ -12,6 +12,9 @@ The main idea of the client is to reach the required data in a few clicks.
  * Automatically detects when to use scan or query requests
  * Supports pagination to view the data.
  * Fast data filtering
+ * Highlighting values in the data table
+ * Context menu to close all/others tabs
+ * Open table in the AWS web console
  * Edit or delete the selected records
  * Import / Export data as json file 
  * Search (Ctrl+F) in the edit item dialog
