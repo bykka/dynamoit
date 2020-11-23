@@ -26,7 +26,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
-import ua.org.java.dynamoit.MainModel;
+import ua.org.java.dynamoit.components.main.MainModel;
 import ua.org.java.dynamoit.model.TableDef;
 
 public class TableGridModel {

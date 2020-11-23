@@ -15,28 +15,21 @@
  *     along with DynamoIt.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ua.org.java.dynamoit;
+package ua.org.java.dynamoit.components.tablegrid.parser;
 
-import dagger.BindsInstance;
-import dagger.Component;
-import javafx.application.Application;
-import javafx.scene.layout.Region;
-import ua.org.java.dynamoit.components.main.MainModule;
-import ua.org.java.dynamoit.db.DynamoDBModule;
+import com.amazonaws.services.dynamodbv2.document.QueryFilter;
+import org.junit.Test;
+import ua.org.java.dynamoit.components.tablegrid.Attributes;
 
-import javax.inject.Singleton;
+import static org.junit.Assert.*;
 
-@Component(modules = {MainModule.class, DynamoDBModule.class})
-@Singleton
-public interface AppFactory {
+public class EqualsParserTest {
 
-    Region mainView();
-
-    @Component.Builder
-    interface Builder {
-        @BindsInstance
-        AppFactory.Builder application(Application application);
-        AppFactory build();
+    @Test
+    public void test() {
+        assertTrue(new EqualsParser<QueryFilter>("", Attributes.Type.STRING, null).matches());
+        assertTrue(new EqualsParser<QueryFilter>(" ", Attributes.Type.STRING, null).matches());
+        assertTrue(new EqualsParser<QueryFilter>("1", Attributes.Type.STRING, null).matches());
     }
 
 }

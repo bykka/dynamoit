@@ -18,7 +18,7 @@
 package ua.org.java.dynamoit.components.profileviewer;
 
 import ua.org.java.dynamoit.EventBus;
-import ua.org.java.dynamoit.MainModel;
+import ua.org.java.dynamoit.components.main.MainModel;
 import ua.org.java.dynamoit.components.tablegrid.TableGridContext;
 import ua.org.java.dynamoit.db.DynamoDBService;
 import ua.org.java.dynamoit.model.TableDef;
@@ -41,7 +41,9 @@ public class ProfileController {
     }
 
     public void onSaveFilter() {
-        this.model.getSavedFilters().add(model.getFilter());
+        if (model.getFilter() != null && !model.getFilter().isBlank()) {
+            this.model.getSavedFilters().add(model.getFilter());
+        }
     }
 
     public void onTablesRefresh() {
@@ -61,4 +63,7 @@ public class ProfileController {
     }
 
 
+    public void onDeleteFilter(String filter) {
+        this.model.getSavedFilters().remove(filter);
+    }
 }

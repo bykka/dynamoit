@@ -12,14 +12,25 @@ The main idea of the client is to reach the required data in a few clicks.
  * Automatically detects when to use scan or query requests
  * Supports pagination to view the data.
  * Fast data filtering
+ * Highlighting values in the data table
+ * Context menu to close all/others tabs
+ * Open table in the AWS web console
  * Edit or delete the selected records
  * Import / Export data as json file 
  * Search (Ctrl+F) in the edit item dialog
  
 ## Supported filters
- * __EQ__ - default operator
- * __BEGINS_WITH__ - for values with asterisk at the end
- * __CONTAINS__ - for value with asterisk at the begin and at the end
+Examples are based on "hello world"
+
+|Filter name|Example|
+|-----------|:------|
+|__EQUALS__ |hello world|
+|__NOT_EQUALS__ |!=hello world|
+|__BEGINS_WITH__|^hello|
+|__CONTAINS__|~world|
+|__NOT_CONTAINS__|!~something|
+|__EXITS__|$| 
+|__NOT_EXITS__|!$| 
 
 ## System requirements, building and running
 At least Java 11 and maven to build and run the application.

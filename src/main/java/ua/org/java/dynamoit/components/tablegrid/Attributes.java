@@ -20,17 +20,16 @@ package ua.org.java.dynamoit.components.tablegrid;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.internal.Filter;
 import javafx.util.Pair;
+import ua.org.java.dynamoit.components.tablegrid.parser.*;
 import ua.org.java.dynamoit.utils.Utils;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class Attributes {
-
-    public static final String ASTERISK = "*";
 
     public enum Type {
         STRING, NUMBER, BOOLEAN
@@ -77,27 +76,19 @@ public final class Attributes {
             return filter;
         }
 
-        if (type == Attributes.Type.NUMBER) {
-            filter.eq(new BigDecimal(value));
-        } else if (type == Attributes.Type.BOOLEAN) {
-            filter.eq(Boolean.valueOf(value));
-        } else {
-            if (value.startsWith(ASTERISK) && value.endsWith(ASTERISK) && value.length() >= 2) {
-                String trim = value.substring(1, value.length() - 1);
-                if (trim.isBlank()) {
-                    return filter;
-                }
-                filter.contains(trim);
-            } else if (value.endsWith(ASTERISK)) {
-                String trim = value.substring(0, value.length() - 1);
-                if (trim.isBlank()) {
-                    return filter;
-                }
-                filter.beginsWith(trim);
-            } else {
-                filter.eq(value);
-            }
-        }
+        Stream.of(
+                new ContainsParser<>(value, filter),
+                new BeginsWithParser<>(value, filter),
+                new ExistsParser<>(value, filter),
+                new NotEqualsParser<>(value, type, filter),
+                new NotContainsParser<>(value, filter),
+                new NotExistsParser<>(value, filter),
+                new EqualsParser<>(value, type, filter) // last parser
+        )
+                .filter(BaseValueToFilterParser::matches)
+                .findFirst()
+                .map(BaseValueToFilterParser::parse);
+
         return filter;
     }
 

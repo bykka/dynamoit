@@ -23,6 +23,7 @@ import com.amazonaws.services.dynamodbv2.document.internal.PageBasedCollection;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
+import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
 import com.amazonaws.services.dynamodbv2.model.DescribeTableResult;
 import com.amazonaws.util.StringUtils;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -248,8 +249,11 @@ public class TableGridController {
 
     private CompletableFuture<? extends ItemCollection<?>> executeQueryOrSearch() {
         SimpleStringProperty hashValueProperty = tableModel.getAttributeFilterMap().get(hash());
-        if (hashValueProperty != null && !StringUtils.isNullOrEmpty(hashValueProperty.get()) && !hashValueProperty.get().contains(ASTERISK)) {
-            return queryItems(tableModel.getAttributeFilterMap());
+        if (hashValueProperty != null && !StringUtils.isNullOrEmpty(hashValueProperty.get())) {
+            QueryFilter filter = attributeValueToFilter(hash(), hashValueProperty.get(), Type.STRING, QueryFilter::new);
+            if (filter.getComparisonOperator() == ComparisonOperator.EQ) {
+                return queryItems(tableModel.getAttributeFilterMap());
+            }
         }
         return scanItems(tableModel.getAttributeFilterMap());
     }

@@ -47,6 +47,12 @@ public class DX {
         return pane;
     }
 
+//    public static ContextMenu create(Supplier<ContextMenu> creator, Function<ContextMenu, List<MenuItem>> builder) {
+//        ContextMenu contextMenu = creator.get();
+//        contextMenu.getItems().addAll(builder.apply(contextMenu));
+//        return contextMenu;
+//    }
+
     public static SplitPane splitPane(Function<SplitPane, List<Node>> builder) {
         SplitPane splitPane = new SplitPane();
         splitPane.getItems().addAll(builder.apply(splitPane));

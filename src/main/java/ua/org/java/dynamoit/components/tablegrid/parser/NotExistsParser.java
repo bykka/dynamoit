@@ -15,17 +15,28 @@
  *     along with DynamoIt.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ua.org.java.dynamoit.components.activityindicator;
+package ua.org.java.dynamoit.components.tablegrid.parser;
 
-import javafx.beans.binding.Bindings;
-import javafx.scene.control.ProgressBar;
-import ua.org.java.dynamoit.EventBus;
+import com.amazonaws.services.dynamodbv2.document.internal.Filter;
 
-public class ActivityIndicator extends ProgressBar {
+import java.util.function.Consumer;
+import java.util.regex.Pattern;
 
-    public ActivityIndicator(EventBus eventBus) {
-        setPrefHeight(12);
-        setPrefWidth(150);
-        visibleProperty().bind(Bindings.greaterThan(eventBus.activityCountProperty(), 0));
+public class NotExistsParser<T extends Filter<T>> extends BaseValueToFilterParser<T> {
+
+    private static final Pattern PATTERN = Pattern.compile("(^!\\$$)");
+
+    public NotExistsParser(String value, T filter) {
+        super(value, filter);
+    }
+
+    @Override
+    protected Pattern regPattern() {
+        return PATTERN;
+    }
+
+    @Override
+    protected Consumer<String> termConsumer() {
+        return term -> filter.notExist();
     }
 }

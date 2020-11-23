@@ -91,4 +91,18 @@ public class Utils {
         }
         return String.valueOf(value);
     }
+
+    public static String trimToBlank(String s) {
+        if (s == null) {
+            return "";
+        }
+        return s.trim();
+    }
+
+    public static String truncateWithDots(String value) {
+        if (value.length() > 40) {
+            return value.substring(0, 40) + "..";
+        }
+        return value;
+    }
 }

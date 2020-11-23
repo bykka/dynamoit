@@ -15,28 +15,28 @@
  *     along with DynamoIt.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ua.org.java.dynamoit;
+package ua.org.java.dynamoit.components.tablegrid.parser;
 
-import dagger.BindsInstance;
-import dagger.Component;
-import javafx.application.Application;
-import javafx.scene.layout.Region;
-import ua.org.java.dynamoit.components.main.MainModule;
-import ua.org.java.dynamoit.db.DynamoDBModule;
+import com.amazonaws.services.dynamodbv2.document.internal.Filter;
 
-import javax.inject.Singleton;
+import java.util.function.Consumer;
+import java.util.regex.Pattern;
 
-@Component(modules = {MainModule.class, DynamoDBModule.class})
-@Singleton
-public interface AppFactory {
+public class ContainsParser<T extends Filter<T>> extends BaseValueToFilterParser<T> {
 
-    Region mainView();
+    private static final Pattern PATTERN = Pattern.compile("^~(.*)$");
 
-    @Component.Builder
-    interface Builder {
-        @BindsInstance
-        AppFactory.Builder application(Application application);
-        AppFactory build();
+    public ContainsParser(String value, T filter) {
+        super(value, filter);
     }
 
+    @Override
+    protected Pattern regPattern() {
+        return PATTERN;
+    }
+
+    @Override
+    protected Consumer<String> termConsumer() {
+        return term -> filter.contains(term);
+    }
 }

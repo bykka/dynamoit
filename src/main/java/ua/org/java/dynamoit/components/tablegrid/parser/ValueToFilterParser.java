@@ -15,28 +15,12 @@
  *     along with DynamoIt.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ua.org.java.dynamoit;
+package ua.org.java.dynamoit.components.tablegrid.parser;
 
-import dagger.BindsInstance;
-import dagger.Component;
-import javafx.application.Application;
-import javafx.scene.layout.Region;
-import ua.org.java.dynamoit.components.main.MainModule;
-import ua.org.java.dynamoit.db.DynamoDBModule;
+public interface ValueToFilterParser<T> {
 
-import javax.inject.Singleton;
+    boolean matches();
 
-@Component(modules = {MainModule.class, DynamoDBModule.class})
-@Singleton
-public interface AppFactory {
-
-    Region mainView();
-
-    @Component.Builder
-    interface Builder {
-        @BindsInstance
-        AppFactory.Builder application(Application application);
-        AppFactory build();
-    }
+    T parse();
 
 }

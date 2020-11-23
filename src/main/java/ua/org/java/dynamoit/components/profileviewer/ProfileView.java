@@ -19,16 +19,14 @@ package ua.org.java.dynamoit.components.profileviewer;
 
 import io.reactivex.rxjavafx.observables.JavaFxObservable;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.ObjectBinding;
 import javafx.collections.ListChangeListener;
-import javafx.scene.control.Button;
-import javafx.scene.control.Tooltip;
-import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeView;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import ua.org.java.dynamoit.MainModel;
+import ua.org.java.dynamoit.components.main.MainModel;
 import ua.org.java.dynamoit.model.TableDef;
 import ua.org.java.dynamoit.utils.DX;
 import ua.org.java.dynamoit.widgets.ClearableTextField;
@@ -39,7 +37,7 @@ import java.util.stream.Collectors;
 
 public class ProfileView extends VBox {
 
-    private TreeView<String> treeView;
+    private final TreeView<String> treeView = new TreeView<>();
 
     private final TreeItem<String> allTables;
     private final MainModel.ProfileModel model;
@@ -56,6 +54,7 @@ public class ProfileView extends VBox {
                             HBox.setHgrow(textField, Priority.ALWAYS);
                             textField.setPromptText("Table name contains");
                             textField.textProperty().bindBidirectional(model.filterProperty());
+                            textField.setOnAction(event -> controller.onSaveFilter());
                         }),
                         DX.create(Button::new, button -> {
                             button.setTooltip(new Tooltip("Save current filter"));
@@ -68,13 +67,26 @@ public class ProfileView extends VBox {
                             button.setOnAction(__ -> controller.onTablesRefresh());
                         })
                 )),
-                DX.create((Supplier<TreeView<String>>) TreeView::new, treeView -> {
+                DX.create(() -> this.treeView, treeView -> {
                     VBox.setVgrow(treeView, Priority.ALWAYS);
-                    this.treeView = treeView;
                     treeView.setRoot(new TreeItem<>());
                     treeView.setShowRoot(false);
                     treeView.getRoot().getChildren().add(allTables);
                     treeView.setOnMouseClicked(event -> this.onTableSelect(event, treeView.getSelectionModel().getSelectedItem()));
+                    treeView.setOnContextMenuRequested(event -> {
+                        if (event.getTarget() != null && treeView.getSelectionModel().getSelectedItem() instanceof FilterTreeItem) {
+                            FilterTreeItem filterTreeItem = (FilterTreeItem) treeView.getSelectionModel().getSelectedItem();
+                            DX.contextMenu(contextMenu -> List.of(
+                                    DX.create((Supplier<MenuItem>) MenuItem::new, menu -> {
+                                        menu.setText("Delete");
+                                        menu.setOnAction(__ -> {
+                                            controller.onDeleteFilter(filterTreeItem.getFilter());
+                                            treeView.getRoot().getChildren().remove(filterTreeItem);
+                                        });
+                                    })
+                            )).show(treeView.getSelectionModel().getSelectedItem().getGraphic(), event.getScreenX(), event.getScreenY());
+                        }
+                    });
                 })
         );
 
@@ -86,12 +98,20 @@ public class ProfileView extends VBox {
         JavaFxObservable.additionsOf(model.getSavedFilters())
                 .map(filter -> {
                     FilterTreeItem filterTables = new FilterTreeItem(filter);
-                    filterTables.getChildren().addAll(model.getAvailableTables()
-                            .stream()
+
+                    ObjectBinding<List<TableTreeItem>> tableItems = Bindings.createObjectBinding(() -> model.getAvailableTables().stream()
                             .filter(tableDef -> tableDef.getName().contains(filter))
                             .map(TableDef::getName)
                             .map(TableTreeItem::new)
-                            .collect(Collectors.toList()));
+                            .collect(Collectors.toList()), model.getAvailableTables());
+
+                    filterTables.getChildren().addAll(tableItems.get());
+
+                    tableItems.addListener(observable -> {
+                        filterTables.getChildren().clear();
+                        filterTables.getChildren().addAll(tableItems.get());
+                    });
+
                     filterTables.setExpanded(true);
                     return filterTables;
                 })
@@ -119,8 +139,16 @@ public class ProfileView extends VBox {
 
     private static class FilterTreeItem extends TreeItem<String> {
 
+        private final String filter;
+
         public FilterTreeItem(String filter) {
-            super("Contains: " + filter, DX.icon("icons/folder_star.png"));
+            this.filter = filter;
+            valueProperty().bind(Bindings.concat("Contains: ", filter, " (", Bindings.size(getChildren()), ")"));
+            setGraphic(DX.icon("icons/folder_star.png"));
+        }
+
+        public String getFilter() {
+            return filter;
         }
     }
 
