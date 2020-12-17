@@ -23,10 +23,7 @@ import com.github.difflib.text.DiffRowGenerator;
 import javafx.beans.binding.Bindings;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.SplitPane;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -39,6 +36,7 @@ import org.fxmisc.richtext.SelectionImpl;
 import ua.org.java.dynamoit.utils.DX;
 import ua.org.java.dynamoit.utils.FXExecutor;
 import ua.org.java.dynamoit.utils.ObservableListIterator;
+import ua.org.java.dynamoit.utils.Utils;
 import ua.org.java.dynamoit.widgets.JsonEditor;
 
 import java.util.ArrayList;
@@ -73,12 +71,14 @@ public class CompareDialog extends Dialog<Void> {
                             DX.toolBar(toolBar -> List.of(
                                     DX.create(Button::new, button -> {
                                         button.setGraphic(DX.icon("icons/arrow_up.png"));
+                                        button.setTooltip(new Tooltip("Previous difference"));
                                         button.setDisable(true);
                                         button.setOnAction(event -> scrollTo(diffIterator.previous()));
                                         button.disableProperty().bind(Bindings.not(diffIterator.hasPreviousProperty()));
                                     }),
                                     DX.create(Button::new, button -> {
                                         button.setGraphic(DX.icon("icons/arrow_down.png"));
+                                        button.setTooltip(new Tooltip("Next difference"));
                                         button.setDisable(true);
                                         button.setOnAction(event -> scrollTo(diffIterator.next()));
                                         button.disableProperty().bind(Bindings.not(diffIterator.hasNextProperty()));
@@ -131,7 +131,7 @@ public class CompareDialog extends Dialog<Void> {
                     }
                     index.getAndIncrement();
                 });
-                diffIterator.setIterator(diffIndexes.listIterator());
+                diffIterator.setIterator(Utils.skipSequences(diffIndexes).listIterator());
             }, FXExecutor.getInstance());
         });
     }
