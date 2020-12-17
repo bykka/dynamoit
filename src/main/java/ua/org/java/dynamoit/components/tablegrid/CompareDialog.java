@@ -20,19 +20,28 @@ package ua.org.java.dynamoit.components.tablegrid;
 
 import com.github.difflib.text.DiffRow;
 import com.github.difflib.text.DiffRowGenerator;
+import javafx.beans.binding.Bindings;
+import javafx.geometry.BoundingBox;
+import javafx.geometry.Bounds;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.SplitPane;
 import javafx.scene.image.Image;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.Selection;
 import org.fxmisc.richtext.SelectionImpl;
+import ua.org.java.dynamoit.utils.DX;
 import ua.org.java.dynamoit.utils.FXExecutor;
+import ua.org.java.dynamoit.utils.ObservableListIterator;
 import ua.org.java.dynamoit.widgets.JsonEditor;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -43,6 +52,7 @@ public class CompareDialog extends Dialog<Void> {
 
     private final JsonEditor doc1Area = new JsonEditor();
     private final JsonEditor doc2Area = new JsonEditor();
+    private ObservableListIterator<Integer> diffIterator = new ObservableListIterator<>();
 
     public CompareDialog(String text1, String text2) {
         ((Stage) this.getDialogPane().getScene().getWindow()).getIcons().add(new Image("icons/edit_diff.png"));
@@ -57,11 +67,34 @@ public class CompareDialog extends Dialog<Void> {
 
         VirtualizedScrollPane<JsonEditor> pane1 = new VirtualizedScrollPane<>(doc1Area);
         VirtualizedScrollPane<JsonEditor> pane2 = new VirtualizedScrollPane<>(doc2Area);
-        this.getDialogPane().setContent(new SplitPane(pane1, pane2));
+        this.getDialogPane().setContent(
+                DX.create(VBox::new, vBox -> {
+                    vBox.getChildren().addAll(
+                            DX.toolBar(toolBar -> List.of(
+                                    DX.create(Button::new, button -> {
+                                        button.setGraphic(DX.icon("icons/arrow_up.png"));
+                                        button.setDisable(true);
+                                        button.setOnAction(event -> scrollTo(diffIterator.previous()));
+                                        button.disableProperty().bind(Bindings.not(diffIterator.hasPreviousProperty()));
+                                    }),
+                                    DX.create(Button::new, button -> {
+                                        button.setGraphic(DX.icon("icons/arrow_down.png"));
+                                        button.setDisable(true);
+                                        button.setOnAction(event -> scrollTo(diffIterator.next()));
+                                        button.disableProperty().bind(Bindings.not(diffIterator.hasNextProperty()));
+                                    })
+                            )),
+                            DX.create(SplitPane::new, pane -> {
+                                pane.getItems().addAll(pane1, pane2);
+                                VBox.setVgrow(pane, Priority.ALWAYS);
+                            })
+                    );
+                })
+        );
 
         pane1.estimatedScrollYProperty().bindBidirectional(pane2.estimatedScrollYProperty());
 
-        CompletableFuture<List<DiffRow>> diffFuture = CompletableFuture.<List<DiffRow>>supplyAsync(() -> {
+        CompletableFuture<List<DiffRow>> diffFuture = CompletableFuture.supplyAsync(() -> {
             DiffRowGenerator generator = DiffRowGenerator.create()
                     .ignoreWhiteSpaces(true)
                     .build();
@@ -72,6 +105,7 @@ public class CompareDialog extends Dialog<Void> {
 
         this.setOnShowing(event -> {
             diffFuture.thenAcceptAsync(rows -> {
+                List<Integer> diffIndexes = new ArrayList<>();
                 AtomicInteger index = new AtomicInteger(0);
                 rows.forEach(diffRow -> {
                     doc1Area.appendText(diffRow.getOldLine());
@@ -93,9 +127,11 @@ public class CompareDialog extends Dialog<Void> {
                             if (diffRow.getNewLine().isBlank()) {
                                 doc1Area.addSelection(createSelection(doc1Area, diffRow.getOldLine(), index.get(), Color.LIGHTGREEN));
                             }
+                            diffIndexes.add(index.get());
                     }
                     index.getAndIncrement();
                 });
+                diffIterator.setIterator(diffIndexes.listIterator());
             }, FXExecutor.getInstance());
         });
     }
@@ -107,5 +143,12 @@ public class CompareDialog extends Dialog<Void> {
                 path -> path.setHighlightFill(color));
         selection.selectRange(index, 0, index, text.length());
         return selection;
+    }
+
+    private void scrollTo(int lineNumber) {
+        Bounds bb = doc1Area.getLayoutBounds();
+        int percent = (int) (bb.getHeight() / 3);
+        doc1Area.showParagraphRegion(lineNumber, new BoundingBox(bb.getMinX() + percent, 0, 0, bb.getHeight() - percent));
+        doc1Area.moveTo(lineNumber, 0);
     }
 }
