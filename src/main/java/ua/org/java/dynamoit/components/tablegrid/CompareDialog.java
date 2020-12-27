@@ -21,6 +21,8 @@ package ua.org.java.dynamoit.components.tablegrid;
 import com.github.difflib.text.DiffRow;
 import com.github.difflib.text.DiffRowGenerator;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.scene.control.*;
@@ -50,7 +52,8 @@ public class CompareDialog extends Dialog<Void> {
 
     private final JsonEditor doc1Area = new JsonEditor();
     private final JsonEditor doc2Area = new JsonEditor();
-    private ObservableListIterator<Integer> diffIterator = new ObservableListIterator<>();
+    private final ObservableListIterator<Integer> diffIterator = new ObservableListIterator<>();
+    private final IntegerProperty diffCount = new SimpleIntegerProperty(0);
 
     public CompareDialog(String text1, String text2) {
         ((Stage) this.getDialogPane().getScene().getWindow()).getIcons().add(new Image("icons/edit_diff.png"));
@@ -82,6 +85,13 @@ public class CompareDialog extends Dialog<Void> {
                                         button.setDisable(true);
                                         button.setOnAction(event -> scrollTo(diffIterator.next()));
                                         button.disableProperty().bind(Bindings.not(diffIterator.hasNextProperty()));
+                                    }),
+                                    DX.spacer(),
+                                    DX.create(Label::new, label -> {
+                                        label.textProperty().bind(
+                                                Bindings.createStringBinding(() -> diffCount.get() + " difference" + (diffCount.get() == 1 ? "" : "s"),
+                                                        diffCount
+                                                ));
                                     })
                             )),
                             DX.create(SplitPane::new, pane -> {
@@ -131,7 +141,9 @@ public class CompareDialog extends Dialog<Void> {
                     }
                     index.getAndIncrement();
                 });
-                diffIterator.setIterator(Utils.skipSequences(diffIndexes).listIterator());
+                List<Integer> diffBlocks = Utils.skipSequences(diffIndexes);
+                diffIterator.setIterator(diffBlocks.listIterator());
+                diffCount.set(diffBlocks.size());
             }, FXExecutor.getInstance());
         });
     }
