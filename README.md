@@ -18,6 +18,7 @@ The main idea of the client is to reach the required data in a few clicks.
  * Edit or delete the selected records
  * Import / Export data as json file 
  * Search (Ctrl+F) in the edit item dialog
+ * Compare two selected documents
  
 ## Supported filters
 Examples are based on "hello world"
@@ -61,3 +62,6 @@ The main screen with filters
 
 The edit item dialog
 ![edit screen](./docs/images/edit_screen.png)
+
+The compare dialog
+![compare screen](./docs/images/compare_screen.png)
