@@ -18,7 +18,6 @@
 package ua.org.java.dynamoit.components.tablegrid;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
-import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ListChangeListener;
@@ -52,6 +51,8 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static javafx.beans.binding.Bindings.*;
+
 public class TableGridView extends VBox {
 
     private final TableGridModel tableModel;
@@ -59,7 +60,7 @@ public class TableGridView extends VBox {
     private final TableGridController controller;
     private Button deleteSelectedButton;
     private Button clearFilterButton;
-    private javafx.scene.control.TableView<Item> tableView;
+    private TableView<Item> tableView = new TableView<>();
 
     private Consumer<TableGridContext> onSearchInTable;
 
@@ -106,6 +107,14 @@ public class TableGridView extends VBox {
                             button.setGraphic(DX.icon("icons/table_refresh.png"));
                             button.setOnAction(event -> controller.onRefreshData());
                         }),
+                        DX.create(Button::new, button -> {
+                            button.setTooltip(new Tooltip("Compare documents"));
+                            button.setGraphic(DX.icon("icons/edit_diff.png"));
+                            button.disableProperty().bind(
+                                    greaterThan(2, size(tableView.getSelectionModel().getSelectedItems()))
+                            );
+                            button.setOnAction(event -> showCompareDialog());
+                        }),
                         new Separator(),
                         DX.create(Button::new, button -> {
                             button.setTooltip(new Tooltip("Save table as json"));
@@ -150,12 +159,10 @@ public class TableGridView extends VBox {
                         }),
                         DX.spacer(),
                         DX.create(Label::new, t -> {
-                            t.textProperty().bind(Bindings.concat("Count [", tableModel.rowsSizeProperty(), " of ~", tableModel.getTableDef().totalCountProperty(), "]"));
+                            t.textProperty().bind(concat("Count [", tableModel.rowsSizeProperty(), " of ~", tableModel.getTableDef().totalCountProperty(), "]"));
                         })
                 )),
-                DX.create((Supplier<javafx.scene.control.TableView<Item>>) javafx.scene.control.TableView::new, tableView -> {
-                    this.tableView = tableView;
-
+                DX.create(() -> this.tableView, tableView -> {
                     tableView.getColumns().add(DX.create((Supplier<TableColumn<Item, Number>>) TableColumn::new, column -> {
                         column.setPrefWidth(35);
                         column.setResizable(false);
@@ -287,13 +294,13 @@ public class TableGridView extends VBox {
                         DX.create(MenuItem::new, menuCopy -> {
                             menuCopy.textProperty().set("Copy      '" + value + "'");
                             menuCopy.setGraphic(DX.icon("icons/page_copy.png"));
-                            menuCopy.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
+                            menuCopy.disableProperty().bind(isEmpty(cell.textProperty()));
                             menuCopy.setOnAction(__ -> copyToClipboard(cell.textProperty().get()));
                         }),
                         DX.create(MenuItem::new, menuFilter -> {
                             menuFilter.textProperty().set("Filter    '" + value + "'");
                             menuFilter.setGraphic(DX.icon("icons/filter_add.png"));
-                            menuFilter.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
+                            menuFilter.disableProperty().bind(isEmpty(cell.textProperty()));
                             menuFilter.setOnAction(__ -> {
                                 SimpleStringProperty property = this.tableModel.getAttributeFilterMap().get(attrName);
                                 if (property != null) {
@@ -305,7 +312,7 @@ public class TableGridView extends VBox {
                         DX.create(MenuItem::new, menuHighlight -> {
                             menuHighlight.textProperty().set("Highlight '" + value + "'");
                             menuHighlight.setGraphic(DX.icon("icons/select_by_color.png"));
-                            menuHighlight.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
+                            menuHighlight.disableProperty().bind(isEmpty(cell.textProperty()));
                             menuHighlight.setOnAction(__ -> {
                                 SimpleStringProperty property = this.tableModel.getAttributeFilterMap().get(attrName);
                                 if (property != null) {
@@ -316,10 +323,10 @@ public class TableGridView extends VBox {
                         DX.create(Menu::new, menuSearch -> {
                             menuSearch.textProperty().set("Search    '" + value + "' in");
                             menuSearch.setGraphic(DX.icon("icons/table_tab_search.png"));
-                            menuSearch.disableProperty().bind(Bindings.isEmpty(cell.textProperty()));
+                            menuSearch.disableProperty().bind(isEmpty(cell.textProperty()));
                             menuSearch.getItems().add(
                                     DX.create(Menu::new, allTablesMenuItem -> {
-                                        allTablesMenuItem.textProperty().bind(Bindings.concat("All tables"));
+                                        allTablesMenuItem.textProperty().bind(concat("All tables"));
                                         allTablesMenuItem.setGraphic(DX.icon("icons/database.png"));
                                         allTablesMenuItem.getItems().addAll(
                                                 tableModel.getProfileModel().getAvailableTables().stream().map(tableDef ->
@@ -331,7 +338,7 @@ public class TableGridView extends VBox {
                             menuSearch.getItems().addAll(
                                     tableModel.getProfileModel().getSavedFilters().stream().map(filter ->
                                             DX.create(Menu::new, filterMenuItem -> {
-                                                filterMenuItem.textProperty().bind(Bindings.concat("Contains: " + filter));
+                                                filterMenuItem.textProperty().bind(concat("Contains: " + filter));
                                                 filterMenuItem.setGraphic(DX.icon("icons/folder_star.png"));
                                                 filterMenuItem.getItems().addAll(
                                                         tableModel.getProfileModel().getAvailableTables().stream()
@@ -384,6 +391,17 @@ public class TableGridView extends VBox {
 
         dialog.showAndWait().ifPresent(onSaveConsumer);
     }
+
+    private void showCompareDialog() {
+        if (tableView.getSelectionModel().getSelectedItems().size() >= 2) {
+            Item item1 = tableView.getSelectionModel().getSelectedItems().get(0);
+            Item item2 = tableView.getSelectionModel().getSelectedItems().get(1);
+
+            CompareDialog dialog = new CompareDialog(item1.toJSONPretty(), item2.toJSONPretty());
+            dialog.showAndWait();
+        }
+    }
+
 
     private void deleteSelectedItems() {
         List<Item> items = tableView.getSelectionModel().getSelectedItems();

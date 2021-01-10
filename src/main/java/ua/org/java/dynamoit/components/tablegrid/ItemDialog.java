@@ -112,7 +112,12 @@ public class ItemDialog extends Dialog<String> {
                                         return List.of(
                                                 DX.create(() -> this.searchField, textField -> {
                                                     HBox.setHgrow(textField, Priority.ALWAYS);
-                                                    textField.setOnKeyPressed(this::hideToolbarOnEscPress);
+                                                    textField.setOnKeyPressed(event -> {
+                                                        hideToolbarOnEscPress(event);
+                                                        if (KeyCode.ENTER == event.getCode()) {
+                                                            scrollTo(findIterator.get().next().getKey());
+                                                        }
+                                                    });
                                                 }),
                                                 DX.create(Label::new, label -> {
                                                     label.textProperty().bind(JavaFxObserver.toBinding(matches.map(list -> list.size() + " matches")));

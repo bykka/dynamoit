@@ -19,15 +19,24 @@ package ua.org.java.dynamoit.utils;
 
 import javafx.beans.property.SimpleBooleanProperty;
 
+import java.util.ArrayList;
 import java.util.ListIterator;
 
 public class ObservableListIterator<T> implements ListIterator<T> {
 
-    private final ListIterator<T> delegate;
+    private ListIterator<T> delegate;
     private final SimpleBooleanProperty hasNext = new SimpleBooleanProperty();
     private final SimpleBooleanProperty hasPrevious = new SimpleBooleanProperty();
 
+    public ObservableListIterator() {
+        this(new ArrayList<T>(0).listIterator());
+    }
+
     public ObservableListIterator(ListIterator<T> delegate) {
+        setIterator(delegate);
+    }
+
+    public void setIterator(ListIterator<T> delegate) {
         this.delegate = delegate;
         this.hasNext.set(delegate.hasNext());
         this.hasPrevious.set(delegate.hasPrevious());

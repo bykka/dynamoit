@@ -24,9 +24,12 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -104,5 +107,27 @@ public class Utils {
             return value.substring(0, 40) + "..";
         }
         return value;
+    }
+
+    public static List<Integer> skipSequences(List<Integer> dataList) {
+        return groupBySeq(dataList).stream().map(list -> list.get(0)).collect(Collectors.toList());
+    }
+
+    public static List<List<Integer>> groupBySeq(List<Integer> dataList) {
+        return dataList.stream().sorted().collect(ArrayList::new,
+                (acc, val) -> {
+                    if (acc.isEmpty()) {
+                        acc.add(new ArrayList<>());
+                    }
+                    List<Integer> lastGroup = acc.get(acc.size() - 1);
+                    if (lastGroup.isEmpty() || val - lastGroup.get(lastGroup.size() - 1) == 1) {
+                        lastGroup.add(val);
+                    } else {
+                        ArrayList<Integer> newGroup = new ArrayList<>();
+                        newGroup.add(val);
+                        acc.add(newGroup);
+                    }
+                }, (lists, lists2) -> {
+                });
     }
 }
