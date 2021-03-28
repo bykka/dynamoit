@@ -35,10 +35,10 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
-        <dagger.version>2.29.1</dagger.version>
-        <javafx.version>15.0.1</javafx.version>
-        <controlsfx.version>11.0.3</controlsfx.version>
-        <aws.sdk.version>1.11.822</aws.sdk.version>
+        <dagger.version>2.33</dagger.version>
+        <javafx.version>16</javafx.version>
+        <controlsfx.version>11.1.0</controlsfx.version>
+        <aws.sdk.version>1.11.986</aws.sdk.version>
         <main.class>ua.org.java.dynamoit.Launcher</main.class>
         <fatJar.dir>${project.build.directory}/fatJar/</fatJar.dir>
         <destination.dir>${project.build.directory}/${project.name}</destination.dir>
@@ -201,6 +201,12 @@
             <artifactId>javafx-swing</artifactId>
             <version>${javafx.version}</version>
         </dependency>-->
+        <!-- -->
+        <dependency>
+            <groupId>org.jfxtras</groupId>
+            <artifactId>jmetro</artifactId>
+            <version>11.6.14</version>
+        </dependency>
         <!-- aws sdk -->
         <dependency>
             <groupId>com.amazonaws</groupId>
@@ -228,13 +234,13 @@
         <dependency>
             <groupId>org.fxmisc.richtext</groupId>
             <artifactId>richtextfx</artifactId>
-            <version>0.10.5</version>
+            <version>0.10.6</version>
         </dependency>
         <!-- rx java -->
         <dependency>
             <groupId>io.reactivex.rxjava2</groupId>
             <artifactId>rxjava</artifactId>
-            <version>2.2.19</version>
+            <version>2.2.21</version>
         </dependency>
         <dependency>
             <groupId>io.reactivex.rxjava2</groupId>
@@ -250,7 +256,7 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.13.1</version>
+            <version>4.13.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -262,13 +268,13 @@
         <dependency>
             <groupId>org.powermock</groupId>
             <artifactId>powermock-module-junit4</artifactId>
-            <version>2.0.7</version>
+            <version>2.0.9</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.powermock</groupId>
             <artifactId>powermock-api-easymock</artifactId>
-            <version>2.0.7</version>
+            <version>2.0.9</version>
             <scope>test</scope>
         </dependency>
 
