@@ -81,13 +81,13 @@ public class TableGridView extends VBox {
                 DX.toolBar(toolBar -> List.of(
                         DX.create(Button::new, button -> {
                             button.setTooltip(new Tooltip("Create a new document"));
-                            button.setGraphic(DX.icon("icons/table_row_insert.png"));
+                            button.setGraphic(DX.icon("icons/add.png"));
                             button.setOnAction(event -> showCreateItemDialog(""));
                         }),
                         DX.create(Button::new, button -> {
                             deleteSelectedButton = button;
                             button.setTooltip(new Tooltip("Delete selected rows"));
-                            button.setGraphic(DX.icon("icons/table_row_delete.png"));
+                            button.setGraphic(DX.icon("icons/delete.png"));
                             button.setOnAction(event -> deleteSelectedItems());
                         }),
                         new Separator(),
@@ -118,7 +118,7 @@ public class TableGridView extends VBox {
                         new Separator(),
                         DX.create(Button::new, button -> {
                             button.setTooltip(new Tooltip("Save table as json"));
-                            button.setGraphic(DX.icon("icons/table_save.png"));
+                            button.setGraphic(DX.icon("icons/diskette.png"));
                             button.setOnAction(event -> {
                                 FileChooser fileChooser = new FileChooser();
                                 fileChooser.setInitialFileName(tableModel.getTableName() + ".json");
@@ -136,7 +136,7 @@ public class TableGridView extends VBox {
                         }),
                         DX.create(Button::new, button -> {
                             button.setTooltip(new Tooltip("Load json into the table"));
-                            button.setGraphic(DX.icon("icons/table_import.png"));
+                            button.setGraphic(DX.icon("icons/folder_go.png"));
                             button.setOnAction(event -> {
                                 FileChooser fileChooser = new FileChooser();
                                 FileChooser.ExtensionFilter jsonFiles = new FileChooser.ExtensionFilter("Json files", "*.json");
@@ -241,6 +241,7 @@ public class TableGridView extends VBox {
 
         return DX.create(TableColumn::new, filter -> {
             filter.setId(attrName);
+            filter.getStyleClass().add("table-column-filter");
             filter.setGraphic(DX.create(ClearableTextField::new, textField -> {
                 textField.textProperty().bindBidirectional(filterProperty);
                 textField.setOnAction(event -> controller.onRefreshData());
