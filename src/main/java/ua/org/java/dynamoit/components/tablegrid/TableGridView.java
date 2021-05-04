@@ -58,7 +58,6 @@ public class TableGridView extends VBox {
     private final TableGridModel tableModel;
 
     private final TableGridController controller;
-    private Button deleteSelectedButton;
     private Button clearFilterButton;
     private TableView<Item> tableView = new TableView<>();
 
@@ -85,10 +84,10 @@ public class TableGridView extends VBox {
                             button.setOnAction(event -> showCreateItemDialog(""));
                         }),
                         DX.create(Button::new, button -> {
-                            deleteSelectedButton = button;
                             button.setTooltip(new Tooltip("Delete selected rows"));
                             button.setGraphic(DX.icon("icons/delete.png"));
                             button.setOnAction(event -> deleteSelectedItems());
+                            button.disableProperty().bind(tableView.getSelectionModel().selectedItemProperty().isNull());
                         }),
                         new Separator(),
                         DX.create(Button::new, button -> {
@@ -114,6 +113,12 @@ public class TableGridView extends VBox {
                                     greaterThan(2, size(tableView.getSelectionModel().getSelectedItems()))
                             );
                             button.setOnAction(event -> showCompareDialog());
+                        }),
+                        DX.create(Button::new, button -> {
+                            button.setTooltip(new Tooltip("Patch documents"));
+                            button.setGraphic(DX.icon("icons/script.png"));
+                            button.disableProperty().bind(tableView.getSelectionModel().selectedItemProperty().isNull());
+                            button.setOnAction(event -> showPatchDialog());
                         }),
                         new Separator(),
                         DX.create(Button::new, button -> {
@@ -190,8 +195,6 @@ public class TableGridView extends VBox {
                             showEditItemDialog(tableView.getSelectionModel().getSelectedItem().toJSONPretty());
                         }
                     });
-
-                    deleteSelectedButton.disableProperty().bind(tableView.getSelectionModel().selectedItemProperty().isNull());
                 })
         );
     }
@@ -384,7 +387,15 @@ public class TableGridView extends VBox {
     }
 
     private void showCreateItemDialog(String json) {
-        showItemDialog(String.format("[%1s] Create a new item", tableModel.getTableName()), json, controller::onCreateItem, controller::validateItem);
+        showItemDialog(String.format("[%1s] Create a new document", tableModel.getTableName()), json, controller::onCreateItem, controller::validateItem);
+    }
+
+    private void showPatchDialog() {
+        if (!tableView.getSelectionModel().getSelectedItems().isEmpty()) {
+            showItemDialog(String.format("[%1s] Patch selected documents", tableModel.getTableName()), "{\n\n}",
+                    json -> controller.onPatchItems(tableView.getSelectionModel().getSelectedItems(), json),
+                    stringEventStream -> controller.validateItem(stringEventStream, true));
+        }
     }
 
     private void showItemDialog(String title, String json, Consumer<String> onSaveConsumer, Function<EventStream<String>, EventStream<Boolean>> validator) {
@@ -402,7 +413,6 @@ public class TableGridView extends VBox {
             dialog.showAndWait();
         }
     }
-
 
     private void deleteSelectedItems() {
         List<Item> items = tableView.getSelectionModel().getSelectedItems();
