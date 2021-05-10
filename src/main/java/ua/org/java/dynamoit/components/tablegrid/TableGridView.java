@@ -59,7 +59,7 @@ public class TableGridView extends VBox {
 
     private final TableGridController controller;
     private Button clearFilterButton;
-    private TableView<Item> tableView = new TableView<>();
+    private final TableView<Item> tableView = new TableView<>();
 
     private Consumer<TableGridContext> onSearchInTable;
 
@@ -220,9 +220,7 @@ public class TableGridView extends VBox {
 
         tableModel.getAttributeFilterMap().addListener((MapChangeListener<String, SimpleStringProperty>) change -> {
             SimpleStringProperty valueAdded = change.getValueAdded();
-            valueAdded.addListener((observable, oldValue, newValue) -> {
-                this.clearFilterButton.setDisable(isFilterClean.get());
-            });
+            valueAdded.addListener((observable, oldValue, newValue) -> this.clearFilterButton.setDisable(isFilterClean.get()));
             this.clearFilterButton.setDisable(isFilterClean.get());
         });
     }
@@ -366,9 +364,7 @@ public class TableGridView extends VBox {
                             menuEdit.getItems().add(
                                     DX.create(MenuItem::new, menuEditAsNew -> {
                                         menuEditAsNew.setText("Edit as new document");
-                                        menuEditAsNew.setOnAction(__ -> {
-                                            showCreateItemDialog(cell.getTableRow().getItem().toJSONPretty());
-                                        });
+                                        menuEditAsNew.setOnAction(__ -> showCreateItemDialog(cell.getTableRow().getItem().toJSONPretty()));
                                     })
                             );
                         })
