@@ -22,6 +22,8 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
 import javafx.collections.ListChangeListener;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -73,6 +75,7 @@ public class ProfileView extends VBox {
                     treeView.setShowRoot(false);
                     treeView.getRoot().getChildren().add(allTables);
                     treeView.setOnMouseClicked(event -> this.onTableSelect(event, treeView.getSelectionModel().getSelectedItem()));
+                    treeView.setOnKeyPressed(event -> this.onTableSelect(event, treeView.getSelectionModel().getSelectedItem()));
                     treeView.setOnContextMenuRequested(event -> {
                         if (event.getTarget() != null && treeView.getSelectionModel().getSelectedItem() instanceof FilterTreeItem) {
                             FilterTreeItem filterTreeItem = (FilterTreeItem) treeView.getSelectionModel().getSelectedItem();
@@ -100,8 +103,8 @@ public class ProfileView extends VBox {
                     FilterTreeItem filterTables = new FilterTreeItem(filter);
 
                     ObjectBinding<List<TableTreeItem>> tableItems = Bindings.createObjectBinding(() -> model.getAvailableTables().stream()
-                            .filter(tableDef -> tableDef.getName().contains(filter))
                             .map(TableDef::getName)
+                            .filter(name -> name.contains(filter))
                             .map(TableTreeItem::new)
                             .collect(Collectors.toList()), model.getAvailableTables());
 
@@ -120,6 +123,16 @@ public class ProfileView extends VBox {
 
     private void onTableSelect(MouseEvent event, TreeItem<String> selectedItem) {
         if (event.getClickCount() == 2 && selectedItem != null) {
+            if (selectedItem instanceof AllTreeItem || selectedItem instanceof FilterTreeItem) {
+                return;
+            }
+
+            controller.onTableSelect(selectedItem.getValue());
+        }
+    }
+
+    private void onTableSelect(KeyEvent event, TreeItem<String> selectedItem) {
+        if (event.getCode() == KeyCode.ENTER && selectedItem != null) {
             if (selectedItem instanceof AllTreeItem || selectedItem instanceof FilterTreeItem) {
                 return;
             }
