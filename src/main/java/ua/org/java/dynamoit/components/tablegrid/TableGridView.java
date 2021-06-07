@@ -191,8 +191,13 @@ public class TableGridView extends VBox {
                     });
 
                     tableView.setOnKeyPressed(event -> {
-                        if (KeyCode.ENTER == event.getCode() && !tableView.getSelectionModel().isEmpty()) {
-                            showEditItemDialog(tableView.getSelectionModel().getSelectedItem().toJSONPretty());
+                        if (!tableView.getSelectionModel().isEmpty()) {
+                            if (KeyCode.ENTER == event.getCode()) {
+                                showEditItemDialog(tableView.getSelectionModel().getSelectedItem().toJSONPretty());
+                            }
+                            if (KeyCode.DELETE == event.getCode()) {
+                                deleteSelectedItems();
+                            }
                         }
                     });
                 })
