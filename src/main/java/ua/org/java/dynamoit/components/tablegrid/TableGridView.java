@@ -193,7 +193,13 @@ public class TableGridView extends VBox {
                     tableView.setOnKeyPressed(event -> {
                         if (!tableView.getSelectionModel().isEmpty()) {
                             if (KeyCode.ENTER == event.getCode()) {
-                                showEditItemDialog(tableView.getSelectionModel().getSelectedItem().toJSONPretty());
+                                if (Utils.isKeyModifierDown(event)) {
+                                    if (event.isControlDown() && tableView.getSelectionModel().getSelectedItems().size() > 1) {
+                                        showCompareDialog();
+                                    }
+                                } else {
+                                    showEditItemDialog(tableView.getSelectionModel().getSelectedItem().toJSONPretty());
+                                }
                             }
                             if (KeyCode.DELETE == event.getCode()) {
                                 deleteSelectedItems();
