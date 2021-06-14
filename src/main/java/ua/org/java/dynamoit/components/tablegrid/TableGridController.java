@@ -22,6 +22,7 @@ import com.amazonaws.services.dynamodbv2.document.*;
 import com.amazonaws.services.dynamodbv2.document.internal.PageBasedCollection;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
+import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
 import com.amazonaws.services.dynamodbv2.model.DescribeTableResult;
@@ -142,11 +143,18 @@ public class TableGridController {
     }
 
     public EventStream<Boolean> validateItem(EventStream<String> textStream) {
+        return validateItem(textStream, false);
+    }
+
+    public EventStream<Boolean> validateItem(EventStream<String> textStream, boolean jsonOnly) {
         return textStream.successionEnds(Duration.ofMillis(100))
                 .map(text -> {
                     try {
                         Item item = Item.fromJSON(text);
 
+                        if (jsonOnly) {
+                            return true;
+                        }
                         return item.get(hash()) != null && (range() == null || item.get(range()) != null);
                     } catch (Exception e) {
                         return false;
@@ -169,6 +177,12 @@ public class TableGridController {
     public void onDeleteItems(List<Item> items) {
         eventBus.activity(
                 delete(items).thenRun(this::onRefreshData)
+        );
+    }
+
+    public void onPatchItems(List<Item> items, String jsonPatch) {
+        eventBus.activity(
+                patchItems(items, jsonPatch).thenRun(this::onRefreshData)
         );
     }
 
@@ -264,6 +278,31 @@ public class TableGridController {
 
     private CompletableFuture<Void> updateItem(String json) {
         return runAsync(() -> table.putItem(Item.fromJSON(json)));
+    }
+
+    private CompletableFuture<Void> patchItems(List<Item> items, String jsonPatch) {
+        return runAsync(() -> {
+            if (!items.isEmpty()) {
+                Item patch = Item.fromJSON(jsonPatch);
+
+                items.forEach(item -> {
+                    UpdateItemSpec updateItemSpec = new UpdateItemSpec();
+                    if (range() == null) {
+                        updateItemSpec.withPrimaryKey(hash(), item.get(hash()));
+                    } else {
+                        updateItemSpec.withPrimaryKey(hash(), item.get(hash()), range(), item.get(range()));
+                    }
+
+                    updateItemSpec.withAttributeUpdate(
+                            asStream(patch.attributes())
+                                    .map(entry -> new AttributeUpdate(entry.getKey()).put(entry.getValue()))
+                                    .collect(Collectors.toList())
+                    );
+
+                    table.updateItem(updateItemSpec);
+                });
+            }
+        });
     }
 
     private CompletableFuture<ItemCollection<ScanOutcome>> scanItems(Map<String, SimpleStringProperty> attributeFilterMap) {

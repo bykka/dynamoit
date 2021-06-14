@@ -38,3 +38,7 @@
 .toggle-button:selected:focused {
     -fx-background-insets: 0, 1, 0, 2.6;
 }
+
+.table-cell, .table-column-filter > .label {
+    -fx-padding: 2px 5px 2px 5px;
+}

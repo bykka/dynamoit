@@ -23,6 +23,7 @@ import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import javafx.scene.input.KeyEvent;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -129,5 +130,9 @@ public class Utils {
                     }
                 }, (lists, lists2) -> {
                 });
+    }
+
+    public static boolean isKeyModifierDown(KeyEvent event) {
+        return event.isAltDown() || event.isShiftDown() || event.isControlDown() || event.isMetaDown();
     }
 }
