@@ -23,7 +23,9 @@ import com.amazonaws.profile.path.AwsProfileFileLocationProvider;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
+import com.amazonaws.services.dynamodbv2.model.ListTablesResult;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +57,17 @@ public class DynamoDBService {
     }
 
     public CompletableFuture<List<String>> getListOfTables(String profile) {
-        return CompletableFuture.supplyAsync(() -> getOrCreateDynamoDBClient(profile).listTables().getTableNames());
+        return CompletableFuture.supplyAsync(() -> {
+            String lastEvaluatedTableName = null;
+            List<String> tableNames = new ArrayList<>();
+            do {
+                ListTablesResult listTablesResult = lastEvaluatedTableName == null ? getOrCreateDynamoDBClient(profile).listTables() : getOrCreateDynamoDBClient(profile).listTables(lastEvaluatedTableName);
+                lastEvaluatedTableName = listTablesResult.getLastEvaluatedTableName();
+                tableNames.addAll(listTablesResult.getTableNames());
+            } while (lastEvaluatedTableName != null);
+
+            return tableNames;
+        });
     }
 
     public AmazonDynamoDB getOrCreateDynamoDBClient(String profileName) {
