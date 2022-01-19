@@ -30,8 +30,8 @@ Examples are based on "hello world"
 |__BEGINS_WITH__|^hello|
 |__CONTAINS__|~world|
 |__NOT_CONTAINS__|!~something|
-|__EXITS__|$| 
-|__NOT_EXITS__|!$| 
+|__EXISTS__|$| 
+|__NOT_EXISTS__|!$| 
 
 ## System requirements, building and running
 At least Java 11 and maven to build and run the application.
