@@ -333,38 +333,7 @@ public class TableGridView extends VBox {
                                 }
                             });
                         }),
-                        DX.create(Menu::new, menuSearch -> {
-                            menuSearch.textProperty().set("Search    '" + value + "' in");
-                            menuSearch.setGraphic(DX.icon("icons/table_tab_search.png"));
-                            menuSearch.disableProperty().bind(isEmpty(cell.textProperty()));
-                            menuSearch.getItems().add(
-                                    DX.create(Menu::new, allTablesMenuItem -> {
-                                        allTablesMenuItem.textProperty().bind(concat("All tables"));
-                                        allTablesMenuItem.setGraphic(DX.icon("icons/database.png"));
-                                        allTablesMenuItem.getItems().addAll(
-                                                tableModel.getProfileModel().getAvailableTables().stream().map(tableDef ->
-                                                        buildContextMenuByTableDef(tableDef, cell.getText())
-                                                ).collect(Collectors.toList())
-                                        );
-                                    })
-                            );
-                            menuSearch.getItems().addAll(
-                                    tableModel.getProfileModel().getSavedFilters().stream().map(filter ->
-                                            DX.create(Menu::new, filterMenuItem -> {
-                                                filterMenuItem.textProperty().bind(concat("Contains: " + filter));
-                                                filterMenuItem.setGraphic(DX.icon("icons/folder_star.png"));
-                                                filterMenuItem.getItems().addAll(
-                                                        tableModel.getProfileModel().getAvailableTables().stream()
-                                                                .filter(tableDef -> tableDef.getName().contains(filter))
-                                                                .map(tableDef ->
-                                                                        buildContextMenuByTableDef(tableDef, cell.getText())
-                                                                ).collect(Collectors.toList())
-                                                );
-                                            })
-                                    ).collect(Collectors.toList())
-                            );
-                        }),
-                        DX.create(Menu::new, menuEdit -> {
+                        DX.create(MenuItem::new, menuEdit -> {
                             menuEdit.setText("Edit document");
                             menuEdit.setGraphic(DX.icon("icons/page_edit.png"));
                             menuEdit.setOnAction(editEvent -> {
@@ -372,12 +341,15 @@ public class TableGridView extends VBox {
                                     showEditItemDialog(cell.getTableRow().getItem().toJSONPretty());
                                 }
                             });
-                            menuEdit.getItems().add(
-                                    DX.create(MenuItem::new, menuEditAsNew -> {
-                                        menuEditAsNew.setText("Edit as new document");
-                                        menuEditAsNew.setOnAction(__ -> showCreateItemDialog(cell.getTableRow().getItem().toJSONPretty()));
-                                    })
-                            );
+                        }),
+                        DX.create(MenuItem::new, menuEdit -> {
+                            menuEdit.setText("Edit as new");
+                            menuEdit.setGraphic(DX.icon("icons/page_add.png"));
+                            menuEdit.setOnAction(editEvent -> {
+                                if (editEvent.getTarget().equals(editEvent.getSource())) {
+                                    showCreateItemDialog(cell.getTableRow().getItem().toJSONPretty());
+                                }
+                            });
                         })
                 )).show(cell, event.getScreenX(), event.getScreenY());
             }
