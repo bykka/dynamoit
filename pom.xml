@@ -36,7 +36,7 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <dagger.version>2.33</dagger.version>
-        <javafx.version>16</javafx.version>
+        <javafx.version>17</javafx.version>
         <controlsfx.version>11.1.0</controlsfx.version>
         <aws.sdk.version>1.11.986</aws.sdk.version>
         <main.class>ua.org.java.dynamoit.Launcher</main.class>
