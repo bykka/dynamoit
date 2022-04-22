@@ -35,10 +35,10 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
-        <dagger.version>2.33</dagger.version>
-        <javafx.version>17</javafx.version>
-        <controlsfx.version>11.1.0</controlsfx.version>
-        <aws.sdk.version>1.11.986</aws.sdk.version>
+        <dagger.version>2.41</dagger.version>
+        <javafx.version>18</javafx.version>
+        <controlsfx.version>11.1.1</controlsfx.version>
+        <aws.sdk.version>1.12.196</aws.sdk.version>
         <main.class>ua.org.java.dynamoit.Launcher</main.class>
         <fatJar.dir>${project.build.directory}/fatJar/</fatJar.dir>
         <destination.dir>${project.build.directory}/${project.name}</destination.dir>
@@ -228,7 +228,7 @@
         <dependency>
             <groupId>org.fxmisc.richtext</groupId>
             <artifactId>richtextfx</artifactId>
-            <version>0.10.6</version>
+            <version>0.10.9</version>
         </dependency>
         <!-- rx java -->
         <dependency>
@@ -237,14 +237,9 @@
             <version>2.2.21</version>
         </dependency>
         <dependency>
-            <groupId>io.reactivex.rxjava2</groupId>
-            <artifactId>rxjavafx</artifactId>
-            <version>2.11.0-RC16</version>
-        </dependency>
-        <dependency>
             <groupId>io.github.java-diff-utils</groupId>
             <artifactId>java-diff-utils</artifactId>
-            <version>4.9</version>
+            <version>4.11</version>
         </dependency>
         <!-- testing -->
         <dependency>
@@ -256,7 +251,7 @@
         <dependency>
             <groupId>org.easymock</groupId>
             <artifactId>easymock</artifactId>
-            <version>4.2</version>
+            <version>4.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
