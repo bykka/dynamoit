@@ -35,10 +35,10 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
-        <dagger.version>2.41</dagger.version>
-        <javafx.version>18</javafx.version>
+        <dagger.version>2.42</dagger.version>
+        <javafx.version>18.0.1</javafx.version>
         <controlsfx.version>11.1.1</controlsfx.version>
-        <aws.sdk.version>1.12.196</aws.sdk.version>
+        <aws.sdk.version>1.12.233</aws.sdk.version>
         <main.class>ua.org.java.dynamoit.Launcher</main.class>
         <fatJar.dir>${project.build.directory}/fatJar/</fatJar.dir>
         <destination.dir>${project.build.directory}/${project.name}</destination.dir>

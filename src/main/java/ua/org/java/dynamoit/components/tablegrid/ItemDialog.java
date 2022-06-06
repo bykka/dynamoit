@@ -47,6 +47,7 @@ import org.reactfx.EventStream;
 import org.reactfx.Subscription;
 import ua.org.java.dynamoit.utils.DX;
 import ua.org.java.dynamoit.utils.ObservableListIterator;
+import ua.org.java.dynamoit.utils.Utils;
 import ua.org.java.dynamoit.widgets.ClearableTextField;
 import ua.org.java.dynamoit.widgets.JsonEditor;
 
@@ -67,6 +68,7 @@ public class ItemDialog extends Dialog<String> {
     private Disposable focusDisposable;
     private final List<Selection<Collection<String>, String, Collection<String>>> selections = new ArrayList<>();
     private final SimpleBooleanProperty showSearch = new SimpleBooleanProperty(false);
+    private final SimpleBooleanProperty editAsRawJson = new SimpleBooleanProperty(false);
     private final SimpleObjectProperty<ObservableListIterator<Pair<Integer, String>>> findIterator = new SimpleObjectProperty<>();
 
     public ItemDialog(String title, String json, Function<EventStream<String>, EventStream<Boolean>> validator) {
@@ -106,6 +108,16 @@ public class ItemDialog extends Dialog<String> {
                 DX.create(VBox::new, vBox -> {
                     vBox.setPadding(new Insets(1, 1, 1, 1));
                     vBox.getChildren().addAll(
+                            DX.toolBar(toolBar -> List.of(
+                                    DX.create(() -> new CheckBox("Edit as RAW document"), box -> {
+                                        box.selectedProperty().bindBidirectional(editAsRawJson);
+                                        box.selectedProperty().addListener((observable, oldValue, newValue) -> {
+                                            textArea.replaceText(
+                                                    Utils.convertJsonDocument(textArea.getText(), newValue)
+                                            );
+                                        });
+                                    })
+                            )),
                             DX.toolBar(toolBar -> {
                                         toolBar.visibleProperty().bind(showSearch);
                                         toolBar.managedProperty().bind(showSearch);
@@ -177,7 +189,7 @@ public class ItemDialog extends Dialog<String> {
 
         this.setOnShowing(event -> {
             validationSubscribe = validator.apply(textArea.multiPlainChanges()
-                    .map(__ -> textArea.getText()))
+                            .map(__ -> textArea.getText()))
                     .subscribe(valid -> saveButtonDisable.accept(!valid));
 
             textArea.replaceText(json);
@@ -193,6 +205,10 @@ public class ItemDialog extends Dialog<String> {
                 focusDisposable.dispose();
             }
         });
+    }
+
+    public boolean isEditAsRawJson() {
+        return editAsRawJson.get();
     }
 
     private void cleanAllSelections() {

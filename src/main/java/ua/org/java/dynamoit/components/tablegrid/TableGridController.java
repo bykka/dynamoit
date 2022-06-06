@@ -29,6 +29,7 @@ import com.amazonaws.services.dynamodbv2.model.DescribeTableResult;
 import com.amazonaws.util.StringUtils;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.reactivex.Observable;
@@ -50,6 +51,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -162,15 +164,15 @@ public class TableGridController {
                 });
     }
 
-    public void onCreateItem(String json) {
+    public void onCreateItem(String json, boolean isRaw) {
         eventBus.activity(
-                createItem(json).thenRun(this::onRefreshData)
+                createItem(json, isRaw).thenRun(this::onRefreshData)
         );
     }
 
-    public void onUpdateItem(String json) {
+    public void onUpdateItem(String json, boolean isRaw) {
         eventBus.activity(
-                updateItem(json).thenRun(this::onRefreshData)
+                updateItem(json, isRaw).thenRun(this::onRefreshData)
         );
     }
 
@@ -180,9 +182,9 @@ public class TableGridController {
         );
     }
 
-    public void onPatchItems(List<Item> items, String jsonPatch) {
+    public void onPatchItems(List<Item> items, String jsonPatch, boolean isRaw) {
         eventBus.activity(
-                patchItems(items, jsonPatch).thenRun(this::onRefreshData)
+                patchItems(items, jsonPatch, isRaw).thenRun(this::onRefreshData)
         );
     }
 
@@ -272,37 +274,44 @@ public class TableGridController {
         return scanItems(tableModel.getAttributeFilterMap());
     }
 
-    private CompletableFuture<Void> createItem(String json) {
-        return runAsync(() -> table.putItem(Item.fromJSON(json)));
+    private CompletableFuture<Void> processItemAsync(String json, boolean isRaw, Consumer<Item> command) {
+        try {
+            Item item = isRaw ? rawJsonToItem(json) : Item.fromJSON(json);
+            return runAsync(() -> command.accept(item));
+        } catch (JsonProcessingException e) {
+            return CompletableFuture.failedFuture(e);
+        }
     }
 
-    private CompletableFuture<Void> updateItem(String json) {
-        return runAsync(() -> table.putItem(Item.fromJSON(json)));
+    private CompletableFuture<Void> createItem(String json, boolean isRaw) {
+        return processItemAsync(json, isRaw, table::putItem);
     }
 
-    private CompletableFuture<Void> patchItems(List<Item> items, String jsonPatch) {
-        return runAsync(() -> {
-            if (!items.isEmpty()) {
-                Item patch = Item.fromJSON(jsonPatch);
+    private CompletableFuture<Void> updateItem(String json, boolean isRaw) {
+        return processItemAsync(json, isRaw, table::putItem);
+    }
 
-                items.forEach(item -> {
-                    UpdateItemSpec updateItemSpec = new UpdateItemSpec();
-                    if (range() == null) {
-                        updateItemSpec.withPrimaryKey(hash(), item.get(hash()));
-                    } else {
-                        updateItemSpec.withPrimaryKey(hash(), item.get(hash()), range(), item.get(range()));
-                    }
+    private CompletableFuture<Void> patchItems(List<Item> items, String jsonPatch, boolean isRaw) {
+        if (items.isEmpty()) {
+            return CompletableFuture.completedFuture(null);
+        }
 
-                    updateItemSpec.withAttributeUpdate(
-                            asStream(patch.attributes())
-                                    .map(entry -> new AttributeUpdate(entry.getKey()).put(entry.getValue()))
-                                    .collect(Collectors.toList())
-                    );
-
-                    table.updateItem(updateItemSpec);
-                });
+        return processItemAsync(jsonPatch, isRaw, patch -> items.forEach(item -> {
+            UpdateItemSpec updateItemSpec = new UpdateItemSpec();
+            if (range() == null) {
+                updateItemSpec.withPrimaryKey(hash(), item.get(hash()));
+            } else {
+                updateItemSpec.withPrimaryKey(hash(), item.get(hash()), range(), item.get(range()));
             }
-        });
+
+            updateItemSpec.withAttributeUpdate(
+                    asStream(patch.attributes())
+                            .map(entry -> new AttributeUpdate(entry.getKey()).put(entry.getValue()))
+                            .collect(Collectors.toList())
+            );
+
+            table.updateItem(updateItemSpec);
+        }));
     }
 
     private CompletableFuture<ItemCollection<ScanOutcome>> scanItems(Map<String, SimpleStringProperty> attributeFilterMap) {

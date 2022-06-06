@@ -37,7 +37,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import org.reactfx.EventStream;
 import ua.org.java.dynamoit.components.tablegrid.highlight.Highlighter;
-import ua.org.java.dynamoit.model.TableDef;
 import ua.org.java.dynamoit.utils.DX;
 import ua.org.java.dynamoit.utils.Utils;
 import ua.org.java.dynamoit.widgets.ClearableTextField;
@@ -46,6 +45,7 @@ import java.io.File;
 import java.text.DateFormat;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -372,15 +372,15 @@ public class TableGridView extends VBox {
     private void showPatchDialog() {
         if (!tableView.getSelectionModel().getSelectedItems().isEmpty()) {
             showItemDialog(String.format("[%1s] Patch selected documents", tableModel.getTableName()), "{\n\n}",
-                    json -> controller.onPatchItems(tableView.getSelectionModel().getSelectedItems(), json),
+                    (json, isRaw) -> controller.onPatchItems(tableView.getSelectionModel().getSelectedItems(), json, isRaw),
                     stringEventStream -> controller.validateItem(stringEventStream, true));
         }
     }
 
-    private void showItemDialog(String title, String json, Consumer<String> onSaveConsumer, Function<EventStream<String>, EventStream<Boolean>> validator) {
+    private void showItemDialog(String title, String json, BiConsumer<String, Boolean> onSaveConsumer, Function<EventStream<String>, EventStream<Boolean>> validator) {
         ItemDialog dialog = new ItemDialog(title, json, validator);
 
-        dialog.showAndWait().ifPresent(onSaveConsumer);
+        dialog.showAndWait().ifPresent(result -> onSaveConsumer.accept(result, dialog.isEditAsRawJson()));
     }
 
     private void showCompareDialog() {
@@ -419,30 +419,6 @@ public class TableGridView extends VBox {
 
     public void setOnSearchInTable(Consumer<TableGridContext> onSearchInTable) {
         this.onSearchInTable = onSearchInTable;
-    }
-
-    private MenuItem buildContextMenuByTableDef(TableDef tableDef, String value) {
-        return DX.create(Menu::new, menu -> {
-            menu.setText(tableDef.getName());
-            menu.setOnAction(event -> {
-                //issue#1
-                if (onSearchInTable != null && event.getTarget().equals(event.getSource())) {
-                    onSearchInTable.accept(new TableGridContext(tableModel.getProfile(), tableDef.getName(), tableDef.getHashAttribute(), value));
-                }
-            });
-            menu.getItems().addAll(
-                    tableDef.getAttributeTypesMap().keySet().stream()
-                            .map(attr -> DX.create(MenuItem::new, menuItem -> {
-                                menuItem.setText(attr);
-                                menuItem.setOnAction(__ -> {
-                                    if (onSearchInTable != null) {
-                                        onSearchInTable.accept(new TableGridContext(tableModel.getProfile(), tableDef.getName(), attr, value));
-                                    }
-                                });
-                            }))
-                            .collect(Collectors.toList())
-            );
-        });
     }
 
     private Dialog<?> createTableInfoDialog() {
