@@ -24,21 +24,25 @@
     -fx-alignment: center;
 }
 
-.table-row-cell:hover {
-    -fx-background-color: -fx-cell-hover-color;
+.root .table-row-cell:hover {
+    -fx-background-color: -color-cell-border, -color-accent-1;
 }
 
-.table-row-cell:hover:selected {
-    -fx-background-color: -fx-background;
+.root:dark .table-row-cell:hover {
+    -fx-background-color: -color-cell-border, -color-accent-6;
 }
 
-.toggle-button:focused {
-    -fx-background-insets: 0, 1, 2, 0, 2.6;
-}
-.toggle-button:selected:focused {
-    -fx-background-insets: 0, 1, 0, 2.6;
-}
+/*.table-row-cell:hover:selected {*/
+/*    -fx-background-color: -fx-background;*/
+/*}*/
 
-.table-cell, .table-column-filter > .label {
-    -fx-padding: 2px 5px 2px 5px;
-}
+/*.toggle-button:focused {*/
+/*    -fx-background-insets: 0, 1, 2, 0, 2.6;*/
+/*}*/
+/*.toggle-button:selected:focused {*/
+/*    -fx-background-insets: 0, 1, 0, 2.6;*/
+/*}*/
+
+/*.table-cell, .table-column-filter > .label {*/
+/*    -fx-padding: 2px 5px 2px 5px;*/
+/*}*/

@@ -23,10 +23,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
+import javafx.scene.layout.*;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -74,6 +71,12 @@ public class DX {
     public static Node spacer() {
         Region spring = new Region();
         HBox.setHgrow(spring, Priority.ALWAYS);
+        return spring;
+    }
+
+    public static Node spacerV() {
+        Region spring = new Region();
+        VBox.setVgrow(spring, Priority.ALWAYS);
         return spring;
     }
 

@@ -49,8 +49,8 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
+import static atlantafx.base.theme.Styles.*;
 import static javafx.beans.binding.Bindings.*;
 
 public class TableGridView extends VBox {
@@ -81,11 +81,13 @@ public class TableGridView extends VBox {
                         DX.create(Button::new, button -> {
                             button.setTooltip(new Tooltip("Create a new document"));
                             button.setGraphic(DX.icon("icons/add.png"));
+                            button.getStyleClass().addAll(BUTTON_ICON);
                             button.setOnAction(event -> showCreateItemDialog(""));
                         }),
                         DX.create(Button::new, button -> {
                             button.setTooltip(new Tooltip("Delete selected rows"));
                             button.setGraphic(DX.icon("icons/delete.png"));
+                            button.getStyleClass().addAll(BUTTON_ICON);
                             button.setOnAction(event -> deleteSelectedItems());
                             button.disableProperty().bind(tableView.getSelectionModel().selectedItemProperty().isNull());
                         }),
@@ -94,21 +96,25 @@ public class TableGridView extends VBox {
                             this.clearFilterButton = button;
                             button.setTooltip(new Tooltip("Clear filter"));
                             button.setGraphic(DX.icon("icons/filter_clear.png"));
+                            button.getStyleClass().addAll(BUTTON_ICON);
                             button.setOnAction(event -> clearFilter());
                         }),
                         DX.create(Button::new, button -> {
                             button.setTooltip(new Tooltip("Clear highlighting"));
                             button.setGraphic(DX.icon("icons/color_swatches.png"));
+                            button.getStyleClass().addAll(BUTTON_ICON);
                             button.setOnAction(event -> highlighter.clear());
                         }),
                         DX.create(Button::new, button -> {
                             button.setTooltip(new Tooltip("Refresh rows"));
                             button.setGraphic(DX.icon("icons/table_refresh.png"));
+                            button.getStyleClass().addAll(BUTTON_ICON);
                             button.setOnAction(event -> controller.onRefreshData());
                         }),
                         DX.create(Button::new, button -> {
                             button.setTooltip(new Tooltip("Compare documents"));
                             button.setGraphic(DX.icon("icons/edit_diff.png"));
+                            button.getStyleClass().addAll(BUTTON_ICON);
                             button.disableProperty().bind(
                                     greaterThan(2, size(tableView.getSelectionModel().getSelectedItems()))
                             );
@@ -117,6 +123,7 @@ public class TableGridView extends VBox {
                         DX.create(Button::new, button -> {
                             button.setTooltip(new Tooltip("Patch documents"));
                             button.setGraphic(DX.icon("icons/script.png"));
+                            button.getStyleClass().addAll(BUTTON_ICON);
                             button.disableProperty().bind(tableView.getSelectionModel().selectedItemProperty().isNull());
                             button.setOnAction(event -> showPatchDialog());
                         }),
@@ -124,6 +131,7 @@ public class TableGridView extends VBox {
                         DX.create(Button::new, button -> {
                             button.setTooltip(new Tooltip("Save table as json"));
                             button.setGraphic(DX.icon("icons/diskette.png"));
+                            button.getStyleClass().addAll(BUTTON_ICON);
                             button.setOnAction(event -> {
                                 FileChooser fileChooser = new FileChooser();
                                 fileChooser.setInitialFileName(tableModel.getTableName() + ".json");
@@ -142,6 +150,7 @@ public class TableGridView extends VBox {
                         DX.create(Button::new, button -> {
                             button.setTooltip(new Tooltip("Load json into the table"));
                             button.setGraphic(DX.icon("icons/folder_go.png"));
+                            button.getStyleClass().addAll(BUTTON_ICON);
                             button.setOnAction(event -> {
                                 FileChooser fileChooser = new FileChooser();
                                 FileChooser.ExtensionFilter jsonFiles = new FileChooser.ExtensionFilter("Json files", "*.json");
@@ -160,6 +169,7 @@ public class TableGridView extends VBox {
                         DX.create(Button::new, button -> {
                             button.setTooltip(new Tooltip("Show table information"));
                             button.setGraphic(DX.icon("icons/information.png"));
+                            button.getStyleClass().addAll(BUTTON_ICON);
                             button.setOnAction(event -> createTableInfoDialog().show());
                         }),
                         DX.spacer(),
@@ -168,6 +178,7 @@ public class TableGridView extends VBox {
                         })
                 )),
                 DX.create(() -> this.tableView, tableView -> {
+//                    tableView.getStyleClass().addAll(INTERACTIVE);
                     tableView.getColumns().add(DX.create((Supplier<TableColumn<Item, Number>>) TableColumn::new, column -> {
                         column.setPrefWidth(35);
                         column.setResizable(false);
@@ -238,8 +249,7 @@ public class TableGridView extends VBox {
 
     private void buildTableHeaders() {
         List<String> availableAttributes = tableView.getColumns().stream()
-                .map(TableColumnBase::getId)
-                .collect(Collectors.toList());
+                .map(TableColumnBase::getId).toList();
 
         tableModel.getTableDef().getAttributeTypesMap().keySet().stream()
                 .filter(attrName -> !availableAttributes.contains(attrName))

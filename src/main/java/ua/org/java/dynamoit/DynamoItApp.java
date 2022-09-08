@@ -17,6 +17,7 @@
 
 package ua.org.java.dynamoit;
 
+import atlantafx.base.theme.NordLight;
 import javafx.application.Application;
 import javafx.scene.image.Image;
 import javafx.scene.layout.Region;
@@ -27,6 +28,12 @@ public class DynamoItApp extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        System.setProperty("prism.lcdtext", "false");
+
+//        Application.setUserAgentStylesheet(new NordDark().getUserAgentStylesheet());
+        Application.setUserAgentStylesheet(new NordLight().getUserAgentStylesheet());
+//        Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
+
         primaryStage.getIcons().add(new Image("icons/dynamite.png"));
         primaryStage.setTitle("DynamoIt");
         primaryStage.setScene(

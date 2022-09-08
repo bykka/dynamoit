@@ -17,9 +17,12 @@
 
 package ua.org.java.dynamoit.components.main;
 
+import atlantafx.base.theme.NordDark;
+import atlantafx.base.theme.NordLight;
+import atlantafx.base.theme.Theme;
 import io.reactivex.rxjavafx.observables.JavaFxObservable;
-import java.util.*;
-import java.util.stream.Collectors;
+import javafx.application.Application;
+import javafx.css.PseudoClass;
 import javafx.event.Event;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -30,6 +33,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.stage.Window;
 import ua.org.java.dynamoit.components.profileviewer.ProfileComponent;
 import ua.org.java.dynamoit.components.profileviewer.ProfileView;
 import ua.org.java.dynamoit.components.tablegrid.TableGridComponent;
@@ -39,8 +43,13 @@ import ua.org.java.dynamoit.utils.DX;
 import ua.org.java.dynamoit.utils.HighlightColors;
 import ua.org.java.dynamoit.widgets.ActivityIndicator;
 
+import java.util.*;
+
+import static atlantafx.base.theme.Styles.BUTTON_ICON;
+
 public class MainView extends VBox {
 
+    private static final PseudoClass DARK = PseudoClass.getPseudoClass("dark");
     private final MainModel mainModel;
     private final MainController controller;
 
@@ -57,7 +66,6 @@ public class MainView extends VBox {
         this.controller.setSelectedTableConsumer(this::createAndOpenTab);
 
         this.getChildren().addAll(
-
                 DX.create(HBox::new, (HBox hBox1) -> {
                     VBox.setVgrow(hBox1, Priority.ALWAYS);
                     hBox1.getChildren().addAll(
@@ -65,7 +73,23 @@ public class MainView extends VBox {
                                 this.profilesToolBar = toolBar;
                                 toolBar.setOrientation(Orientation.VERTICAL);
                                 toolBar.getStylesheets().add(getClass().getResource("/css/toggle-buttons.css").toExternalForm());
-                                return List.of();
+                                return List.of(
+                                        DX.spacerV(),
+                                        DX.create(ToggleButton::new, (ToggleButton button) -> {
+                                            button.setGraphic(DX.icon("icons/earth_night.png"));
+                                            button.getStyleClass().addAll(BUTTON_ICON);
+                                            button.setOnAction(actionEvent -> {
+                                                Theme theme = button.isSelected() ? new NordDark() : new NordLight();
+                                                Application.setUserAgentStylesheet(theme.getUserAgentStylesheet());
+
+                                                String icon = button.isSelected() ? "icons/weather_sun.png" : "icons/earth_night.png" ;
+                                                button.setGraphic(DX.icon(icon));
+
+                                                //getScene().getRoot().pseudoClassStateChanged(DARK, theme.isDarkMode());
+                                                Window.getWindows().forEach(window -> window.getScene().getRoot().pseudoClassStateChanged(DARK, theme.isDarkMode()));
+                                            });
+                                        })
+                                );
                             }),
 
                             DX.splitPane(splitPane -> {
@@ -82,7 +106,6 @@ public class MainView extends VBox {
                             )
                     );
                 }),
-
 
                 DX.create(HBox::new, hBox -> {
                     hBox.setPadding(new Insets(3, 3, 3, 3));
@@ -105,7 +128,7 @@ public class MainView extends VBox {
                         profile.getValue().setColor(colorsIterator.next());
                     }
 
-                    profilesToolBar.getItems().add(
+                    profilesToolBar.getItems().add(profilesToolBar.getItems().size() - 2,
                             new Group(DX.create(ToggleButton::new, (ToggleButton button) -> {
                                 button.setText(profileName);
                                 button.setUserData(profileName);
@@ -175,9 +198,7 @@ public class MainView extends VBox {
     }
 
     private void closeOtherTabs(Tab tabToKeep) {
-        List<Tab> tabs = tabPane.getTabs().stream()
-                .filter(tab -> tab != tabToKeep)
-                .collect(Collectors.toList());
+        List<Tab> tabs = tabPane.getTabs().stream().filter(tab -> tab != tabToKeep).toList();
 
         tabs.forEach(this::closeTab);
     }
