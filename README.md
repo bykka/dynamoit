@@ -34,7 +34,7 @@ Examples are based on "hello world"
 |__NOT_EXISTS__|!$| 
 
 ## System requirements, building and running
-At least Java 11 and maven to build and run the application.
+At least Java 17 and maven to build and run the application.
 
 Execute the next command to build
 ```
