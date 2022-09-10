@@ -24,14 +24,9 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.skin.TableViewSkin;
-import javafx.scene.input.Clipboard;
-import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
@@ -43,7 +38,6 @@ import ua.org.java.dynamoit.utils.Utils;
 import ua.org.java.dynamoit.widgets.ClearableTextField;
 
 import java.io.File;
-import java.text.DateFormat;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -53,11 +47,12 @@ import java.util.function.Supplier;
 
 import static atlantafx.base.theme.Styles.BUTTON_ICON;
 import static javafx.beans.binding.Bindings.*;
+import static ua.org.java.dynamoit.utils.Utils.copyToClipboard;
 
 public class TableGridView extends VBox {
 
     private final TableGridModel tableModel;
-    private ThemeManager themeManager;
+    private final ThemeManager themeManager;
 
     private final TableGridController controller;
     private Button clearFilterButton;
@@ -435,70 +430,7 @@ public class TableGridView extends VBox {
     }
 
     private Dialog<?> createTableInfoDialog() {
-        return DX.create(Dialog::new, dialog -> {
-            dialog.setTitle(tableModel.getTableName());
-            dialog.getDialogPane().getButtonTypes().add(ButtonType.OK);
-            dialog.setResizable(true);
-            dialog.getDialogPane().setContent(DX.create(GridPane::new, gridPane -> {
-                gridPane.setHgap(10);
-                gridPane.setVgap(10);
-
-                gridPane.getColumnConstraints().addAll(
-                        new ColumnConstraints(),
-                        DX.create(ColumnConstraints::new, c -> {
-                            c.setHgrow(Priority.ALWAYS);
-                        })
-                );
-
-                Function<Supplier<String>, Node> copyClipboardImage = stringSupplier -> DX.create(() -> DX.icon("icons/page_copy.png"), icon -> {
-                    icon.setOnMouseClicked(__ -> copyToClipboard(stringSupplier.get()));
-                    icon.setStyle("-fx-cursor: hand");
-                });
-
-                gridPane.addColumn(0,
-                        DX.boldLabel("Name:"),
-                        DX.boldLabel("Arn:"),
-                        DX.boldLabel("Creation date:"),
-                        DX.boldLabel("Size:"),
-                        DX.boldLabel("Region:")
-                );
-
-                gridPane.addColumn(1,
-                        DX.create(Hyperlink::new, link -> {
-                            String tableLink = String.format(
-                                    "https://%1$s.console.aws.amazon.com/dynamodb/home?region=%1$s#tables:selected=%2$s;tab=overview",
-                                    tableModel.getProfileModel().getRegion(),
-                                    tableModel.getTableName()
-                            );
-                            link.setText(tableModel.getOriginalTableDescription().getTableName().trim());
-                            link.setOnMouseClicked(event -> controller.openUrl(tableLink));
-                        }),
-                        new Label(tableModel.getOriginalTableDescription().getTableArn()),
-                        new Label(DateFormat.getInstance().format(tableModel.getOriginalTableDescription().getCreationDateTime())),
-                        new Label(tableModel.getOriginalTableDescription().getTableSizeBytes() + " bytes"),
-                        new Label(tableModel.getProfileModel().getRegion())
-                );
-
-                gridPane.addColumn(2,
-                        copyClipboardImage.apply(() -> tableModel.getOriginalTableDescription().getTableName()),
-                        copyClipboardImage.apply(() -> tableModel.getOriginalTableDescription().getTableArn()),
-                        copyClipboardImage.apply(() -> DateFormat.getInstance().format(tableModel.getOriginalTableDescription().getCreationDateTime())),
-                        copyClipboardImage.apply(() -> "" + tableModel.getOriginalTableDescription().getTableSizeBytes()),
-                        copyClipboardImage.apply(() -> tableModel.getProfileModel().getRegion())
-                );
-
-                String streamArn = tableModel.getOriginalTableDescription().getLatestStreamArn();
-                if (streamArn != null && !streamArn.isBlank()) {
-                    gridPane.addRow(gridPane.getRowCount(), DX.boldLabel("Stream:"), new Label(streamArn), copyClipboardImage.apply(() -> streamArn));
-                }
-            }));
-        });
+        return new TableInfoDialog(tableModel, controller::openUrl);
     }
 
-    private static void copyToClipboard(String value) {
-        ClipboardContent content = new ClipboardContent();
-        content.putString(value);
-        Clipboard clipboard = Clipboard.getSystemClipboard();
-        clipboard.setContent(content);
-    }
 }
