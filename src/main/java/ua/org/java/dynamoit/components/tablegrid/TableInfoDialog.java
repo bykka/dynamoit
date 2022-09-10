@@ -30,9 +30,10 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static atlantafx.base.theme.Styles.FLAT;
 import static ua.org.java.dynamoit.utils.Utils.copyToClipboard;
 
-public class TableInfoDialog extends Dialog<Boolean> {
+public class TableInfoDialog extends Dialog<Void> {
 
     public TableInfoDialog(TableGridModel tableModel, Consumer<String> openUrl) {
         setTitle(tableModel.getTableName());
@@ -54,7 +55,7 @@ public class TableInfoDialog extends Dialog<Boolean> {
                 button.setGraphic(DX.icon("icons/page_copy.png"));
                 button.setOnAction(__ -> copyToClipboard(stringSupplier.get()));
                 button.setTooltip(new Tooltip("Copy to clipboard"));
-                //icon.setStyle("-fx-cursor: hand");
+                button.getStyleClass().addAll(FLAT);
             });
 
             gridPane.addColumn(0,
