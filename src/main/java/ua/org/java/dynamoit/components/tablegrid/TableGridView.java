@@ -37,6 +37,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import org.reactfx.EventStream;
 import ua.org.java.dynamoit.components.tablegrid.highlight.Highlighter;
+import ua.org.java.dynamoit.components.thememanager.ThemeManager;
 import ua.org.java.dynamoit.utils.DX;
 import ua.org.java.dynamoit.utils.Utils;
 import ua.org.java.dynamoit.widgets.ClearableTextField;
@@ -50,12 +51,13 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static atlantafx.base.theme.Styles.*;
+import static atlantafx.base.theme.Styles.BUTTON_ICON;
 import static javafx.beans.binding.Bindings.*;
 
 public class TableGridView extends VBox {
 
     private final TableGridModel tableModel;
+    private ThemeManager themeManager;
 
     private final TableGridController controller;
     private Button clearFilterButton;
@@ -65,9 +67,10 @@ public class TableGridView extends VBox {
 
     private final Highlighter highlighter = new Highlighter();
 
-    public TableGridView(TableGridController controller, TableGridModel tableModel) {
+    public TableGridView(TableGridController controller, TableGridModel tableModel, ThemeManager themeManager) {
         this.controller = controller;
         this.tableModel = tableModel;
+        this.themeManager = themeManager;
 
         buildUI();
         addModelListeners();
@@ -389,7 +392,7 @@ public class TableGridView extends VBox {
 
     private void showItemDialog(String title, String json, BiConsumer<String, Boolean> onSaveConsumer, Function<EventStream<String>, EventStream<Boolean>> validator) {
         ItemDialog dialog = new ItemDialog(title, json, validator);
-
+        themeManager.applyPseudoClasses(dialog.getDialogPane());
         dialog.showAndWait().ifPresent(result -> onSaveConsumer.accept(result, dialog.isEditAsRawJson()));
     }
 

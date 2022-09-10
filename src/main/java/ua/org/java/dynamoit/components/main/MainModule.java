@@ -22,11 +22,13 @@ import dagger.Provides;
 import javafx.application.Application;
 import javafx.application.HostServices;
 import javafx.scene.layout.Region;
-import javax.inject.Singleton;
 import ua.org.java.dynamoit.EventBus;
+import ua.org.java.dynamoit.components.thememanager.ThemeManager;
 import ua.org.java.dynamoit.db.DynamoDBService;
 import ua.org.java.dynamoit.utils.FXExecutor;
 import ua.org.java.dynamoit.widgets.ActivityIndicator;
+
+import javax.inject.Singleton;
 
 @Module
 public class MainModule {
@@ -43,8 +45,8 @@ public class MainModule {
     }
 
     @Provides
-    public static Region mainView(MainModel model, MainController controller, ActivityIndicator activityIndicator) {
-        return new MainView(model, controller, activityIndicator);
+    public static Region mainView(MainView mainView) {
+        return mainView;
     }
 
     @Provides
@@ -60,8 +62,8 @@ public class MainModule {
     }
 
     @Provides
-    public static MainController controller(DynamoDBService dynamoDBService, MainModel model, EventBus eventBus, HostServices hostServices) {
-        return new MainController(dynamoDBService, model, eventBus, hostServices);
+    public static MainController controller(DynamoDBService dynamoDBService, MainModel model, EventBus eventBus, HostServices hostServices, ThemeManager themeManager) {
+        return new MainController(dynamoDBService, model, eventBus, hostServices, themeManager);
     }
 
 }

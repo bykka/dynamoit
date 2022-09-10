@@ -17,8 +17,6 @@
 
 package ua.org.java.dynamoit.components.main;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 import javafx.application.HostServices;
 import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.components.profileviewer.DaggerProfileComponent;
@@ -26,8 +24,12 @@ import ua.org.java.dynamoit.components.profileviewer.ProfileComponent;
 import ua.org.java.dynamoit.components.tablegrid.DaggerTableGridComponent;
 import ua.org.java.dynamoit.components.tablegrid.TableGridComponent;
 import ua.org.java.dynamoit.components.tablegrid.TableGridContext;
+import ua.org.java.dynamoit.components.thememanager.ThemeManager;
 import ua.org.java.dynamoit.db.DynamoDBService;
 import ua.org.java.dynamoit.utils.FXExecutor;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 public class MainController {
 
@@ -35,13 +37,15 @@ public class MainController {
     private final MainModel model;
     private final EventBus eventBus;
     private HostServices hostServices;
+    private ThemeManager themeManager;
     private Consumer<TableGridContext> selectedTableConsumer;
 
-    public MainController(DynamoDBService dynamoDBService, MainModel model, EventBus eventBus, HostServices hostServices) {
+    public MainController(DynamoDBService dynamoDBService, MainModel model, EventBus eventBus, HostServices hostServices, ThemeManager themeManager) {
         this.dynamoDBService = dynamoDBService;
         this.model = model;
         this.eventBus = eventBus;
         this.hostServices = hostServices;
+        this.themeManager = themeManager;
 
         eventBus.activity(
                 CompletableFuture
@@ -64,6 +68,7 @@ public class MainController {
                 .eventBus(eventBus)
                 .tableContext(tableContext)
                 .hostServices(hostServices)
+                .themeManager(themeManager)
                 .build();
     }
 

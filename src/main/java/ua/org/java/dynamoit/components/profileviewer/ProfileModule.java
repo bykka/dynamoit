@@ -19,9 +19,7 @@ package ua.org.java.dynamoit.components.profileviewer;
 
 import dagger.Module;
 import dagger.Provides;
-import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.components.main.MainModel;
-import ua.org.java.dynamoit.db.DynamoDBService;
 
 import javax.inject.Singleton;
 
@@ -32,16 +30,6 @@ public class ProfileModule {
     @Singleton
     public MainModel.ProfileModel model(MainModel mainModel, String profile) {
         return mainModel.getAvailableProfiles().get(profile);
-    }
-
-    @Provides
-    public ProfileView view(ProfileController controller, MainModel.ProfileModel model){
-        return new ProfileView(controller, model);
-    }
-
-    @Provides
-    public ProfileController controller(MainModel.ProfileModel model, DynamoDBService dynamoDBService, EventBus eventBus){
-        return new ProfileController(model, dynamoDBService, eventBus);
     }
 
 }

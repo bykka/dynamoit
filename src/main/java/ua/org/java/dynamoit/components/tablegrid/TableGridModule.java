@@ -22,6 +22,7 @@ import dagger.Provides;
 import javafx.application.HostServices;
 import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.components.main.MainModel;
+import ua.org.java.dynamoit.components.thememanager.ThemeManager;
 import ua.org.java.dynamoit.db.DynamoDBService;
 import ua.org.java.dynamoit.utils.FXExecutor;
 
@@ -37,8 +38,8 @@ public class TableGridModule {
     }
 
     @Provides
-    public TableGridView view(TableGridController controller, TableGridModel tableModel) {
-        return new TableGridView(controller, tableModel);
+    public TableGridView view(TableGridController controller, TableGridModel tableModel, ThemeManager themeManager) {
+        return new TableGridView(controller, tableModel, themeManager);
     }
 
     @Provides

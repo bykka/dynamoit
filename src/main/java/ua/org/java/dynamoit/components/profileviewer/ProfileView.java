@@ -33,6 +33,7 @@ import ua.org.java.dynamoit.model.TableDef;
 import ua.org.java.dynamoit.utils.DX;
 import ua.org.java.dynamoit.widgets.ClearableTextField;
 
+import javax.inject.Inject;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -42,11 +43,11 @@ import static atlantafx.base.theme.Styles.BUTTON_ICON;
 public class ProfileView extends VBox {
 
     private final TreeView<String> treeView = new TreeView<>();
-
     private final TreeItem<String> allTables;
     private final MainModel.ProfileModel model;
     private final ProfileController controller;
 
+    @Inject
     public ProfileView(ProfileController controller, MainModel.ProfileModel model) {
         this.model = model;
         this.controller = controller;

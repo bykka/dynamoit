@@ -17,12 +17,7 @@
 
 package ua.org.java.dynamoit.components.main;
 
-import atlantafx.base.theme.NordDark;
-import atlantafx.base.theme.NordLight;
-import atlantafx.base.theme.Theme;
 import io.reactivex.rxjavafx.observables.JavaFxObservable;
-import javafx.application.Application;
-import javafx.css.PseudoClass;
 import javafx.event.Event;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -39,17 +34,18 @@ import ua.org.java.dynamoit.components.profileviewer.ProfileView;
 import ua.org.java.dynamoit.components.tablegrid.TableGridComponent;
 import ua.org.java.dynamoit.components.tablegrid.TableGridContext;
 import ua.org.java.dynamoit.components.tablegrid.TableGridView;
+import ua.org.java.dynamoit.components.thememanager.ThemeManager;
 import ua.org.java.dynamoit.utils.DX;
 import ua.org.java.dynamoit.utils.HighlightColors;
 import ua.org.java.dynamoit.widgets.ActivityIndicator;
 
+import javax.inject.Inject;
 import java.util.*;
 
 import static atlantafx.base.theme.Styles.BUTTON_ICON;
 
 public class MainView extends VBox {
 
-    private static final PseudoClass DARK = PseudoClass.getPseudoClass("dark");
     private final MainModel mainModel;
     private final MainController controller;
 
@@ -60,7 +56,8 @@ public class MainView extends VBox {
     private final Map<String, ProfileView> profileViews = new HashMap<>();
     private double dividerPosition = 0.35;
 
-    public MainView(MainModel mainModel, MainController controller, ActivityIndicator activityIndicator) {
+    @Inject
+    public MainView(MainModel mainModel, MainController controller, ActivityIndicator activityIndicator, ThemeManager themeManager) {
         this.mainModel = mainModel;
         this.controller = controller;
         this.controller.setSelectedTableConsumer(this::createAndOpenTab);
@@ -79,14 +76,14 @@ public class MainView extends VBox {
                                             button.setGraphic(DX.icon("icons/earth_night.png"));
                                             button.getStyleClass().addAll(BUTTON_ICON);
                                             button.setOnAction(actionEvent -> {
-                                                Theme theme = button.isSelected() ? new NordDark() : new NordLight();
-                                                Application.setUserAgentStylesheet(theme.getUserAgentStylesheet());
+                                                themeManager
+                                                        .switchTheme()
+                                                        .applyCurrentTheme();
 
-                                                String icon = button.isSelected() ? "icons/weather_sun.png" : "icons/earth_night.png" ;
+                                                String icon = themeManager.getCurrentTheme().isDarkMode() ? "icons/weather_sun.png" : "icons/earth_night.png";
                                                 button.setGraphic(DX.icon(icon));
 
-                                                //getScene().getRoot().pseudoClassStateChanged(DARK, theme.isDarkMode());
-                                                Window.getWindows().forEach(window -> window.getScene().getRoot().pseudoClassStateChanged(DARK, theme.isDarkMode()));
+                                                Window.getWindows().forEach(window -> themeManager.applyPseudoClasses(window.getScene().getRoot()));
                                             });
                                         })
                                 );
