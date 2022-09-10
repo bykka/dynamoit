@@ -23,6 +23,9 @@ import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import ua.org.java.dynamoit.utils.DX;
 
+import java.io.IOException;
+import java.util.jar.Manifest;
+
 public class DynamoItApp extends Application {
 
     @Override
@@ -33,7 +36,7 @@ public class DynamoItApp extends Application {
         appFactory.themeManager().applyCurrentTheme();
 
         primaryStage.getIcons().add(new Image("icons/dynamite.png"));
-        primaryStage.setTitle("DynamoIt");
+        primaryStage.setTitle(buildAppTitle());
         primaryStage.setScene(
                 DX.scene(() -> {
                             Region mainView = appFactory.mainView();
@@ -50,6 +53,22 @@ public class DynamoItApp extends Application {
 
     public static void main(String[] args) {
         launch(DynamoItApp.class);
+    }
+
+    private static String buildAppTitle() {
+        String title = "DynamoIt";
+        var manifestStream = DynamoItApp.class.getClassLoader().getResourceAsStream("META-INF/MANIFEST.MF");
+        if (manifestStream != null) {
+            try (manifestStream) {
+                Manifest manifest = new Manifest(manifestStream);
+                String version = manifest.getMainAttributes().getValue("Implementation-Version");
+                if (version != null) {
+                    return String.format("%s: %s", title, version);
+                }
+            } catch (IOException ignored) {
+            }
+        }
+        return title;
     }
 
 }
