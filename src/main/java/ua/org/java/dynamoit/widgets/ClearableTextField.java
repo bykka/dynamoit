@@ -17,6 +17,7 @@
 
 package ua.org.java.dynamoit.widgets;
 
+import atlantafx.base.controls.CustomTextField;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ObjectProperty;
@@ -29,7 +30,6 @@ import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
-import org.controlsfx.control.textfield.CustomTextField;
 
 public class ClearableTextField extends CustomTextField {
 

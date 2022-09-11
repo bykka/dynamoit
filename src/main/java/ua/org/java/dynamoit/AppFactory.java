@@ -22,15 +22,18 @@ import dagger.Component;
 import javafx.application.Application;
 import javafx.scene.layout.Region;
 import ua.org.java.dynamoit.components.main.MainModule;
+import ua.org.java.dynamoit.components.thememanager.ThemeManager;
+import ua.org.java.dynamoit.components.thememanager.ThemeManagerModule;
 import ua.org.java.dynamoit.db.DynamoDBModule;
 
 import javax.inject.Singleton;
 
-@Component(modules = {MainModule.class, DynamoDBModule.class})
+@Component(modules = {MainModule.class, DynamoDBModule.class, ThemeManagerModule.class})
 @Singleton
 public interface AppFactory {
 
     Region mainView();
+    ThemeManager themeManager();
 
     @Component.Builder
     interface Builder {

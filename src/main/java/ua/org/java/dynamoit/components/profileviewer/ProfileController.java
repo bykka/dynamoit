@@ -24,6 +24,7 @@ import ua.org.java.dynamoit.db.DynamoDBService;
 import ua.org.java.dynamoit.model.TableDef;
 import ua.org.java.dynamoit.utils.FXExecutor;
 
+import javax.inject.Inject;
 import java.util.stream.Collectors;
 
 public class ProfileController {
@@ -32,6 +33,7 @@ public class ProfileController {
     private final MainModel.ProfileModel model;
     private final EventBus eventBus;
 
+    @Inject
     public ProfileController(MainModel.ProfileModel model, DynamoDBService dynamoDBService, EventBus eventBus) {
         this.dynamoDBService = dynamoDBService;
         this.model = model;

@@ -15,23 +15,6 @@
  *     along with DynamoIt.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-/*
- * This file is part of DynamoIt.
- *
- *     DynamoIt is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
- *
- *     DynamoIt is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with DynamoIt.  If not, see <https://www.gnu.org/licenses/>.
- */
-
 package ua.org.java.dynamoit.components.main;
 
 import dagger.Module;
@@ -40,9 +23,10 @@ import javafx.application.Application;
 import javafx.application.HostServices;
 import javafx.scene.layout.Region;
 import ua.org.java.dynamoit.EventBus;
-import ua.org.java.dynamoit.widgets.ActivityIndicator;
+import ua.org.java.dynamoit.components.thememanager.ThemeManager;
 import ua.org.java.dynamoit.db.DynamoDBService;
 import ua.org.java.dynamoit.utils.FXExecutor;
+import ua.org.java.dynamoit.widgets.ActivityIndicator;
 
 import javax.inject.Singleton;
 
@@ -61,8 +45,8 @@ public class MainModule {
     }
 
     @Provides
-    public static Region mainView(MainModel model, MainController controller, ActivityIndicator activityIndicator) {
-        return new MainView(model, controller, activityIndicator);
+    public static Region mainView(MainView mainView) {
+        return mainView;
     }
 
     @Provides
@@ -78,8 +62,8 @@ public class MainModule {
     }
 
     @Provides
-    public static MainController controller(DynamoDBService dynamoDBService, MainModel model, EventBus eventBus, HostServices hostServices) {
-        return new MainController(dynamoDBService, model, eventBus, hostServices);
+    public static MainController controller(DynamoDBService dynamoDBService, MainModel model, EventBus eventBus, HostServices hostServices, ThemeManager themeManager) {
+        return new MainController(dynamoDBService, model, eventBus, hostServices, themeManager);
     }
 
 }

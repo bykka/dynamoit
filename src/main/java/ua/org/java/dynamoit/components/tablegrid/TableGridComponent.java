@@ -22,6 +22,7 @@ import dagger.Component;
 import javafx.application.HostServices;
 import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.components.main.MainModel;
+import ua.org.java.dynamoit.components.thememanager.ThemeManager;
 import ua.org.java.dynamoit.db.DynamoDBModule;
 
 import javax.inject.Singleton;
@@ -36,12 +37,18 @@ public interface TableGridComponent {
     interface Builder {
         @BindsInstance
         Builder profileModel(MainModel.ProfileModel profileModel);
+
         @BindsInstance
         Builder eventBus(EventBus eventBus);
+
         @BindsInstance
         Builder tableContext(TableGridContext context);
+
         @BindsInstance
         Builder hostServices(HostServices hostServices);
+        @BindsInstance
+        Builder themeManager(ThemeManager themeManager);
+
         TableGridComponent build();
     }
 

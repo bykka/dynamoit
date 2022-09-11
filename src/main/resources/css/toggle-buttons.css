@@ -15,92 +15,60 @@
  *     along with DynamoIt.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-/*  ---=== LIGHTCYAN ===---  */
-.toggle-button-lightcyan {
-    -fx-background-color: -fx-shadow-highlight-color, -fx-outer-border, lightcyan, lightcyan;
+/*  ---=== 1 ===---  */
+.toggle-button-1 {
+    -fx-background-color: -color-chart-1-alpha20;
 }
-.toggle-button-lightcyan:focused {
-    -fx-background-color: -fx-focus-color, -fx-inner-border, lightcyan, -fx-faint-focus-color, lightcyan;
+.toggle-button-1:selected {
+    -fx-background-color: -color-chart-1;
 }
-.toggle-button-lightcyan:selected:focused {
-    -fx-background-color:
-            -fx-focus-color,
-            linear-gradient(to bottom,
-            derive(lightcyan, -22%) 0%,
-            derive(lightcyan, -13%) 20%,
-            derive(lightcyan, -11%) 50%),
-            -fx-faint-focus-color,
-            linear-gradient(to bottom,
-            derive(lightcyan, -22%) 0%,
-            derive(lightcyan, -13%) 20%,
-            derive(lightcyan, -11%) 50%);
+/*  ---=== 2 ===---  */
+.toggle-button-2 {
+    -fx-background-color: -color-chart-2-alpha20;
 }
-.toggle-button-lightcyan:selected {
-    -fx-background-color:
-            -fx-shadow-highlight-color,
-            linear-gradient(to bottom, derive(-fx-outer-border, -20%), -fx-outer-border),
-            linear-gradient(to bottom,
-            derive(lightcyan, -22%) 0%,
-            derive(lightcyan, -13%) 20%,
-            derive(lightcyan, -11%) 50%);
+.toggle-button-2:selected {
+    -fx-background-color: -color-chart-2;
 }
-
-/*  ---=== ANTIQUEWHITE ===---  */
-.toggle-button-antiquewhite {
-    -fx-background-color: -fx-shadow-highlight-color, -fx-outer-border, antiquewhite, antiquewhite;
+/*  ---=== 3 ===---  */
+.toggle-button-3 {
+    -fx-background-color: -color-chart-3-alpha20;
 }
-.toggle-button-antiquewhite:focused {
-    -fx-background-color: -fx-focus-color, -fx-inner-border, antiquewhite, -fx-faint-focus-color, antiquewhite;
+.toggle-button-3:selected {
+    -fx-background-color: -color-chart-3;
 }
-.toggle-button-antiquewhite:selected:focused {
-    -fx-background-color:
-            -fx-focus-color,
-            linear-gradient(to bottom,
-            derive(antiquewhite, -22%) 0%,
-            derive(antiquewhite, -13%) 20%,
-            derive(antiquewhite, -11%) 50%),
-            -fx-faint-focus-color,
-            linear-gradient(to bottom,
-            derive(antiquewhite, -22%) 0%,
-            derive(antiquewhite, -13%) 20%,
-            derive(antiquewhite, -11%) 50%);
+/*  ---=== 4 ===---  */
+.toggle-button-4 {
+    -fx-background-color: -color-chart-4-alpha20;
 }
-.toggle-button-antiquewhite:selected {
-    -fx-background-color:
-            -fx-shadow-highlight-color,
-            linear-gradient(to bottom, derive(-fx-outer-border, -20%), -fx-outer-border),
-            linear-gradient(to bottom,
-            derive(antiquewhite, -22%) 0%,
-            derive(antiquewhite, -13%) 20%,
-            derive(antiquewhite, -11%) 50%);
+.toggle-button-4:selected {
+    -fx-background-color: -color-chart-4;
+}
+/*  ---=== 5 ===---  */
+.toggle-button-5 {
+    -fx-background-color: -color-chart-5-alpha20;
+}
+.toggle-button-5:selected {
+    -fx-background-color: -color-chart-5;
+}
+/*  ---=== 6 ===---  */
+.toggle-button-6 {
+    -fx-background-color: -color-chart-6-alpha20;
+}
+.toggle-button-6:selected {
+    -fx-background-color: -color-chart-6;
+}
+/*  ---=== 7 ===---  */
+.toggle-button-7 {
+    -fx-background-color: -color-chart-7-alpha20;
+}
+.toggle-button-7:selected {
+    -fx-background-color: -color-chart-7;
+}
+/*  ---=== 8 ===---  */
+.toggle-button-8 {
+    -fx-background-color: -color-chart-8-alpha20;
+}
+.toggle-button-8:selected {
+    -fx-background-color: -color-chart-8;
 }
 
-/*  ---=== LIGHTPINK ===---  */
-.toggle-button-lightpink {
-    -fx-background-color: -fx-shadow-highlight-color, -fx-outer-border, lightpink, lightpink;
-}
-.toggle-button-lightpink:focused {
-    -fx-background-color: -fx-focus-color, -fx-inner-border, lightpink, -fx-faint-focus-color, lightpink;
-}
-.toggle-button-lightpink:selected:focused {
-    -fx-background-color:
-            -fx-focus-color,
-            linear-gradient(to bottom,
-            derive(lightpink, -22%) 0%,
-            derive(lightpink, -13%) 20%,
-            derive(lightpink, -11%) 50%),
-            -fx-faint-focus-color,
-            linear-gradient(to bottom,
-            derive(lightpink, -22%) 0%,
-            derive(lightpink, -13%) 20%,
-            derive(lightpink, -11%) 50%);
-}
-.toggle-button-lightpink:selected {
-    -fx-background-color:
-            -fx-shadow-highlight-color,
-            linear-gradient(to bottom, derive(-fx-outer-border, -20%), -fx-outer-border),
-            linear-gradient(to bottom,
-            derive(lightpink, -22%) 0%,
-            derive(lightpink, -13%) 20%,
-            derive(lightpink, -11%) 50%);
-}

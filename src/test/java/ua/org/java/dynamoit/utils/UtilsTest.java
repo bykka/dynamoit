@@ -22,6 +22,7 @@ import org.junit.Test;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static ua.org.java.dynamoit.utils.Utils.convertJsonDocument;
 
 public class UtilsTest {
 
@@ -43,6 +44,25 @@ public class UtilsTest {
 
         result = Utils.groupBySeq(List.of());
         assertEquals(List.of(), result);
+    }
+
+    @Test
+    public void testConvertJsonToDocument() {
+        String newLine = System.getProperty("line.separator");
+
+        String document1 = convertJsonDocument("{\"name\": \"user\"}", true);
+        assertEquals(String.join(newLine,
+                "{",
+                "  \"name\" : {",
+                "    \"s\" : \"user\"",
+                "  }",
+                "}"), document1);
+
+        String document2 = convertJsonDocument("{\"name\": {\"s\": \"user\"}}", false);
+        assertEquals(String.join(newLine,
+                "{",
+                "  \"name\" : \"user\"",
+                "}"), document2);
     }
 
 }

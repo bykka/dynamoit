@@ -16,7 +16,7 @@
  */
 
 .json_curly {
-    -fx-fill: darkblue !important;
+    -fx-fill: -color-chart-5 !important;
 }
 
 .json_property {
@@ -24,28 +24,37 @@
     -fx-font-weight: bold;
 }
 
+.root:dark .json_property {
+    -fx-fill: -color-accent-1 !important;
+    -fx-font-weight: bold;
+}
+
 .json_value {
-    -fx-fill: forestgreen !important;
+    -fx-fill: -color-chart-3 !important;
     -fx-font-weight: bold;
 }
 
 .json_array {
-    -fx-fill: darkblue !important;
+    -fx-fill: #b34d1a !important;
 }
 
 .json_bool {
-    -fx-fill: crimson !important;
+    -fx-fill: -color-chart-1 !important;
     -fx-font-weight: bold;
 }
 
 .json_number {
-    -fx-fill: cornflowerblue !important;
+    -fx-fill: -color-chart-4 !important;
 }
 
 .main-selection {
     -fx-fill: lemonchiffon;
 }
 
-.paragraph-box:has-caret {
-    -fx-background-color: derive(-fx-cell-hover-color, 50%)
+/*.paragraph-box:has-caret {*/
+/*    -fx-background-color: derive(-fx-cell-hover-color, 50%)*/
+/*}*/
+
+.code-area {
+    -fx-background-color: -color-bg-default;
 }

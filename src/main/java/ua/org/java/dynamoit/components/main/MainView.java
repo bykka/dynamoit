@@ -15,23 +15,6 @@
  *     along with DynamoIt.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-/*
- * This file is part of DynamoIt.
- *
- *     DynamoIt is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
- *
- *     DynamoIt is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with DynamoIt.  If not, see <https://www.gnu.org/licenses/>.
- */
-
 package ua.org.java.dynamoit.components.main;
 
 import io.reactivex.rxjavafx.observables.JavaFxObservable;
@@ -45,17 +28,21 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.stage.Window;
 import ua.org.java.dynamoit.components.profileviewer.ProfileComponent;
 import ua.org.java.dynamoit.components.profileviewer.ProfileView;
 import ua.org.java.dynamoit.components.tablegrid.TableGridComponent;
 import ua.org.java.dynamoit.components.tablegrid.TableGridContext;
 import ua.org.java.dynamoit.components.tablegrid.TableGridView;
+import ua.org.java.dynamoit.components.thememanager.ThemeManager;
 import ua.org.java.dynamoit.utils.DX;
 import ua.org.java.dynamoit.utils.HighlightColors;
 import ua.org.java.dynamoit.widgets.ActivityIndicator;
 
+import javax.inject.Inject;
 import java.util.*;
-import java.util.stream.Collectors;
+
+import static atlantafx.base.theme.Styles.BUTTON_ICON;
 
 public class MainView extends VBox {
 
@@ -69,13 +56,13 @@ public class MainView extends VBox {
     private final Map<String, ProfileView> profileViews = new HashMap<>();
     private double dividerPosition = 0.35;
 
-    public MainView(MainModel mainModel, MainController controller, ActivityIndicator activityIndicator) {
+    @Inject
+    public MainView(MainModel mainModel, MainController controller, ActivityIndicator activityIndicator, ThemeManager themeManager) {
         this.mainModel = mainModel;
         this.controller = controller;
         this.controller.setSelectedTableConsumer(this::createAndOpenTab);
 
         this.getChildren().addAll(
-
                 DX.create(HBox::new, (HBox hBox1) -> {
                     VBox.setVgrow(hBox1, Priority.ALWAYS);
                     hBox1.getChildren().addAll(
@@ -83,7 +70,23 @@ public class MainView extends VBox {
                                 this.profilesToolBar = toolBar;
                                 toolBar.setOrientation(Orientation.VERTICAL);
                                 toolBar.getStylesheets().add(getClass().getResource("/css/toggle-buttons.css").toExternalForm());
-                                return List.of();
+                                return List.of(
+                                        DX.spacerV(),
+                                        DX.create(ToggleButton::new, (ToggleButton button) -> {
+                                            button.setGraphic(DX.icon("icons/earth_night.png"));
+                                            button.getStyleClass().addAll(BUTTON_ICON);
+                                            button.setOnAction(actionEvent -> {
+                                                themeManager
+                                                        .switchTheme()
+                                                        .applyCurrentTheme();
+
+                                                String icon = themeManager.getCurrentTheme().isDarkMode() ? "icons/weather_sun.png" : "icons/earth_night.png";
+                                                button.setGraphic(DX.icon(icon));
+
+                                                Window.getWindows().forEach(window -> themeManager.applyPseudoClasses(window.getScene().getRoot()));
+                                            });
+                                        })
+                                );
                             }),
 
                             DX.splitPane(splitPane -> {
@@ -100,7 +103,6 @@ public class MainView extends VBox {
                             )
                     );
                 }),
-
 
                 DX.create(HBox::new, hBox -> {
                     hBox.setPadding(new Insets(3, 3, 3, 3));
@@ -123,7 +125,7 @@ public class MainView extends VBox {
                         profile.getValue().setColor(colorsIterator.next());
                     }
 
-                    profilesToolBar.getItems().add(
+                    profilesToolBar.getItems().add(profilesToolBar.getItems().size() - 2,
                             new Group(DX.create(ToggleButton::new, (ToggleButton button) -> {
                                 button.setText(profileName);
                                 button.setUserData(profileName);
@@ -193,9 +195,7 @@ public class MainView extends VBox {
     }
 
     private void closeOtherTabs(Tab tabToKeep) {
-        List<Tab> tabs = tabPane.getTabs().stream()
-                .filter(tab -> tab != tabToKeep)
-                .collect(Collectors.toList());
+        List<Tab> tabs = tabPane.getTabs().stream().filter(tab -> tab != tabToKeep).toList();
 
         tabs.forEach(this::closeTab);
     }

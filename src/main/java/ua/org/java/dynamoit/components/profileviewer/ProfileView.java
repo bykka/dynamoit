@@ -33,18 +33,21 @@ import ua.org.java.dynamoit.model.TableDef;
 import ua.org.java.dynamoit.utils.DX;
 import ua.org.java.dynamoit.widgets.ClearableTextField;
 
+import javax.inject.Inject;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static atlantafx.base.theme.Styles.BUTTON_ICON;
+
 public class ProfileView extends VBox {
 
     private final TreeView<String> treeView = new TreeView<>();
-
     private final TreeItem<String> allTables;
     private final MainModel.ProfileModel model;
     private final ProfileController controller;
 
+    @Inject
     public ProfileView(ProfileController controller, MainModel.ProfileModel model) {
         this.model = model;
         this.controller = controller;
@@ -61,11 +64,13 @@ public class ProfileView extends VBox {
                         DX.create(Button::new, button -> {
                             button.setTooltip(new Tooltip("Save current filter"));
                             button.setGraphic(DX.icon("icons/star.png"));
+                            button.getStyleClass().addAll(BUTTON_ICON);
                             button.setOnAction(event -> controller.onSaveFilter());
                         }),
                         DX.create(Button::new, button -> {
                             button.setTooltip(new Tooltip("Reload list of tables"));
                             button.setGraphic(DX.icon("icons/arrow_refresh.png"));
+                            button.getStyleClass().addAll(BUTTON_ICON);
                             button.setOnAction(__ -> controller.onTablesRefresh());
                         })
                 )),
@@ -77,8 +82,7 @@ public class ProfileView extends VBox {
                     treeView.setOnMouseClicked(event -> this.onTableSelect(event, treeView.getSelectionModel().getSelectedItem()));
                     treeView.setOnKeyPressed(event -> this.onTableSelect(event, treeView.getSelectionModel().getSelectedItem()));
                     treeView.setOnContextMenuRequested(event -> {
-                        if (event.getTarget() != null && treeView.getSelectionModel().getSelectedItem() instanceof FilterTreeItem) {
-                            FilterTreeItem filterTreeItem = (FilterTreeItem) treeView.getSelectionModel().getSelectedItem();
+                        if (event.getTarget() != null && treeView.getSelectionModel().getSelectedItem() instanceof FilterTreeItem filterTreeItem) {
                             DX.contextMenu(contextMenu -> List.of(
                                     DX.create((Supplier<MenuItem>) MenuItem::new, menu -> {
                                         menu.setText("Delete");

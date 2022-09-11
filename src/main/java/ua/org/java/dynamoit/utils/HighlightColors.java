@@ -19,16 +19,27 @@ package ua.org.java.dynamoit.utils;
 
 public enum HighlightColors {
 
-    lightcyan,
-    antiquewhite,
-    lightpink;
+    COLOR_CHART_1("1"),
+    COLOR_CHART_2("2"),
+    COLOR_CHART_3("3"),
+    COLOR_CHART_4("4"),
+    COLOR_CHART_5("5"),
+    COLOR_CHART_6("6"),
+    COLOR_CHART_7("7"),
+    COLOR_CHART_8("8");
+
+    private final String cssClassName;
+
+    HighlightColors(String cssClassName) {
+        this.cssClassName = cssClassName;
+    }
 
     public String toggleButtonClass() {
-        return "toggle-button-" + this.name();
+        return "toggle-button-" + this.cssClassName;
     }
 
     public String tabClass() {
-        return "tab-" + this.name();
+        return "tab-" + this.cssClassName;
     }
 
 }

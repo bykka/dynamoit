@@ -1,12 +1,14 @@
-##Overview
+## Overview
 It's a simple DynamoDB graphical client written on JavaFX.
 
-This client allows easily to view, edit, create, and delete data.
+This client allows easily viewing, editing, creating, and deleting of data.
 
-The main idea of the client is to reach the required data in a few clicks.
+The main idea of the client is to reach the required data in a few clicks without thinking a scan or query operation is required for that.
+
+The client only requires properly configured settings for the AWS CLI tool. Read [the official AWS CLI documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html) if it is not configured yet. 
 
 ## Features
- * No login required. The client uses AWS cli profiles.
+ * No login required. The client uses AWS CLI profiles.
  * Highlights profiles with unique colors 
  * Group tables by keywords
  * Automatically detects when to use scan or query requests
@@ -19,6 +21,7 @@ The main idea of the client is to reach the required data in a few clicks.
  * Import / Export data as json file 
  * Search (Ctrl+F) in the edit item dialog
  * Compare two selected documents
+ * Light / Dark themes support
  
 ## Supported filters
 Examples are based on "hello world"
@@ -54,10 +57,10 @@ mvn clean package -Ppackage
 ```
 
 ## Screenshots:
-The main screen
+The main screen (Light theme)
 ![main screen](./images/main_screen.png)
 
-The main screen with filters
+The main screen with filters (Dark theme)
 ![filter screen](./images/filter_screen.png)
 
 The edit item dialog

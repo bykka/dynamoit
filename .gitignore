@@ -1,72 +1,10 @@
 # compiled output
-dist
-/tmp
-/out-tsc
 target
-build
-generated
-
-#config
-oms-rest-http/src/main/resources/application.conf
-
-# dependencies
-node_modules
 
 # IDEs and editors and tools
 .idea
 *.iml
 .project
 .classpath
-.c9/
-*.launch
 .settings/
-/.idea_modules
-/.classpath
-/.project
-/.settings
-/RUNNING_PID
 .gradle
-
-# IDE - VSCode
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-
-# misc
-/.sass-cache
-/connect.lock
-/coverage
-/libpeerconnection.log
-npm-debug.log
-testem.log
-/typings
-logs
-yarn-debug.log*
-yarn-error.log*
-selenium-debug.log
-
-# e2e
-/e2e/*.js
-/e2e/*.map
-
-# System Files
-.DS_Store
-Thumbs.db
-
-# Tests
-/test/unit/coverage/
-/test/e2e/reports/
-
-# Bloop
-.bloop
-
-# CDK asset staging directory
-.cdk.staging
-cdk.out
-
-#aws
-/backend-full.yaml
-
-/frontend-web/src/config/config.ts

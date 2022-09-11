@@ -15,7 +15,7 @@ jobs:
       - name: Set up Java
         uses: actions/setup-java@v1
         with:
-          java-version: 15
+          java-version: 17
 
       - name: Cache local Maven repository
         uses: actions/cache@v2
@@ -43,7 +43,7 @@ jobs:
       - name: Set up Java
         uses: actions/setup-java@v1
         with:
-          java-version: 15
+          java-version: 17
 
       - name: Cache local Maven repository
         uses: actions/cache@v2
@@ -71,7 +71,7 @@ jobs:
       - name: Set up Java
         uses: actions/setup-java@v1
         with:
-          java-version: 15
+          java-version: 17
 
       - name: Cache local Maven repository
         uses: actions/cache@v2
