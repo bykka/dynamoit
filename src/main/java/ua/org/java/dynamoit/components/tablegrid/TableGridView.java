@@ -107,7 +107,7 @@ public class TableGridView extends VBox {
                             button.setTooltip(new Tooltip("Refresh rows"));
                             button.setGraphic(DX.icon("icons/table_refresh.png"));
                             button.getStyleClass().addAll(BUTTON_ICON);
-                            button.setOnAction(event -> controller.onRefreshData());
+                            button.setOnAction(event -> reloadData());
                         }),
                         DX.create(Button::new, button -> {
                             button.setTooltip(new Tooltip("Compare documents"));
@@ -264,8 +264,8 @@ public class TableGridView extends VBox {
             filter.getStyleClass().add("table-column-filter");
             filter.setGraphic(DX.create(ClearableTextField::new, textField -> {
                 textField.textProperty().bindBidirectional(filterProperty);
-                textField.setOnAction(event -> controller.onRefreshData());
-                textField.setOnClear(event -> controller.onRefreshData());
+                textField.setOnAction(event -> reloadData());
+                textField.setOnClear(event -> reloadData());
             }));
             filter.getColumns().add(DX.create((Supplier<TableColumn<Item, String>>) TableColumn::new, column -> {
                 if (attrName.equals(tableModel.getTableDef().getHashAttribute())) {
@@ -326,7 +326,7 @@ public class TableGridView extends VBox {
                                 SimpleStringProperty property = this.tableModel.getAttributeFilterMap().get(attrName);
                                 if (property != null) {
                                     property.set(cell.getText());
-                                    controller.onRefreshData();
+                                    reloadData();
                                 }
                             });
                         }),
@@ -366,7 +366,12 @@ public class TableGridView extends VBox {
     }
 
     private void clearFilter() {
+        tableView.getSortOrder().clear();
         controller.onClearFilters();
+    }
+    private void reloadData(){
+        tableView.getSortOrder().clear();
+        controller.onRefreshData();
     }
 
     private void showEditItemDialog(String json) {
