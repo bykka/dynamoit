@@ -68,4 +68,9 @@ public class ProfileController {
     public void onDeleteFilter(String filter) {
         this.model.getSavedFilters().remove(filter);
     }
+
+    public void onChangeRegion(String region) {
+        this.model.regionProperty().set(region);
+        this.getListOfTables();
+    }
 }

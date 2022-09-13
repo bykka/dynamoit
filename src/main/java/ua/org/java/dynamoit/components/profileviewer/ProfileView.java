@@ -20,6 +20,7 @@ package ua.org.java.dynamoit.components.profileviewer;
 import io.reactivex.rxjavafx.observables.JavaFxObservable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ListChangeListener;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
@@ -37,10 +38,37 @@ import javax.inject.Inject;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static atlantafx.base.theme.Styles.BUTTON_ICON;
 
 public class ProfileView extends VBox {
+
+    private static final List<String> REGIONS = Stream.of(
+            "us-east-1",
+            "us-east-2",
+            "us-west-1",
+            "us-west-2",
+            "af-south-1",
+            "ap-east-1",
+            "ap-south-1",
+            "ap-northeast-3",
+            "ap-northeast-2",
+            "ap-southeast-1",
+            "ap-southeast-2",
+            "ap-northeast-1",
+            "ca-central-1",
+            "eu-central-1",
+            "eu-west-1",
+            "eu-west-2",
+            "eu-south-1",
+            "eu-west-3",
+            "eu-north-1",
+            "me-south-1",
+            "sa-east-1",
+            "us-gov-east-1",
+            "us-gov-west-1"
+    ).sorted().toList();
 
     private final TreeView<String> treeView = new TreeView<>();
     private final TreeItem<String> allTables;
@@ -51,7 +79,7 @@ public class ProfileView extends VBox {
     public ProfileView(ProfileController controller, MainModel.ProfileModel model) {
         this.model = model;
         this.controller = controller;
-        allTables = new AllTreeItem();
+        allTables = new AllTreeItem(model.regionProperty());
 
         this.getChildren().addAll(
                 DX.toolBar(toolBar -> List.of(
@@ -82,16 +110,31 @@ public class ProfileView extends VBox {
                     treeView.setOnMouseClicked(event -> this.onTableSelect(event, treeView.getSelectionModel().getSelectedItem()));
                     treeView.setOnKeyPressed(event -> this.onTableSelect(event, treeView.getSelectionModel().getSelectedItem()));
                     treeView.setOnContextMenuRequested(event -> {
-                        if (event.getTarget() != null && treeView.getSelectionModel().getSelectedItem() instanceof FilterTreeItem filterTreeItem) {
-                            DX.contextMenu(contextMenu -> List.of(
-                                    DX.create((Supplier<MenuItem>) MenuItem::new, menu -> {
-                                        menu.setText("Delete");
-                                        menu.setOnAction(__ -> {
-                                            controller.onDeleteFilter(filterTreeItem.getFilter());
-                                            treeView.getRoot().getChildren().remove(filterTreeItem);
-                                        });
-                                    })
-                            )).show(treeView.getSelectionModel().getSelectedItem().getGraphic(), event.getScreenX(), event.getScreenY());
+                        if (event.getTarget() != null) {
+                            TreeItem<String> selectedItem = treeView.getSelectionModel().getSelectedItem();
+                            ContextMenu contextMenu = null;
+
+                            if (selectedItem instanceof AllTreeItem allTreeItem) {
+                                contextMenu = DX.contextMenu(cm -> REGIONS.stream()
+                                        .map(region -> DX.create(MenuItem::new, menu -> {
+                                            menu.setText(region);
+                                            menu.setOnAction(__ -> controller.onChangeRegion(region));
+                                        })).collect(Collectors.toList()));
+                            } else if (selectedItem instanceof FilterTreeItem filterTreeItem) {
+                                contextMenu = DX.contextMenu(cm -> List.of(
+                                        DX.create((Supplier<MenuItem>) MenuItem::new, menu -> {
+                                            menu.setText("Delete");
+                                            menu.setOnAction(__ -> {
+                                                controller.onDeleteFilter(filterTreeItem.getFilter());
+                                                treeView.getRoot().getChildren().remove(filterTreeItem);
+                                            });
+                                        })
+                                ));
+                            }
+
+                            if (contextMenu != null) {
+                                contextMenu.show(selectedItem.getGraphic(), event.getScreenX(), event.getScreenY());
+                            }
                         }
                     });
                 })
@@ -147,9 +190,9 @@ public class ProfileView extends VBox {
 
     private class AllTreeItem extends TreeItem<String> {
 
-        public AllTreeItem() {
-            super("All tables", DX.icon("icons/database.png"));
-            valueProperty().bind(Bindings.concat("All tables (", Bindings.size(model.getFilteredTables()), ")"));
+        public AllTreeItem(SimpleStringProperty region) {
+            super("All tables: " + region, DX.icon("icons/database.png"));
+            valueProperty().bind(Bindings.concat("All tables: ", region, " (", Bindings.size(model.getFilteredTables()), ")"));
         }
 
     }

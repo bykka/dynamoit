@@ -48,12 +48,12 @@ public class MainModel {
         private final FilteredList<TableDef> filteredTables = availableTables.filtered(Objects::nonNull);
         private final ObservableList<String> savedFilters = FXCollections.observableArrayList();
         private final String profile;
-        private final String region;
+        private final SimpleStringProperty region = new SimpleStringProperty();
         private HighlightColors color;
 
         public ProfileModel(String profile, String region) {
             this.profile = profile;
-            this.region = region;
+            this.region.setValue(region);
             filter.addListener((observable, oldValue, newValue) -> filteredTables.setPredicate(value -> value.getName().contains(filter.get())));
         }
 
@@ -69,7 +69,7 @@ public class MainModel {
             return filter;
         }
 
-        public FilteredList<TableDef> getFilteredTables(){
+        public FilteredList<TableDef> getFilteredTables() {
             return this.filteredTables;
         }
 
@@ -82,7 +82,11 @@ public class MainModel {
         }
 
         public String getRegion() {
-            return region;
+            return region.get();
+        }
+
+        public SimpleStringProperty regionProperty() {
+            return this.region;
         }
 
         public Optional<HighlightColors> getColor() {
