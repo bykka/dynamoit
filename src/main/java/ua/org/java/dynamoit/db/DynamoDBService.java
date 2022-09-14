@@ -53,12 +53,13 @@ public class DynamoDBService {
                 .map(profileName -> profileMap.computeIfAbsent(profileName, __ -> new Profile(profileName)));
     }
 
-    public CompletableFuture<List<String>> getListOfTables(String profile) {
+    public CompletableFuture<List<String>> getListOfTables(String profile, String region) {
         return CompletableFuture.supplyAsync(() -> {
             String lastEvaluatedTableName = null;
             List<String> tableNames = new ArrayList<>();
             do {
-                ListTablesResult listTablesResult = lastEvaluatedTableName == null ? getOrCreateDynamoDBClient(profile).listTables() : getOrCreateDynamoDBClient(profile).listTables(lastEvaluatedTableName);
+                AmazonDynamoDB dbClient = getOrCreateDynamoDBClient(profile, region);
+                ListTablesResult listTablesResult = lastEvaluatedTableName == null ? dbClient.listTables() : dbClient.listTables(lastEvaluatedTableName);
                 lastEvaluatedTableName = listTablesResult.getLastEvaluatedTableName();
                 tableNames.addAll(listTablesResult.getTableNames());
             } while (lastEvaluatedTableName != null);
@@ -67,28 +68,18 @@ public class DynamoDBService {
         });
     }
 
-    public AmazonDynamoDB getOrCreateDynamoDBClient(String profileName) {
-        return profileDynamoDBClientMap.computeIfAbsent(profileName, __ -> {
+    public AmazonDynamoDB getOrCreateDynamoDBClient(String profileName, String region) {
+        return profileDynamoDBClientMap.computeIfAbsent(profileName + region, __ -> {
             AmazonDynamoDBClientBuilder builder = AmazonDynamoDBClientBuilder.standard()
-                    .withCredentials(new ProfileCredentialsProvider(profileName));
-
-            getAvailableProfiles()
-                    .filter(p -> p.name.equals(profileName))
-                    .findAny()
-                    .map(Profile::getRegion)
-                    .ifPresent(builder::withRegion);
+                    .withCredentials(new ProfileCredentialsProvider(profileName))
+                    .withRegion(region);
 
             return builder.build();
         });
     }
 
-    public DynamoDB getOrCreateDocumentClient(String profileName) {
-        DynamoDB dynamoDB = profileDocumentClientMap.get(profileName);
-        if (dynamoDB == null) {
-            dynamoDB = new DynamoDB(getOrCreateDynamoDBClient(profileName));
-            profileDocumentClientMap.put(profileName, dynamoDB);
-        }
-        return dynamoDB;
+    public DynamoDB getOrCreateDocumentClient(String profileName, String region) {
+        return profileDocumentClientMap.computeIfAbsent(profileName + region, key -> new DynamoDB(getOrCreateDynamoDBClient(profileName, region)));
     }
 
     public static class Profile {

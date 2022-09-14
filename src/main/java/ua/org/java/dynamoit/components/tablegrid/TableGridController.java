@@ -93,23 +93,23 @@ public class TableGridController {
         this.hostServices = hostServices;
 
         tableModel.getProfileModel().getAvailableTables().stream()
-                .filter(tableDef -> tableDef.getName().equals(context.getTableName()))
+                .filter(tableDef -> tableDef.getName().equals(context.tableName()))
                 .findFirst()
                 .ifPresent(tableModel::setTableDef);
 
-        tableModel.setTableName(context.getTableName());
-        tableModel.setProfile(context.getProfileName());
+        tableModel.setTableName(context.tableName());
+        tableModel.setProfile(context.tableName());
 
-        dbClient = dynamoDBService.getOrCreateDynamoDBClient(context.getProfileName());
-        documentClient = dynamoDBService.getOrCreateDocumentClient(context.getProfileName());
-        table = documentClient.getTable(context.getTableName());
+        dbClient = dynamoDBService.getOrCreateDynamoDBClient(context.profileName(), context.region());
+        documentClient = dynamoDBService.getOrCreateDocumentClient(context.profileName(), context.region());
+        table = documentClient.getTable(context.tableName());
     }
 
     public void init() {
         eventBus.activity(
                 supplyAsync(() -> {
                     if (tableModel.getOriginalTableDescription() == null) {
-                        return supplyAsync(() -> dbClient.describeTable(context.getTableName()))
+                        return supplyAsync(() -> dbClient.describeTable(context.tableName()))
                                 .thenAcceptAsync(this::bindToModel, uiExecutor);
                     } else {
                         bindToModel(tableModel.getTableDef());
@@ -403,8 +403,8 @@ public class TableGridController {
     }
 
     private void applyContext() {
-        if (context.getPropertyName() != null && context.getPropertyValue() != null) {
-            tableModel.getAttributeFilterMap().computeIfAbsent(context.getPropertyName(), __ -> new SimpleStringProperty()).set(context.getPropertyValue());
+        if (context.propertyName() != null && context.propertyValue() != null) {
+            tableModel.getAttributeFilterMap().computeIfAbsent(context.propertyName(), __ -> new SimpleStringProperty()).set(context.propertyValue());
         }
     }
 

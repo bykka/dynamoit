@@ -46,7 +46,7 @@ public class TableGridControllerTest {
 
     @Test
     public void onRefreshData() {
-        TableGridContext context = new TableGridContext("profile1", "table1");
+        TableGridContext context = new TableGridContext("profile1", "region1", "table1");
         MainModel mainModel = new MainModel();
         mainModel.addProfile("profile1", "region1");
         mainModel.addProfile("profile2", "region2");
@@ -59,10 +59,10 @@ public class TableGridControllerTest {
         Table table = mock(Table.class);
         AmazonDynamoDB amazonDynamoDB = mock(AmazonDynamoDB.class);
         DynamoDB dynamoDB = mock(DynamoDB.class);
-        expect(dynamoDB.getTable(context.getTableName())).andReturn(table);
+        expect(dynamoDB.getTable(context.tableName())).andReturn(table);
         DynamoDBService dynamoDBService = mock(DynamoDBService.class);
-        expect(dynamoDBService.getOrCreateDynamoDBClient(context.getProfileName())).andReturn(amazonDynamoDB);
-        expect(dynamoDBService.getOrCreateDocumentClient(context.getProfileName())).andReturn(dynamoDB);
+        expect(dynamoDBService.getOrCreateDynamoDBClient(context.profileName(), context.region())).andReturn(amazonDynamoDB);
+        expect(dynamoDBService.getOrCreateDocumentClient(context.profileName(), context.region())).andReturn(dynamoDB);
 
         Page<Item, Object> page = mock(Page.class);
         HostServices hostServices = mock(HostServices.class);

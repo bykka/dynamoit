@@ -165,8 +165,8 @@ public class MainView extends VBox {
         tableItemsView.setOnSearchInTable(this::createAndOpenTab);
 
         tabPane.getTabs().add(
-                DX.create(() -> new Tab(tableContext.getTableName(), tableItemsView), tab -> {
-                    MainModel.ProfileModel profileModel = mainModel.getAvailableProfiles().get(tableContext.getProfileName());
+                DX.create(() -> new Tab(tableContext.tableName(), tableItemsView), tab -> {
+                    MainModel.ProfileModel profileModel = mainModel.getAvailableProfiles().get(tableContext.profileName());
                     profileModel.getColor().ifPresent(color -> tab.getStyleClass().add(color.tabClass()));
                     tab.setContextMenu(DX.contextMenu(contextMenu -> List.of(
                             DX.create(MenuItem::new, menu -> {
