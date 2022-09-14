@@ -32,6 +32,15 @@
     -fx-background-color: -color-cell-border, -color-accent-6;
 }
 
+.context-menu {
+    -fx-effect: dropshadow(three-pass-box, -color-border-muted, 6, 0.5, 0, 1);
+}
+
+.root:dark .context-menu {
+    -fx-effect: dropshadow(three-pass-box, -color-bg-inset, 8, 0.5, 0, 2);
+}
+
+
 /*.table-row-cell:hover:selected {*/
 /*    -fx-background-color: -fx-background;*/
 /*}*/
