@@ -32,6 +32,7 @@ import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.components.main.MainModel;
 import ua.org.java.dynamoit.db.DynamoDBService;
 import ua.org.java.dynamoit.model.TableDef;
+import ua.org.java.dynamoit.model.profile.PreconfiguredProfileDetails;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -48,8 +49,8 @@ public class TableGridControllerTest {
     public void onRefreshData() {
         TableGridContext context = new TableGridContext("profile1", "region1", "table1");
         MainModel mainModel = new MainModel();
-        mainModel.addProfile("profile1", "region1");
-        mainModel.addProfile("profile2", "region2");
+        mainModel.addProfile(new PreconfiguredProfileDetails("profile1", "region1"));
+        mainModel.addProfile(new PreconfiguredProfileDetails("profile2", "region2"));
         TableDef tableDef = new TableDef("Table1");
         tableDef.setHashAttribute("hash_attr");
         TableGridModel model = new TableGridModel(mainModel.getAvailableProfiles().get("profile1"));

@@ -24,6 +24,8 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.model.ListTablesResult;
+import ua.org.java.dynamoit.model.profile.PreconfiguredProfileDetails;
+import ua.org.java.dynamoit.model.profile.ProfileDetails;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -31,26 +33,28 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static ua.org.java.dynamoit.model.Regions.ALL_REGIONS;
+
 public class DynamoDBService {
 
     private final Map<String, AmazonDynamoDB> profileDynamoDBClientMap = new HashMap<>();
     private final Map<String, DynamoDB> profileDocumentClientMap = new HashMap<>();
 
-    public Stream<Profile> getAvailableProfiles() {
+    public Stream<ProfileDetails> getAvailableProfiles() {
         Function<String, String> cutProfilePrefix = profileName -> profileName.startsWith("profile ") ? profileName.substring(8).trim() : profileName;
         // config file contains profile and region values
-        Map<String, Profile> profileMap = new ProfilesConfigFile(AwsProfileFileLocationProvider.DEFAULT_CONFIG_LOCATION_PROVIDER.getLocation()).getAllBasicProfiles()
+        Map<String, ProfileDetails> profileMap = new ProfilesConfigFile(AwsProfileFileLocationProvider.DEFAULT_CONFIG_LOCATION_PROVIDER.getLocation()).getAllBasicProfiles()
                 .values()
                 .stream()
-                .map(profile -> new Profile(cutProfilePrefix.apply(profile.getProfileName()), profile.getRegion()))
-                .collect(Collectors.toMap(Profile::getName, profile -> profile));
+                .map(profile -> new PreconfiguredProfileDetails(cutProfilePrefix.apply(profile.getProfileName()), profile.getRegion()))
+                .collect(Collectors.toMap(ProfileDetails::getName, profile -> profile));
 
         // by default it uses credentials config with contains profile and access keys
         return new ProfilesConfigFile().getAllBasicProfiles()
                 .values()
                 .stream()
                 .map(profile -> cutProfilePrefix.apply(profile.getProfileName()))
-                .map(profileName -> profileMap.computeIfAbsent(profileName, __ -> new Profile(profileName)));
+                .map(profileName -> profileMap.computeIfAbsent(profileName, __ -> new PreconfiguredProfileDetails(profileName, ALL_REGIONS.get(0))));
     }
 
     public CompletableFuture<List<String>> getListOfTables(String profile, String region) {
@@ -80,37 +84,6 @@ public class DynamoDBService {
 
     public DynamoDB getOrCreateDocumentClient(String profileName, String region) {
         return profileDocumentClientMap.computeIfAbsent(profileName + region, key -> new DynamoDB(getOrCreateDynamoDBClient(profileName, region)));
-    }
-
-    public static class Profile {
-
-        private final String name;
-        private final String region;
-
-        public Profile(String profile) {
-            this(profile, null);
-        }
-
-        public Profile(String profile, String region) {
-            this.name = profile;
-            this.region = region;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getRegion() {
-            return region;
-        }
-
-        @Override
-        public String toString() {
-            return "Profile{" +
-                    "name='" + name + '\'' +
-                    ", region='" + region + '\'' +
-                    '}';
-        }
     }
 
 }

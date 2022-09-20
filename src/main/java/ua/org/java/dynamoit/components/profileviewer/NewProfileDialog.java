@@ -65,7 +65,7 @@ public class NewProfileDialog extends Dialog<Void> {
                 tab.setContent(DX.create(GridPane::new, gridPane -> {
                     defaultSettings.accept(gridPane);
 
-                    gridPane.addRow(1, DX.boldLabel("Http url:"), new TextField());
+                    gridPane.addRow(1, DX.boldLabel("Endpoint url:"), new TextField());
                 }));
             }));
         }));
