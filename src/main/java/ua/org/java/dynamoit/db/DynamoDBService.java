@@ -33,7 +33,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static ua.org.java.dynamoit.model.Regions.ALL_REGIONS;
+import static ua.org.java.dynamoit.utils.RegionsUtils.ALL_REGIONS;
 
 public class DynamoDBService {
 

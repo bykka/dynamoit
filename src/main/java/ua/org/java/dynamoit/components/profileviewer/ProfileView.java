@@ -40,7 +40,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static atlantafx.base.theme.Styles.BUTTON_ICON;
-import static ua.org.java.dynamoit.model.Regions.ALL_REGIONS;
+import static ua.org.java.dynamoit.utils.RegionsUtils.ALL_REGIONS;
 
 public class ProfileView extends VBox {
     private final TreeView<String> treeView = new TreeView<>();
