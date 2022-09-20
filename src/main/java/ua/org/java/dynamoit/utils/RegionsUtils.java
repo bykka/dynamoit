@@ -29,4 +29,5 @@ public class RegionsUtils {
             .sorted()
             .toList();
 
+    public static final String DEFAULT_REGION = Regions.DEFAULT_REGION.getName();
 }

@@ -17,6 +17,7 @@
 
 package ua.org.java.dynamoit.components.profileviewer;
 
+import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.ColumnConstraints;
@@ -26,9 +27,18 @@ import ua.org.java.dynamoit.utils.DX;
 
 import java.util.function.Consumer;
 
+import static ua.org.java.dynamoit.utils.RegionsUtils.ALL_REGIONS;
+import static ua.org.java.dynamoit.utils.RegionsUtils.DEFAULT_REGION;
+
 public class NewProfileDialog extends Dialog<Void> {
 
     private static final int LABEL_SIZE = 90;
+
+    private final SimpleStringProperty profileNameProperty = new SimpleStringProperty();
+    private final SimpleStringProperty regionProperty = new SimpleStringProperty(DEFAULT_REGION);
+    private final SimpleStringProperty accessKeyProperty = new SimpleStringProperty();
+    private final SimpleStringProperty securityKeyProperty = new SimpleStringProperty();
+    private final SimpleStringProperty endpointUrlProperty = new SimpleStringProperty();
 
     public NewProfileDialog() {
         setTitle("Create a new Profile");
@@ -47,7 +57,9 @@ public class NewProfileDialog extends Dialog<Void> {
                         })
                 );
                 gridPane.setPadding(new Insets(14, 0, 0, 14));
-                gridPane.addRow(0, DX.boldLabel("Profile:"), new TextField());
+                gridPane.addRow(0, DX.boldLabel("Profile:"), DX.create(TextField::new, profileTextField -> {
+                    profileTextField.textProperty().bindBidirectional(profileNameProperty);
+                }));
             };
 
             tabPane.getTabs().add(DX.create(Tab::new, tab -> {
@@ -55,9 +67,16 @@ public class NewProfileDialog extends Dialog<Void> {
                 tab.setContent(DX.create(GridPane::new, gridPane -> {
                     defaultSettings.accept(gridPane);
 
-                    gridPane.addRow(1, DX.boldLabel("Access key:"), new TextField());
-                    gridPane.addRow(2, DX.boldLabel("Security key:"), new TextField());
-                    gridPane.addRow(3, DX.boldLabel("Region:"), new ChoiceBox<String>());
+                    gridPane.addRow(1, DX.boldLabel("Access key:"), DX.create(TextField::new, textField -> {
+                        textField.textProperty().bindBidirectional(accessKeyProperty);
+                    }));
+                    gridPane.addRow(2, DX.boldLabel("Security key:"), DX.create(TextField::new, textField -> {
+                        textField.textProperty().bindBidirectional(securityKeyProperty);
+                    }));
+                    gridPane.addRow(3, DX.boldLabel("Region:"), DX.create(() -> new ChoiceBox<String>(), regionChoiceBox -> {
+                        regionChoiceBox.getItems().addAll(ALL_REGIONS);
+                        regionChoiceBox.valueProperty().bindBidirectional(regionProperty);
+                    }));
                 }));
             }));
             tabPane.getTabs().add(DX.create(Tab::new, tab -> {
@@ -65,7 +84,9 @@ public class NewProfileDialog extends Dialog<Void> {
                 tab.setContent(DX.create(GridPane::new, gridPane -> {
                     defaultSettings.accept(gridPane);
 
-                    gridPane.addRow(1, DX.boldLabel("Endpoint url:"), new TextField());
+                    gridPane.addRow(1, DX.boldLabel("Endpoint url:"), DX.create(TextField::new, textField -> {
+                        textField.textProperty().bindBidirectional(endpointUrlProperty);
+                    }));
                 }));
             }));
         }));
