@@ -96,7 +96,7 @@ public class DX {
 
     public static Label boldLabel(String title) {
         Label label = new Label(title);
-        label.setStyle("-fx-font-weight: bold");
+        label.getStyleClass().add("text-bold");
         return label;
     }
 
