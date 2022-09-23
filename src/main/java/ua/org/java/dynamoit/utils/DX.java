@@ -17,6 +17,8 @@
 
 package ua.org.java.dynamoit.utils;
 
+import io.reactivex.rxjavafx.observables.JavaFxObservable;
+import io.reactivex.rxjavafx.sources.Change;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -24,15 +26,22 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
+import javafx.util.Duration;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static atlantafx.base.theme.Styles.STATE_DANGER;
+
 public class DX {
 
-    private DX() {}
+    private DX() {
+    }
 
     public static Scene scene(Supplier<Parent> rootBuilder) {
         return new Scene(rootBuilder.get());
@@ -80,17 +89,17 @@ public class DX {
         return spring;
     }
 
-    public static <T> T create(Supplier<T> creator, Consumer<T> builder){
+    public static <T> T create(Supplier<T> creator, Consumer<T> builder) {
         T component = creator.get();
         builder.accept(component);
         return component;
     }
 
-    public static ImageView icon(String icon){
+    public static ImageView icon(String icon) {
         return icon(icon, 16);
     }
 
-    public static ImageView icon(String icon, double size){
+    public static ImageView icon(String icon, double size) {
         return new ImageView(new Image(icon, size, size, true, false));
     }
 
@@ -98,6 +107,31 @@ public class DX {
         Label label = new Label(title);
         label.getStyleClass().add("text-bold");
         return label;
+    }
+
+    public static void appendValidation(TextField textField, Map<String, Function<String, Boolean>> validationPredicatesWithMessages) {
+        JavaFxObservable.changesOf(textField.textProperty())
+                .debounce(200, TimeUnit.MILLISECONDS)
+                .map(Change::getNewVal)
+                .map(text -> validationPredicatesWithMessages.entrySet()
+                        .stream()
+                        .map(entry -> entry.getValue().apply(text) ? entry.getKey() : null)
+                        .filter(Objects::nonNull)
+                        .findFirst()
+                )
+                .subscribe(errorMessage -> {
+                    if (errorMessage.isPresent()) {
+                        textField.pseudoClassStateChanged(STATE_DANGER, true);
+                        Tooltip tooltip = new Tooltip(errorMessage.get());
+                        tooltip.setShowDelay(Duration.millis(100));
+                        textField.tooltipProperty().set(tooltip);
+                    } else {
+                        textField.pseudoClassStateChanged(STATE_DANGER, false);
+                        textField.tooltipProperty().set(null);
+                    }
+                });
+
+
     }
 
 }

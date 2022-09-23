@@ -17,6 +17,7 @@
 
 package ua.org.java.dynamoit.components.profileviewer;
 
+import com.amazonaws.util.StringUtils;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
@@ -25,6 +26,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import ua.org.java.dynamoit.utils.DX;
 
+import java.util.Map;
 import java.util.function.Consumer;
 
 import static ua.org.java.dynamoit.utils.RegionsUtils.ALL_REGIONS;
@@ -59,6 +61,7 @@ public class NewProfileDialog extends Dialog<Void> {
                 gridPane.setPadding(new Insets(14, 0, 0, 14));
                 gridPane.addRow(0, DX.boldLabel("Profile:"), DX.create(TextField::new, profileTextField -> {
                     profileTextField.textProperty().bindBidirectional(profileNameProperty);
+                    DX.appendValidation(profileTextField, Map.of("Required", StringUtils::isNullOrEmpty));
                 }));
             };
 
