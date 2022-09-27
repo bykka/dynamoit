@@ -24,10 +24,11 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import ua.org.java.dynamoit.utils.DX;
+import ua.org.java.dynamoit.widgets.ValidateTextField;
 
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static ua.org.java.dynamoit.utils.RegionsUtils.ALL_REGIONS;
 import static ua.org.java.dynamoit.utils.RegionsUtils.DEFAULT_REGION;
@@ -35,7 +36,7 @@ import static ua.org.java.dynamoit.utils.RegionsUtils.DEFAULT_REGION;
 public class NewProfileDialog extends Dialog<Void> {
 
     private static final int LABEL_SIZE = 90;
-    private static final Map<String, Function<String, Boolean>> REQUIRED_VALIDATION_RULE = Map.of("Required", String::isBlank);
+    private static final Map<String, Predicate<String>> REQUIRED_VALIDATION_RULE = Map.of("Required", s -> s == null || s.isBlank());
 
     private final SimpleStringProperty profileNameProperty = new SimpleStringProperty();
     private final SimpleStringProperty regionProperty = new SimpleStringProperty(DEFAULT_REGION);
@@ -60,9 +61,8 @@ public class NewProfileDialog extends Dialog<Void> {
                         })
                 );
                 gridPane.setPadding(new Insets(14, 0, 0, 14));
-                gridPane.addRow(0, DX.boldLabel("Profile:"), DX.create(TextField::new, profileTextField -> {
+                gridPane.addRow(0, DX.boldLabel("Profile:"), DX.create(() -> new ValidateTextField(REQUIRED_VALIDATION_RULE), profileTextField -> {
                     profileTextField.textProperty().bindBidirectional(profileNameProperty);
-                    DX.appendValidation(profileTextField, REQUIRED_VALIDATION_RULE);
                 }));
             };
 
@@ -71,13 +71,11 @@ public class NewProfileDialog extends Dialog<Void> {
                 tab.setContent(DX.create(GridPane::new, gridPane -> {
                     defaultSettings.accept(gridPane);
 
-                    gridPane.addRow(1, DX.boldLabel("Access key:"), DX.create(TextField::new, textField -> {
+                    gridPane.addRow(1, DX.boldLabel("Access key:"), DX.create(() -> new ValidateTextField(REQUIRED_VALIDATION_RULE), textField -> {
                         textField.textProperty().bindBidirectional(accessKeyProperty);
-                        DX.appendValidation(textField, REQUIRED_VALIDATION_RULE);
                     }));
-                    gridPane.addRow(2, DX.boldLabel("Security key:"), DX.create(TextField::new, textField -> {
+                    gridPane.addRow(2, DX.boldLabel("Security key:"), DX.create(() -> new ValidateTextField(REQUIRED_VALIDATION_RULE), textField -> {
                         textField.textProperty().bindBidirectional(securityKeyProperty);
-                        DX.appendValidation(textField, REQUIRED_VALIDATION_RULE);
                     }));
                     gridPane.addRow(3, DX.boldLabel("Region:"), DX.create(() -> new ChoiceBox<String>(), regionChoiceBox -> {
                         regionChoiceBox.getItems().addAll(ALL_REGIONS);
@@ -90,9 +88,8 @@ public class NewProfileDialog extends Dialog<Void> {
                 tab.setContent(DX.create(GridPane::new, gridPane -> {
                     defaultSettings.accept(gridPane);
 
-                    gridPane.addRow(1, DX.boldLabel("Endpoint url:"), DX.create(TextField::new, textField -> {
+                    gridPane.addRow(1, DX.boldLabel("Endpoint url:"), DX.create(() -> new ValidateTextField(REQUIRED_VALIDATION_RULE), textField -> {
                         textField.textProperty().bindBidirectional(endpointUrlProperty);
-                        DX.appendValidation(textField, REQUIRED_VALIDATION_RULE);
                     }));
                 }));
             }));
