@@ -17,8 +17,10 @@
 
 package ua.org.java.dynamoit.components.profileviewer;
 
-import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.*;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
@@ -39,10 +41,16 @@ public class NewProfileDialog extends Dialog<Void> {
     private static final Map<String, Predicate<String>> REQUIRED_VALIDATION_RULE = Map.of("Required", s -> s == null || s.isBlank());
 
     private final SimpleStringProperty profileNameProperty = new SimpleStringProperty();
+    private final BooleanProperty profileNameValidProperty = new SimpleBooleanProperty();
     private final SimpleStringProperty regionProperty = new SimpleStringProperty(DEFAULT_REGION);
     private final SimpleStringProperty accessKeyProperty = new SimpleStringProperty();
+    private final BooleanProperty accessKeyValidProperty = new SimpleBooleanProperty();
     private final SimpleStringProperty securityKeyProperty = new SimpleStringProperty();
+    private final BooleanProperty securityKeyValidProperty = new SimpleBooleanProperty();
     private final SimpleStringProperty endpointUrlProperty = new SimpleStringProperty();
+    private final BooleanProperty endpointUrlValidProperty = new SimpleBooleanProperty();
+    private final BooleanProperty remoteTabSelectedProperty = new SimpleBooleanProperty();
+    private final BooleanProperty localTabSelectedProperty = new SimpleBooleanProperty();
 
     public NewProfileDialog() {
         setTitle("Create a new Profile");
@@ -62,20 +70,24 @@ public class NewProfileDialog extends Dialog<Void> {
                 );
                 gridPane.setPadding(new Insets(14, 0, 0, 14));
                 gridPane.addRow(0, DX.boldLabel("Profile:"), DX.create(() -> new ValidateTextField(REQUIRED_VALIDATION_RULE), profileTextField -> {
-                    profileTextField.textProperty().bindBidirectional(profileNameProperty);
+                    profileNameProperty.bindBidirectional(profileTextField.textProperty());
+                    profileNameValidProperty.bind(profileTextField.isValidProperty());
                 }));
             };
 
             tabPane.getTabs().add(DX.create(Tab::new, tab -> {
                 tab.setText("Remote");
+                remoteTabSelectedProperty.bind(tab.selectedProperty());
                 tab.setContent(DX.create(GridPane::new, gridPane -> {
                     defaultSettings.accept(gridPane);
 
                     gridPane.addRow(1, DX.boldLabel("Access key:"), DX.create(() -> new ValidateTextField(REQUIRED_VALIDATION_RULE), textField -> {
-                        textField.textProperty().bindBidirectional(accessKeyProperty);
+                        accessKeyProperty.bind(textField.textProperty());
+                        accessKeyValidProperty.bind(textField.isValidProperty());
                     }));
                     gridPane.addRow(2, DX.boldLabel("Security key:"), DX.create(() -> new ValidateTextField(REQUIRED_VALIDATION_RULE), textField -> {
-                        textField.textProperty().bindBidirectional(securityKeyProperty);
+                        securityKeyProperty.bind(textField.textProperty());
+                        securityKeyValidProperty.bind(textField.isValidProperty());
                     }));
                     gridPane.addRow(3, DX.boldLabel("Region:"), DX.create(() -> new ChoiceBox<String>(), regionChoiceBox -> {
                         regionChoiceBox.getItems().addAll(ALL_REGIONS);
@@ -85,16 +97,34 @@ public class NewProfileDialog extends Dialog<Void> {
             }));
             tabPane.getTabs().add(DX.create(Tab::new, tab -> {
                 tab.setText("Local");
+                localTabSelectedProperty.bind(tab.selectedProperty());
                 tab.setContent(DX.create(GridPane::new, gridPane -> {
                     defaultSettings.accept(gridPane);
 
                     gridPane.addRow(1, DX.boldLabel("Endpoint url:"), DX.create(() -> new ValidateTextField(REQUIRED_VALIDATION_RULE), textField -> {
-                        textField.textProperty().bindBidirectional(endpointUrlProperty);
+                        endpointUrlProperty.bindBidirectional(textField.textProperty());
+                        endpointUrlValidProperty.bind(textField.isValidProperty());
                     }));
                 }));
             }));
         }));
 
         getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        Node okButton = getDialogPane().lookupButton(ButtonType.OK);
+
+        if (okButton != null) {
+            okButton.disableProperty().bind(
+                    Bindings.createBooleanBinding(() -> {
+                        if (localTabSelectedProperty.get()) {
+                            return !(profileNameValidProperty.get() && endpointUrlValidProperty.get());
+                        } else if (remoteTabSelectedProperty.get()) {
+                            return !(profileNameValidProperty.get() && accessKeyValidProperty.get() && securityKeyValidProperty.get());
+                        }
+                        return true;
+                    }, remoteTabSelectedProperty, localTabSelectedProperty, profileNameValidProperty, endpointUrlValidProperty, accessKeyValidProperty, securityKeyValidProperty)
+            );
+        }
+
     }
 }
