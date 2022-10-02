@@ -77,7 +77,9 @@ public class MainView extends VBox {
                                             button.getStyleClass().addAll(BUTTON_ICON);
                                             button.setTooltip(new Tooltip("Add a new profile"));
                                             button.setOnAction(actionEvent -> {
-                                                new NewProfileDialog().show();
+                                                new NewProfileDialog().showAndWait().ifPresent(profileDetails -> {
+                                                    controller.addProfile(profileDetails);
+                                                });
                                             });
                                         }),
                                         DX.spacerV(),

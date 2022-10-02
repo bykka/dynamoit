@@ -25,9 +25,13 @@ import javafx.scene.control.*;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
+import ua.org.java.dynamoit.model.profile.LocalProfileDetails;
+import ua.org.java.dynamoit.model.profile.ProfileDetails;
+import ua.org.java.dynamoit.model.profile.RemoteProfileDetails;
 import ua.org.java.dynamoit.utils.DX;
 import ua.org.java.dynamoit.widgets.ValidateTextField;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -35,7 +39,7 @@ import java.util.function.Predicate;
 import static ua.org.java.dynamoit.utils.RegionsUtils.ALL_REGIONS;
 import static ua.org.java.dynamoit.utils.RegionsUtils.DEFAULT_REGION;
 
-public class NewProfileDialog extends Dialog<Void> {
+public class NewProfileDialog extends Dialog<ProfileDetails> {
 
     private static final int LABEL_SIZE = 90;
     private static final Map<String, Predicate<String>> REQUIRED_VALIDATION_RULE = Map.of("Required", s -> s == null || s.isBlank());
@@ -101,7 +105,10 @@ public class NewProfileDialog extends Dialog<Void> {
                 tab.setContent(DX.create(GridPane::new, gridPane -> {
                     defaultSettings.accept(gridPane);
 
-                    gridPane.addRow(1, DX.boldLabel("Endpoint url:"), DX.create(() -> new ValidateTextField(REQUIRED_VALIDATION_RULE), textField -> {
+                    Map<String, Predicate<String>> validationRules = new LinkedHashMap<>(REQUIRED_VALIDATION_RULE);
+                    validationRules.put("Should be URL", text -> !text.startsWith("http://") && !text.startsWith("https://"));
+
+                    gridPane.addRow(1, DX.boldLabel("Endpoint url:"), DX.create(() -> new ValidateTextField(validationRules), textField -> {
                         endpointUrlProperty.bindBidirectional(textField.textProperty());
                         endpointUrlValidProperty.bind(textField.isValidProperty());
                     }));
@@ -125,6 +132,17 @@ public class NewProfileDialog extends Dialog<Void> {
                     }, remoteTabSelectedProperty, localTabSelectedProperty, profileNameValidProperty, endpointUrlValidProperty, accessKeyValidProperty, securityKeyValidProperty)
             );
         }
+
+        this.setResultConverter(param -> {
+            if (param == ButtonType.OK) {
+                if (localTabSelectedProperty.get()) {
+                    return new LocalProfileDetails(profileNameProperty.get(), endpointUrlProperty.get());
+                } else if (remoteTabSelectedProperty.get()) {
+                    return new RemoteProfileDetails(profileNameProperty.get(), regionProperty.get(), accessKeyProperty.get(), securityKeyProperty.get());
+                }
+            }
+            return null;
+        });
 
     }
 }

@@ -26,6 +26,7 @@ import ua.org.java.dynamoit.components.tablegrid.TableGridComponent;
 import ua.org.java.dynamoit.components.tablegrid.TableGridContext;
 import ua.org.java.dynamoit.components.thememanager.ThemeManager;
 import ua.org.java.dynamoit.db.DynamoDBService;
+import ua.org.java.dynamoit.model.profile.ProfileDetails;
 import ua.org.java.dynamoit.utils.FXExecutor;
 
 import java.util.concurrent.CompletableFuture;
@@ -80,5 +81,9 @@ public class MainController {
 
     public void setSelectedTableConsumer(Consumer<TableGridContext> selectedTableConsumer) {
         this.selectedTableConsumer = selectedTableConsumer;
+    }
+
+    public void addProfile(ProfileDetails profileDetails) {
+        model.addProfile(profileDetails);
     }
 }
