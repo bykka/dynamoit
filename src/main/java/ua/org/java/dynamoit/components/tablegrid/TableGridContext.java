@@ -17,14 +17,16 @@
 
 package ua.org.java.dynamoit.components.tablegrid;
 
+import ua.org.java.dynamoit.model.profile.ProfileDetails;
+
 public record TableGridContext(
-        String profileName,
-        String region,
+
+        ProfileDetails profileDetails,
         String tableName,
         String propertyName,
         String propertyValue
 ) {
-    public TableGridContext(String profileName, String region, String tableName) {
-        this(profileName, region, tableName, null, null);
+    public TableGridContext(ProfileDetails profileDetails, String tableName) {
+        this(profileDetails, tableName, null, null);
     }
 };

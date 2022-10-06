@@ -53,12 +53,12 @@ public class ProfileController {
     }
 
     public void onTableSelect(String tableName) {
-        eventBus.setSelectedTable(new TableGridContext(model.getProfile(), model.getRegion(), tableName));
+        eventBus.setSelectedTable(new TableGridContext(model.getProfileDetails(), tableName));
     }
 
     private void getListOfTables() {
         eventBus.activity(
-                this.dynamoDBService.getListOfTables(model.getProfile(), model.getRegion())
+                this.dynamoDBService.getListOfTables(model.getProfileDetails())
                         .thenApply(tables -> tables.stream().map(TableDef::new).collect(Collectors.toList()))
                         .thenAcceptAsync(tables -> this.model.getAvailableTables().setAll(tables), FXExecutor.getInstance())
         );

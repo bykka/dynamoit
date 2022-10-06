@@ -63,7 +63,7 @@ public class MainController {
 
     public TableGridComponent buildTableGridComponent(TableGridContext tableContext) {
         return DaggerTableGridComponent.builder()
-                .profileModel(model.getAvailableProfiles().get(tableContext.profileName()))
+                .profileModel(model.getAvailableProfiles().get(tableContext.profileDetails().getName()))
                 .eventBus(eventBus)
                 .tableContext(tableContext)
                 .hostServices(hostServices)

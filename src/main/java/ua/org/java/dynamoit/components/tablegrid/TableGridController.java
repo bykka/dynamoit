@@ -100,8 +100,8 @@ public class TableGridController {
         tableModel.setTableName(context.tableName());
         tableModel.setProfile(context.tableName());
 
-        dbClient = dynamoDBService.getOrCreateDynamoDBClient(context.profileName(), context.region());
-        documentClient = dynamoDBService.getOrCreateDocumentClient(context.profileName(), context.region());
+        dbClient = dynamoDBService.getOrCreateDynamoDBClient(context.profileDetails());
+        documentClient = dynamoDBService.getOrCreateDocumentClient(context.profileDetails());
         table = documentClient.getTable(context.tableName());
     }
 

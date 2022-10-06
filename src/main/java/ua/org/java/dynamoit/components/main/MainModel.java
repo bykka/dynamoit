@@ -52,7 +52,7 @@ public class MainModel {
         private final ObservableList<String> savedFilters = FXCollections.observableArrayList();
         private final SimpleStringProperty region = new SimpleStringProperty();
         private HighlightColors color;
-        private ProfileDetails profileDetails;
+        private final ProfileDetails profileDetails;
 
         public ProfileModel(ProfileDetails profileDetails) {
             this.profileDetails = profileDetails;
@@ -84,6 +84,10 @@ public class MainModel {
 
         public ObservableList<String> getSavedFilters() {
             return savedFilters;
+        }
+
+        public ProfileDetails getProfileDetails() {
+            return profileDetails;
         }
 
         public String getProfile() {

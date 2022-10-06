@@ -17,6 +17,8 @@
 
 package ua.org.java.dynamoit.model.profile;
 
+import java.util.Objects;
+
 /**
  * AWS CLI configured
  */
@@ -31,5 +33,18 @@ public class PreconfiguredProfileDetails extends ProfileDetails {
 
     public String getRegion() {
         return region;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof PreconfiguredProfileDetails that)) return false;
+        if (!super.equals(o)) return false;
+        return region.equals(that.region);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), region);
     }
 }

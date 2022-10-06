@@ -77,9 +77,7 @@ public class MainView extends VBox {
                                             button.getStyleClass().addAll(BUTTON_ICON);
                                             button.setTooltip(new Tooltip("Add a new profile"));
                                             button.setOnAction(actionEvent -> {
-                                                new NewProfileDialog().showAndWait().ifPresent(profileDetails -> {
-                                                    controller.addProfile(profileDetails);
-                                                });
+                                                new NewProfileDialog().showAndWait().ifPresent(controller::addProfile);
                                             });
                                         }),
                                         DX.spacerV(),
@@ -177,7 +175,7 @@ public class MainView extends VBox {
 
         tabPane.getTabs().add(
                 DX.create(() -> new Tab(tableContext.tableName(), tableItemsView), tab -> {
-                    MainModel.ProfileModel profileModel = mainModel.getAvailableProfiles().get(tableContext.profileName());
+                    MainModel.ProfileModel profileModel = mainModel.getAvailableProfiles().get(tableContext.profileDetails().getName());
                     profileModel.getColor().ifPresent(color -> tab.getStyleClass().add(color.tabClass()));
                     tab.setContextMenu(DX.contextMenu(contextMenu -> List.of(
                             DX.create(MenuItem::new, menu -> {

@@ -17,6 +17,8 @@
 
 package ua.org.java.dynamoit.model.profile;
 
+import java.util.Objects;
+
 /**
  * Allows to access remote profile
  */
@@ -43,5 +45,18 @@ public class RemoteProfileDetails extends ProfileDetails {
 
     public String getSecretKey() {
         return secretKey;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof RemoteProfileDetails that)) return false;
+        if (!super.equals(o)) return false;
+        return region.equals(that.region) && accessKeyId.equals(that.accessKeyId) && secretKey.equals(that.secretKey);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), region, accessKeyId, secretKey);
     }
 }
