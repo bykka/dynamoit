@@ -22,7 +22,7 @@ import java.util.Objects;
 /**
  * Access some local DynamoDB by endpoint
  */
-public class LocalProfileDetails extends ProfileDetails {
+public class LocalProfileDetails extends ProfileDetails implements Cloneable{
 
     private final String endPoint;
 
@@ -46,5 +46,10 @@ public class LocalProfileDetails extends ProfileDetails {
     @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), endPoint);
+    }
+
+    @Override
+    public LocalProfileDetails clone() {
+        return (LocalProfileDetails) super.clone();
     }
 }

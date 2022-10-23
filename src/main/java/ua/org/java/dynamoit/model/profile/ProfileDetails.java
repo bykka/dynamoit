@@ -19,7 +19,7 @@ package ua.org.java.dynamoit.model.profile;
 
 import java.util.Objects;
 
-public class ProfileDetails {
+public class ProfileDetails implements Cloneable {
 
     protected final String name;
 
@@ -42,6 +42,15 @@ public class ProfileDetails {
     @Override
     public int hashCode() {
         return Objects.hash(name);
+    }
+
+    @Override
+    public ProfileDetails clone() {
+        try {
+            return (ProfileDetails) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
     }
 }
 

@@ -22,7 +22,7 @@ import java.util.Objects;
 /**
  * Allows to access remote profile
  */
-public class RemoteProfileDetails extends ProfileDetails {
+public class RemoteProfileDetails extends ProfileDetails implements Cloneable {
 
     private final String region;
     private final String accessKeyId;
@@ -58,5 +58,10 @@ public class RemoteProfileDetails extends ProfileDetails {
     @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), region, accessKeyId, secretKey);
+    }
+
+    @Override
+    public RemoteProfileDetails clone() {
+        return (RemoteProfileDetails) super.clone();
     }
 }

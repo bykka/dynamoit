@@ -22,7 +22,7 @@ import java.util.Objects;
 /**
  * AWS CLI configured
  */
-public class PreconfiguredProfileDetails extends ProfileDetails {
+public class PreconfiguredProfileDetails extends ProfileDetails implements Cloneable {
 
     private final String region;
 
@@ -46,5 +46,10 @@ public class PreconfiguredProfileDetails extends ProfileDetails {
     @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), region);
+    }
+
+    @Override
+    public PreconfiguredProfileDetails clone() {
+        return (PreconfiguredProfileDetails) super.clone();
     }
 }
