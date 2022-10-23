@@ -36,7 +36,7 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <dagger.version>2.43.2</dagger.version>
-        <javafx.version>18.0.2</javafx.version>
+        <javafx.version>19</javafx.version>
         <aws.sdk.version>1.12.296</aws.sdk.version>
         <main.class>ua.org.java.dynamoit.Launcher</main.class>
         <fatJar.dir>${project.build.directory}/fatJar/</fatJar.dir>
@@ -265,7 +265,7 @@
         <dependency>
             <groupId>io.github.mkpaz</groupId>
             <artifactId>atlantafx-base</artifactId>
-            <version>1.0.0</version>
+            <version>1.1.0</version>
         </dependency>
         <!-- testing -->
         <dependency>
