@@ -23,9 +23,8 @@ import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 import javafx.collections.transformation.FilteredList;
 import ua.org.java.dynamoit.model.TableDef;
-import ua.org.java.dynamoit.model.profile.PreconfiguredProfileDetails;
 import ua.org.java.dynamoit.model.profile.ProfileDetails;
-import ua.org.java.dynamoit.model.profile.RemoteProfileDetails;
+import ua.org.java.dynamoit.model.profile.ProfileDetailsWithRegion;
 import ua.org.java.dynamoit.utils.HighlightColors;
 
 import java.util.LinkedHashMap;
@@ -57,10 +56,8 @@ public class MainModel {
         public ProfileModel(ProfileDetails profileDetails) {
             this.profileDetails = profileDetails;
 
-            if (profileDetails instanceof PreconfiguredProfileDetails p) {
+            if (profileDetails instanceof ProfileDetailsWithRegion p) {
                 this.region.setValue(p.getRegion());
-            } else if (profileDetails instanceof RemoteProfileDetails r) {
-                this.region.setValue(r.getRegion());
             }
 
             filter.addListener((observable, oldValue, newValue) -> filteredTables.setPredicate(value -> value.getName().contains(filter.get())));
@@ -100,6 +97,13 @@ public class MainModel {
 
         public SimpleStringProperty regionProperty() {
             return this.region;
+        }
+
+        public void setRegion(String region) {
+            this.region.setValue(region);
+            if (profileDetails instanceof ProfileDetailsWithRegion p) {
+                p.setRegion(region);
+            }
         }
 
         public Optional<HighlightColors> getColor() {

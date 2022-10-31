@@ -70,7 +70,7 @@ public class ProfileController {
     }
 
     public void onChangeRegion(String region) {
-        this.model.regionProperty().set(region);
+        this.model.setRegion(region);
         this.loadListOfTables();
     }
 }

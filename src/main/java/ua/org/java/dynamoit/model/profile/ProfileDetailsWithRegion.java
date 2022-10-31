@@ -19,43 +19,38 @@ package ua.org.java.dynamoit.model.profile;
 
 import java.util.Objects;
 
-/**
- * Allows to access remote profile
- */
-public class RemoteProfileDetails extends ProfileDetailsWithRegion implements Cloneable {
+public abstract class ProfileDetailsWithRegion extends ProfileDetails implements Cloneable {
 
-    private final String accessKeyId;
-    private final String secretKey;
+    protected String region;
 
-    public RemoteProfileDetails(String name, String region, String accessKeyId, String secretKey) {
-        super(name, region);
-        this.accessKeyId = accessKeyId;
-        this.secretKey = secretKey;
+    protected ProfileDetailsWithRegion(String name, String region) {
+        super(name);
+        this.region = region;
     }
 
-    public String getAccessKeyId() {
-        return accessKeyId;
+    public String getRegion() {
+        return region;
     }
 
-    public String getSecretKey() {
-        return secretKey;
+    public void setRegion(String region) {
+        this.region = region;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof RemoteProfileDetails that)) return false;
+        if (!(o instanceof ProfileDetailsWithRegion that)) return false;
         if (!super.equals(o)) return false;
-        return Objects.equals(accessKeyId, that.accessKeyId) && Objects.equals(secretKey, that.secretKey);
+        return Objects.equals(region, that.region);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), accessKeyId, secretKey);
+        return Objects.hash(super.hashCode(), region);
     }
 
     @Override
-    public RemoteProfileDetails clone() {
-        return (RemoteProfileDetails) super.clone();
+    public ProfileDetailsWithRegion clone() {
+        return (ProfileDetailsWithRegion) super.clone();
     }
 }
