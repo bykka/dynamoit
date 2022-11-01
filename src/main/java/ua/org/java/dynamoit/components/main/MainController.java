@@ -54,9 +54,9 @@ public class MainController {
                 "Please check that your aws cli is properly configured https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html"
         );
 
-        eventBus.selectedTableProperty().addListener((observable, oldValue, newValue) -> {
+        eventBus.selectedTableProperty().subscribe(value -> {
             if (selectedTableConsumer != null) {
-                selectedTableConsumer.accept(newValue);
+                selectedTableConsumer.accept(value);
             }
         });
     }
