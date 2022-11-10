@@ -22,9 +22,11 @@ import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
+import javafx.stage.Stage;
 import ua.org.java.dynamoit.model.profile.LocalProfileDetails;
 import ua.org.java.dynamoit.model.profile.ProfileDetails;
 import ua.org.java.dynamoit.model.profile.RemoteProfileDetails;
@@ -58,6 +60,7 @@ public class NewProfileDialog extends Dialog<ProfileDetails> {
 
     public NewProfileDialog() {
         setTitle("Create a new Profile");
+        ((Stage) this.getDialogPane().getScene().getWindow()).getIcons().add(new Image("icons/server_add.png"));
         getDialogPane().setMinWidth(500);
 
         getDialogPane().setContent(DX.create(TabPane::new, tabPane -> {
