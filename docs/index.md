@@ -1,11 +1,12 @@
 ## Overview
 It's a simple DynamoDB graphical client written on JavaFX.
 
-This client allows easily viewing, editing, creating, and deleting of data.
+This client allows easy viewing, editing, creating, and deleting of data.
 
 The main idea of the client is to reach the required data in a few clicks without thinking a scan or query operation is required for that.
 
-The client only requires properly configured settings for the AWS CLI tool. Read [the official AWS CLI documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html) if it is not configured yet. 
+The client only requires properly configured settings for the AWS CLI tool. Read [the official AWS CLI documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html) if it is not configured yet.
+Or configure a new remote or local profile manually using the "Create a new profile" dialog.   
 
 ## Features
  * No login required. The client uses AWS CLI profiles.
@@ -22,6 +23,8 @@ The client only requires properly configured settings for the AWS CLI tool. Read
  * Search (Ctrl+F) in the edit item dialog
  * Compare two selected documents
  * Light / Dark themes support
+ * Change region for the active profile
+ * Local DynamoDB support
  
 ## Supported filters
 Examples are based on "hello world"
@@ -33,11 +36,11 @@ Examples are based on "hello world"
 |__BEGINS_WITH__|^hello|
 |__CONTAINS__|~world|
 |__NOT_CONTAINS__|!~something|
-|__EXITS__|$| 
-|__NOT_EXITS__|!$| 
+|__EXISTS__|$| 
+|__NOT_EXISTS__|!$| 
 
 ## System requirements, building and running
-At least Java 11 and maven to build and run the application.
+At least Java 17 and maven to build and run the application.
 
 Execute the next command to build
 ```
@@ -51,7 +54,7 @@ To run the application simply execute the command
 java -jar target/fatJar/DynamoIt-<version>.jar 
 ```
 
-To build a portable bundle you need Java 15 and execute the next command
+To build a portable bundle
 ```
 mvn clean package -Ppackage
 ```
@@ -68,3 +71,6 @@ The edit item dialog
 
 The compare dialog
 ![compare screen](./images/compare_screen.png)
+
+A new profile dialog
+![a new profile dialog](./images/new_profile_dialog.png)
