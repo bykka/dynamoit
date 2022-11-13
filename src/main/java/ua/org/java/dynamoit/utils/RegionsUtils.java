@@ -15,18 +15,19 @@
  *     along with DynamoIt.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ua.org.java.dynamoit.components.tablegrid;
+package ua.org.java.dynamoit.utils;
 
-import ua.org.java.dynamoit.model.profile.ProfileDetails;
+import com.amazonaws.regions.Regions;
 
-public record TableGridContext(
+import java.util.List;
+import java.util.stream.Stream;
 
-        ProfileDetails profileDetails,
-        String tableName,
-        String propertyName,
-        String propertyValue
-) {
-    public TableGridContext(ProfileDetails profileDetails, String tableName) {
-        this(profileDetails, tableName, null, null);
-    }
-};
+public class RegionsUtils {
+
+    public static final List<String> ALL_REGIONS = Stream.of(Regions.values())
+            .map(Regions::getName)
+            .sorted()
+            .toList();
+
+    public static final String DEFAULT_REGION = Regions.DEFAULT_REGION.getName();
+}

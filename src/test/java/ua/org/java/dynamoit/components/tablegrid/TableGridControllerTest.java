@@ -32,6 +32,7 @@ import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.components.main.MainModel;
 import ua.org.java.dynamoit.db.DynamoDBService;
 import ua.org.java.dynamoit.model.TableDef;
+import ua.org.java.dynamoit.model.profile.PreconfiguredProfileDetails;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -46,10 +47,13 @@ public class TableGridControllerTest {
 
     @Test
     public void onRefreshData() {
-        TableGridContext context = new TableGridContext("profile1", "table1");
+        TableGridContext context = new TableGridContext(
+                new PreconfiguredProfileDetails("profile1", "region1"),
+                "table1"
+        );
         MainModel mainModel = new MainModel();
-        mainModel.addProfile("profile1", "region1");
-        mainModel.addProfile("profile2", "region2");
+        mainModel.addProfile(new PreconfiguredProfileDetails("profile1", "region1"));
+        mainModel.addProfile(new PreconfiguredProfileDetails("profile2", "region2"));
         TableDef tableDef = new TableDef("Table1");
         tableDef.setHashAttribute("hash_attr");
         TableGridModel model = new TableGridModel(mainModel.getAvailableProfiles().get("profile1"));
@@ -59,10 +63,10 @@ public class TableGridControllerTest {
         Table table = mock(Table.class);
         AmazonDynamoDB amazonDynamoDB = mock(AmazonDynamoDB.class);
         DynamoDB dynamoDB = mock(DynamoDB.class);
-        expect(dynamoDB.getTable(context.getTableName())).andReturn(table);
+        expect(dynamoDB.getTable(context.tableName())).andReturn(table);
         DynamoDBService dynamoDBService = mock(DynamoDBService.class);
-        expect(dynamoDBService.getOrCreateDynamoDBClient(context.getProfileName())).andReturn(amazonDynamoDB);
-        expect(dynamoDBService.getOrCreateDocumentClient(context.getProfileName())).andReturn(dynamoDB);
+        expect(dynamoDBService.getOrCreateDynamoDBClient(context.profileDetails())).andReturn(amazonDynamoDB);
+        expect(dynamoDBService.getOrCreateDocumentClient(context.profileDetails())).andReturn(dynamoDB);
 
         Page<Item, Object> page = mock(Page.class);
         HostServices hostServices = mock(HostServices.class);

@@ -15,8 +15,20 @@
  *     along with DynamoIt.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+* {
+    -fx-font-family: Consolas, monospace;
+}
+
+.root:dark .caret {
+    -fx-stroke: white;
+}
+
 .json_curly {
     -fx-fill: -color-chart-5 !important;
+}
+
+.root:dark .json_curly {
+    -fx-fill: #FFFFFF !important;
 }
 
 .json_property {
@@ -25,12 +37,17 @@
 }
 
 .root:dark .json_property {
-    -fx-fill: -color-accent-1 !important;
+    -fx-fill: #9876AA !important;
     -fx-font-weight: bold;
 }
 
 .json_value {
-    -fx-fill: -color-chart-3 !important;
+    -fx-fill: #008000 !important;
+    -fx-font-weight: bold;
+}
+
+.root:dark .json_value {
+    -fx-fill: #6A8759 !important;
     -fx-font-weight: bold;
 }
 
@@ -39,21 +56,31 @@
 }
 
 .json_bool {
-    -fx-fill: -color-chart-1 !important;
+    -fx-fill: #660E7A !important;
+    -fx-font-weight: bold;
+}
+
+.root:dark .json_bool {
+    -fx-fill: #CC7832 !important;
     -fx-font-weight: bold;
 }
 
 .json_number {
-    -fx-fill: -color-chart-4 !important;
+    -fx-fill: #0000FF !important;
 }
+
+.root:dark .json_number {
+    -fx-fill: #6897BB !important;
+}
+
 
 .main-selection {
-    -fx-fill: lemonchiffon;
+    -fx-fill: #FFFAE3;
 }
 
-/*.paragraph-box:has-caret {*/
-/*    -fx-background-color: derive(-fx-cell-hover-color, 50%)*/
-/*}*/
+.root:dark .main-selection {
+    -fx-fill: #323232;
+}
 
 .code-area {
     -fx-background-color: -color-bg-default;

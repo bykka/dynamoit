@@ -39,7 +39,7 @@ public class ProfileController {
         this.model = model;
         this.eventBus = eventBus;
 
-        this.getListOfTables();
+        this.loadListOfTables();
     }
 
     public void onSaveFilter() {
@@ -49,16 +49,16 @@ public class ProfileController {
     }
 
     public void onTablesRefresh() {
-        getListOfTables();
+        loadListOfTables();
     }
 
     public void onTableSelect(String tableName) {
-        eventBus.setSelectedTable(new TableGridContext(model.getProfile(), tableName));
+        eventBus.setSelectedTable(new TableGridContext(model.getProfileDetails().clone(), tableName));
     }
 
-    private void getListOfTables() {
+    private void loadListOfTables() {
         eventBus.activity(
-                this.dynamoDBService.getListOfTables(model.getProfile())
+                this.dynamoDBService.getListOfTables(model.getProfileDetails())
                         .thenApply(tables -> tables.stream().map(TableDef::new).collect(Collectors.toList()))
                         .thenAcceptAsync(tables -> this.model.getAvailableTables().setAll(tables), FXExecutor.getInstance())
         );
@@ -67,5 +67,10 @@ public class ProfileController {
 
     public void onDeleteFilter(String filter) {
         this.model.getSavedFilters().remove(filter);
+    }
+
+    public void onChangeRegion(String region) {
+        this.model.setRegion(region);
+        this.loadListOfTables();
     }
 }

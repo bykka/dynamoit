@@ -26,6 +26,7 @@ import ua.org.java.dynamoit.components.tablegrid.TableGridComponent;
 import ua.org.java.dynamoit.components.tablegrid.TableGridContext;
 import ua.org.java.dynamoit.components.thememanager.ThemeManager;
 import ua.org.java.dynamoit.db.DynamoDBService;
+import ua.org.java.dynamoit.model.profile.ProfileDetails;
 import ua.org.java.dynamoit.utils.FXExecutor;
 
 import java.util.concurrent.CompletableFuture;
@@ -33,15 +34,13 @@ import java.util.function.Consumer;
 
 public class MainController {
 
-    private final DynamoDBService dynamoDBService;
     private final MainModel model;
     private final EventBus eventBus;
-    private HostServices hostServices;
-    private ThemeManager themeManager;
+    private final HostServices hostServices;
+    private final ThemeManager themeManager;
     private Consumer<TableGridContext> selectedTableConsumer;
 
     public MainController(DynamoDBService dynamoDBService, MainModel model, EventBus eventBus, HostServices hostServices, ThemeManager themeManager) {
-        this.dynamoDBService = dynamoDBService;
         this.model = model;
         this.eventBus = eventBus;
         this.hostServices = hostServices;
@@ -49,22 +48,22 @@ public class MainController {
 
         eventBus.activity(
                 CompletableFuture
-                        .supplyAsync(this.dynamoDBService::getAvailableProfiles)
-                        .thenAcceptAsync(profiles -> profiles.forEach(profile -> model.addProfile(profile.getName(), profile.getRegion())), FXExecutor.getInstance()),
+                        .supplyAsync(dynamoDBService::getAvailableProfiles)
+                        .thenAcceptAsync(profiles -> profiles.forEach(model::addProfile), FXExecutor.getInstance()),
                 "AWS configuration settings has not been discovered",
                 "Please check that your aws cli is properly configured https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html"
         );
 
-        eventBus.selectedTableProperty().addListener((observable, oldValue, newValue) -> {
+        eventBus.selectedTableProperty().subscribe(value -> {
             if (selectedTableConsumer != null) {
-                selectedTableConsumer.accept(newValue);
+                selectedTableConsumer.accept(value);
             }
         });
     }
 
     public TableGridComponent buildTableGridComponent(TableGridContext tableContext) {
         return DaggerTableGridComponent.builder()
-                .profileModel(model.getAvailableProfiles().get(tableContext.getProfileName()))
+                .profileModel(model.getAvailableProfiles().get(tableContext.profileDetails().getName()))
                 .eventBus(eventBus)
                 .tableContext(tableContext)
                 .hostServices(hostServices)
@@ -82,5 +81,9 @@ public class MainController {
 
     public void setSelectedTableConsumer(Consumer<TableGridContext> selectedTableConsumer) {
         this.selectedTableConsumer = selectedTableConsumer;
+    }
+
+    public void addProfile(ProfileDetails profileDetails) {
+        model.addProfile(profileDetails);
     }
 }

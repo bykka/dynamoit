@@ -20,6 +20,7 @@ package ua.org.java.dynamoit.components.profileviewer;
 import io.reactivex.rxjavafx.observables.JavaFxObservable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ListChangeListener;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
@@ -39,9 +40,9 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static atlantafx.base.theme.Styles.BUTTON_ICON;
+import static ua.org.java.dynamoit.utils.RegionsUtils.ALL_REGIONS;
 
 public class ProfileView extends VBox {
-
     private final TreeView<String> treeView = new TreeView<>();
     private final TreeItem<String> allTables;
     private final MainModel.ProfileModel model;
@@ -51,7 +52,7 @@ public class ProfileView extends VBox {
     public ProfileView(ProfileController controller, MainModel.ProfileModel model) {
         this.model = model;
         this.controller = controller;
-        allTables = new AllTreeItem();
+        allTables = new AllTreeItem(model.regionProperty());
 
         this.getChildren().addAll(
                 DX.toolBar(toolBar -> List.of(
@@ -82,16 +83,31 @@ public class ProfileView extends VBox {
                     treeView.setOnMouseClicked(event -> this.onTableSelect(event, treeView.getSelectionModel().getSelectedItem()));
                     treeView.setOnKeyPressed(event -> this.onTableSelect(event, treeView.getSelectionModel().getSelectedItem()));
                     treeView.setOnContextMenuRequested(event -> {
-                        if (event.getTarget() != null && treeView.getSelectionModel().getSelectedItem() instanceof FilterTreeItem filterTreeItem) {
-                            DX.contextMenu(contextMenu -> List.of(
-                                    DX.create((Supplier<MenuItem>) MenuItem::new, menu -> {
-                                        menu.setText("Delete");
-                                        menu.setOnAction(__ -> {
-                                            controller.onDeleteFilter(filterTreeItem.getFilter());
-                                            treeView.getRoot().getChildren().remove(filterTreeItem);
-                                        });
-                                    })
-                            )).show(treeView.getSelectionModel().getSelectedItem().getGraphic(), event.getScreenX(), event.getScreenY());
+                        if (event.getTarget() != null) {
+                            TreeItem<String> selectedItem = treeView.getSelectionModel().getSelectedItem();
+                            ContextMenu contextMenu = null;
+
+                            if (selectedItem instanceof AllTreeItem allTreeItem) {
+                                contextMenu = DX.contextMenu(cm -> ALL_REGIONS.stream()
+                                        .map(region -> DX.create(MenuItem::new, menu -> {
+                                            menu.setText(region);
+                                            menu.setOnAction(__ -> controller.onChangeRegion(region));
+                                        })).collect(Collectors.toList()));
+                            } else if (selectedItem instanceof FilterTreeItem filterTreeItem) {
+                                contextMenu = DX.contextMenu(cm -> List.of(
+                                        DX.create((Supplier<MenuItem>) MenuItem::new, menu -> {
+                                            menu.setText("Delete");
+                                            menu.setOnAction(__ -> {
+                                                controller.onDeleteFilter(filterTreeItem.getFilter());
+                                                treeView.getRoot().getChildren().remove(filterTreeItem);
+                                            });
+                                        })
+                                ));
+                            }
+
+                            if (contextMenu != null) {
+                                contextMenu.show(selectedItem.getGraphic(), event.getScreenX(), event.getScreenY());
+                            }
                         }
                     });
                 })
@@ -147,9 +163,9 @@ public class ProfileView extends VBox {
 
     private class AllTreeItem extends TreeItem<String> {
 
-        public AllTreeItem() {
-            super("All tables", DX.icon("icons/database.png"));
-            valueProperty().bind(Bindings.concat("All tables (", Bindings.size(model.getFilteredTables()), ")"));
+        public AllTreeItem(SimpleStringProperty region) {
+            super("All tables: " + region, DX.icon("icons/database.png"));
+            valueProperty().bind(Bindings.concat("All tables: ", region, " (", Bindings.size(model.getFilteredTables()), ")"));
         }
 
     }

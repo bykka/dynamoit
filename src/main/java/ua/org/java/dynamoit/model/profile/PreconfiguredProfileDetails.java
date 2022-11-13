@@ -15,18 +15,19 @@
  *     along with DynamoIt.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ua.org.java.dynamoit.components.tablegrid;
+package ua.org.java.dynamoit.model.profile;
 
-import ua.org.java.dynamoit.model.profile.ProfileDetails;
+/**
+ * AWS CLI configured
+ */
+public class PreconfiguredProfileDetails extends ProfileDetailsWithRegion implements Cloneable {
 
-public record TableGridContext(
-
-        ProfileDetails profileDetails,
-        String tableName,
-        String propertyName,
-        String propertyValue
-) {
-    public TableGridContext(ProfileDetails profileDetails, String tableName) {
-        this(profileDetails, tableName, null, null);
+    public PreconfiguredProfileDetails(String name, String region) {
+        super(name, region);
     }
-};
+
+    @Override
+    public PreconfiguredProfileDetails clone() {
+        return (PreconfiguredProfileDetails) super.clone();
+    }
+}

@@ -254,9 +254,9 @@ public class ItemDialog extends Dialog<String> {
                 "match" + indexLine.getKey(),
                 textArea,
                 path -> {
-                    path.setStroke(Color.GREEN);
+                    path.setStroke(Color.ORANGERED);
                     path.setStrokeWidth(1);
-                    path.setHighlightFill(Color.LIGHTYELLOW);
+                    path.setHighlightFill(Color.TRANSPARENT);
                 });
         selection.selectRange(indexLine.getKey(), 0, indexLine.getKey(), indexLine.getValue().length());
         return selection;

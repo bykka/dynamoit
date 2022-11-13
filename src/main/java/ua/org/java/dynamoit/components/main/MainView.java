@@ -29,6 +29,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Window;
+import ua.org.java.dynamoit.components.profileviewer.NewProfileDialog;
 import ua.org.java.dynamoit.components.profileviewer.ProfileComponent;
 import ua.org.java.dynamoit.components.profileviewer.ProfileView;
 import ua.org.java.dynamoit.components.tablegrid.TableGridComponent;
@@ -71,6 +72,14 @@ public class MainView extends VBox {
                                 toolBar.setOrientation(Orientation.VERTICAL);
                                 toolBar.getStylesheets().add(getClass().getResource("/css/toggle-buttons.css").toExternalForm());
                                 return List.of(
+                                        DX.create(Button::new, button -> {
+                                            button.setGraphic(DX.icon("icons/add.png"));
+                                            button.getStyleClass().addAll(BUTTON_ICON);
+                                            button.setTooltip(new Tooltip("Add a new profile"));
+                                            button.setOnAction(actionEvent -> {
+                                                new NewProfileDialog().showAndWait().ifPresent(controller::addProfile);
+                                            });
+                                        }),
                                         DX.spacerV(),
                                         DX.create(ToggleButton::new, (ToggleButton button) -> {
                                             button.setGraphic(DX.icon("icons/earth_night.png"));
@@ -125,7 +134,7 @@ public class MainView extends VBox {
                         profile.getValue().setColor(colorsIterator.next());
                     }
 
-                    profilesToolBar.getItems().add(profilesToolBar.getItems().size() - 2,
+                    profilesToolBar.getItems().add(profilesToolBar.getItems().size() - 3,
                             new Group(DX.create(ToggleButton::new, (ToggleButton button) -> {
                                 button.setText(profileName);
                                 button.setUserData(profileName);
@@ -165,8 +174,8 @@ public class MainView extends VBox {
         tableItemsView.setOnSearchInTable(this::createAndOpenTab);
 
         tabPane.getTabs().add(
-                DX.create(() -> new Tab(tableContext.getTableName(), tableItemsView), tab -> {
-                    MainModel.ProfileModel profileModel = mainModel.getAvailableProfiles().get(tableContext.getProfileName());
+                DX.create(() -> new Tab(tableContext.tableName(), tableItemsView), tab -> {
+                    MainModel.ProfileModel profileModel = mainModel.getAvailableProfiles().get(tableContext.profileDetails().getName());
                     profileModel.getColor().ifPresent(color -> tab.getStyleClass().add(color.tabClass()));
                     tab.setContextMenu(DX.contextMenu(contextMenu -> List.of(
                             DX.create(MenuItem::new, menu -> {

@@ -23,6 +23,8 @@ import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 import javafx.collections.transformation.FilteredList;
 import ua.org.java.dynamoit.model.TableDef;
+import ua.org.java.dynamoit.model.profile.ProfileDetails;
+import ua.org.java.dynamoit.model.profile.ProfileDetailsWithRegion;
 import ua.org.java.dynamoit.utils.HighlightColors;
 
 import java.util.LinkedHashMap;
@@ -37,8 +39,8 @@ public class MainModel {
         return availableProfiles;
     }
 
-    public void addProfile(String profile, String region) {
-        this.availableProfiles.put(profile, new ProfileModel(profile, region));
+    public void addProfile(ProfileDetails profileDetails) {
+        this.availableProfiles.put(profileDetails.getName(), new ProfileModel(profileDetails));
     }
 
     public static class ProfileModel {
@@ -47,13 +49,17 @@ public class MainModel {
         private final SimpleStringProperty filter = new SimpleStringProperty("");
         private final FilteredList<TableDef> filteredTables = availableTables.filtered(Objects::nonNull);
         private final ObservableList<String> savedFilters = FXCollections.observableArrayList();
-        private final String profile;
-        private final String region;
+        private final SimpleStringProperty region = new SimpleStringProperty();
         private HighlightColors color;
+        private final ProfileDetails profileDetails;
 
-        public ProfileModel(String profile, String region) {
-            this.profile = profile;
-            this.region = region;
+        public ProfileModel(ProfileDetails profileDetails) {
+            this.profileDetails = profileDetails;
+
+            if (profileDetails instanceof ProfileDetailsWithRegion p) {
+                this.region.setValue(p.getRegion());
+            }
+
             filter.addListener((observable, oldValue, newValue) -> filteredTables.setPredicate(value -> value.getName().contains(filter.get())));
         }
 
@@ -69,7 +75,7 @@ public class MainModel {
             return filter;
         }
 
-        public FilteredList<TableDef> getFilteredTables(){
+        public FilteredList<TableDef> getFilteredTables() {
             return this.filteredTables;
         }
 
@@ -77,12 +83,27 @@ public class MainModel {
             return savedFilters;
         }
 
+        public ProfileDetails getProfileDetails() {
+            return profileDetails;
+        }
+
         public String getProfile() {
-            return profile;
+            return profileDetails.getName();
         }
 
         public String getRegion() {
-            return region;
+            return region.get();
+        }
+
+        public SimpleStringProperty regionProperty() {
+            return this.region;
+        }
+
+        public void setRegion(String region) {
+            this.region.setValue(region);
+            if (profileDetails instanceof ProfileDetailsWithRegion p) {
+                p.setRegion(region);
+            }
         }
 
         public Optional<HighlightColors> getColor() {

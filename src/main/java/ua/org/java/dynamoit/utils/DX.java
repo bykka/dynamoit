@@ -32,7 +32,8 @@ import java.util.function.Supplier;
 
 public class DX {
 
-    private DX() {}
+    private DX() {
+    }
 
     public static Scene scene(Supplier<Parent> rootBuilder) {
         return new Scene(rootBuilder.get());
@@ -80,23 +81,23 @@ public class DX {
         return spring;
     }
 
-    public static <T> T create(Supplier<T> creator, Consumer<T> builder){
+    public static <T> T create(Supplier<T> creator, Consumer<T> builder) {
         T component = creator.get();
         builder.accept(component);
         return component;
     }
 
-    public static ImageView icon(String icon){
+    public static ImageView icon(String icon) {
         return icon(icon, 16);
     }
 
-    public static ImageView icon(String icon, double size){
+    public static ImageView icon(String icon, double size) {
         return new ImageView(new Image(icon, size, size, true, false));
     }
 
     public static Label boldLabel(String title) {
         Label label = new Label(title);
-        label.setStyle("-fx-font-weight: bold");
+        label.getStyleClass().add("text-bold");
         return label;
     }
 

@@ -23,6 +23,7 @@ import javafx.collections.ObservableList;
 import org.junit.Test;
 import ua.org.java.dynamoit.components.main.MainModel;
 import ua.org.java.dynamoit.model.TableDef;
+import ua.org.java.dynamoit.model.profile.PreconfiguredProfileDetails;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,7 +35,7 @@ public class ProfileViewTest {
 
     @Test
     public void testChangesInAllTables() {
-        MainModel.ProfileModel model = new MainModel.ProfileModel("profile1", "region1");
+        MainModel.ProfileModel model = new MainModel.ProfileModel(new PreconfiguredProfileDetails("profile1", "region1"));
         ObservableList<TableDef> tables = model.getAvailableTables();
 
         ObjectBinding<List<String>> tab2 = Bindings.createObjectBinding(() -> tables.stream()
