@@ -20,9 +20,11 @@ package ua.org.java.dynamoit.components.tablegrid;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
+import javafx.stage.Stage;
 import ua.org.java.dynamoit.utils.DX;
 
 import java.text.DateFormat;
@@ -37,6 +39,7 @@ public class TableInfoDialog extends Dialog<Void> {
 
     public TableInfoDialog(TableGridModel tableModel, Consumer<String> openUrl) {
         setTitle(tableModel.getTableName());
+        ((Stage) this.getDialogPane().getScene().getWindow()).getIcons().add(new Image("icons/information.png"));
         getDialogPane().getButtonTypes().add(ButtonType.OK);
         setResizable(true);
         getDialogPane().setContent(DX.create(GridPane::new, gridPane -> {

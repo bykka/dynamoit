@@ -27,7 +27,7 @@ import java.util.LinkedHashMap;
 
 public class TableDef {
 
-    private String name;
+    private final String name;
     private final SimpleStringProperty hashAttribute = new SimpleStringProperty();
     private final SimpleStringProperty rangeAttribute = new SimpleStringProperty();
     private final ObservableMap<String, Attributes.Type> attributeTypesMap = FXCollections.observableMap(new LinkedHashMap<>());
