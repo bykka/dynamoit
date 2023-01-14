@@ -51,6 +51,9 @@ import static ua.org.java.dynamoit.utils.Utils.copyToClipboard;
 
 public class TableGridView extends VBox {
 
+    private static final int PADDING = 7 + 7; // left + right paddings
+    private static final int FONT_SIZE = 10;
+
     private final TableGridModel tableModel;
     private final ThemeManager themeManager;
 
@@ -178,7 +181,10 @@ public class TableGridView extends VBox {
                 DX.create(() -> this.tableView, tableView -> {
 //                    tableView.getStyleClass().addAll(INTERACTIVE);
                     tableView.getColumns().add(DX.create((Supplier<TableColumn<Item, Number>>) TableColumn::new, column -> {
-                        column.setPrefWidth(35);
+                        column.prefWidthProperty().bind(createIntegerBinding(() -> {
+                            int charsNumber = String.valueOf(tableModel.rowsSizeProperty().get()).length();
+                            return PADDING + charsNumber * FONT_SIZE;
+                        }, tableModel.rowsSizeProperty()));
                         column.setResizable(false);
                         column.setSortable(false);
                         column.getStyleClass().add("column-index");
