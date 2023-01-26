@@ -29,7 +29,6 @@ import ua.org.java.dynamoit.utils.DX;
 
 import java.text.DateFormat;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static atlantafx.base.theme.Styles.FLAT;
@@ -37,30 +36,33 @@ import static ua.org.java.dynamoit.utils.Utils.copyToClipboard;
 
 public class TableInfoDialog extends Dialog<Void> {
 
+    private final TableGridModel tableModel;
+    private final Consumer<String> openUrl;
+
     public TableInfoDialog(TableGridModel tableModel, Consumer<String> openUrl) {
+        this.tableModel = tableModel;
+        this.openUrl = openUrl;
+
         setTitle(tableModel.getTableName());
         ((Stage) this.getDialogPane().getScene().getWindow()).getIcons().add(new Image("icons/information.png"));
         getDialogPane().getButtonTypes().add(ButtonType.OK);
         setResizable(true);
-        getDialogPane().setContent(DX.create(GridPane::new, gridPane -> {
-            gridPane.setHgap(10);
-            gridPane.setVgap(10);
-            gridPane.setPadding(new Insets(14, 14, 0, 14));
 
-            gridPane.getColumnConstraints().addAll(
-                    new ColumnConstraints(110),
-                    DX.create(ColumnConstraints::new, c -> {
-                        c.setHgrow(Priority.ALWAYS);
-                    })
-            );
+        getDialogPane().setContent(DX.create(TabPane::new, tabPane -> {
+            tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
+            tabPane.getTabs().add(DX.create(Tab::new, tab -> {
+                tab.setText("Overview");
+                tab.setContent(buildTableOverview());
+            }));
+            tabPane.getTabs().add(DX.create(Tab::new, tab -> {
+                tab.setText("Global indexes");
+                tab.setContent(buildGlobalIndexes());
+            }));
+        }));
+    }
 
-            Function<Supplier<String>, Node> copyClipboardWidget = stringSupplier -> DX.create(Button::new, button -> {
-                button.setGraphic(DX.icon("icons/page_copy.png"));
-                button.setOnAction(__ -> copyToClipboard(stringSupplier.get()));
-                button.setTooltip(new Tooltip("Copy to clipboard"));
-                button.getStyleClass().addAll(FLAT);
-            });
-
+    private Node buildTableOverview() {
+        return DX.create(TableInfoDialog::buildEmptyGridPane, gridPane -> {
             gridPane.addColumn(0,
                     DX.boldLabel("Name:"),
                     DX.boldLabel("Arn:"),
@@ -86,18 +88,58 @@ public class TableInfoDialog extends Dialog<Void> {
             );
 
             gridPane.addColumn(2,
-                    copyClipboardWidget.apply(() -> tableModel.getOriginalTableDescription().getTableName()),
-                    copyClipboardWidget.apply(() -> tableModel.getOriginalTableDescription().getTableArn()),
-                    copyClipboardWidget.apply(() -> DateFormat.getInstance().format(tableModel.getOriginalTableDescription().getCreationDateTime())),
-                    copyClipboardWidget.apply(() -> "" + tableModel.getOriginalTableDescription().getTableSizeBytes()),
-                    copyClipboardWidget.apply(() -> tableModel.getProfileModel().getRegion())
+                    copyClipboardWidget(() -> tableModel.getOriginalTableDescription().getTableName()),
+                    copyClipboardWidget(() -> tableModel.getOriginalTableDescription().getTableArn()),
+                    copyClipboardWidget(() -> DateFormat.getInstance().format(tableModel.getOriginalTableDescription().getCreationDateTime())),
+                    copyClipboardWidget(() -> "" + tableModel.getOriginalTableDescription().getTableSizeBytes()),
+                    copyClipboardWidget(() -> tableModel.getProfileModel().getRegion())
             );
 
             String streamArn = tableModel.getOriginalTableDescription().getLatestStreamArn();
             if (streamArn != null && !streamArn.isBlank()) {
-                gridPane.addRow(gridPane.getRowCount(), DX.boldLabel("Stream:"), new Label(streamArn), copyClipboardWidget.apply(() -> streamArn));
+                gridPane.addRow(gridPane.getRowCount(), DX.boldLabel("Stream:"), new Label(streamArn), copyClipboardWidget(() -> streamArn));
             }
-        }));
+        });
+    }
 
+    private Node buildGlobalIndexes() {
+        System.out.println(this.tableModel.getOriginalTableDescription().getGlobalSecondaryIndexes().size());
+
+        return DX.create(TableInfoDialog::buildEmptyGridPane, gridPane -> {
+
+            gridPane.getColumnConstraints().clear();
+            gridPane.getColumnConstraints().addAll(
+                DX.create(ColumnConstraints::new, (ColumnConstraints c) -> c.setHgrow(Priority.ALWAYS))
+            );
+
+            this.tableModel.getOriginalTableDescription().getGlobalSecondaryIndexes().forEach(indexDescription -> {
+                gridPane.addColumn(0, DX.boldLabel(indexDescription.getIndexName()));
+                gridPane.addColumn(1, copyClipboardWidget(indexDescription::getIndexName));
+            });
+        });
+    }
+
+    private static GridPane buildEmptyGridPane() {
+        return DX.create(GridPane::new, gridPane -> {
+            gridPane.setHgap(10);
+            gridPane.setVgap(10);
+            gridPane.setPadding(new Insets(14, 14, 0, 14));
+
+            gridPane.getColumnConstraints().addAll(
+                    new ColumnConstraints(110),
+                    DX.create(ColumnConstraints::new, c -> {
+                        c.setHgrow(Priority.ALWAYS);
+                    })
+            );
+        });
+    }
+
+    private static Node copyClipboardWidget(Supplier<String> stringSupplier) {
+        return DX.create(Button::new, button -> {
+            button.setGraphic(DX.icon("icons/page_copy.png"));
+            button.setOnAction(__ -> copyToClipboard(stringSupplier.get()));
+            button.setTooltip(new Tooltip("Copy to clipboard"));
+            button.getStyleClass().addAll(FLAT);
+        });
     }
 }
