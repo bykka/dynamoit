@@ -248,11 +248,11 @@ public class TableGridController {
      */
     private static Pair<List<Item>, Page<Item, ?>> iteratePage(Page<Item, ?> page) {
         List<Item> items = new ArrayList<>(PAGE_SIZE);
-        items.addAll(asStream(page).collect(Collectors.toList()));
+        items.addAll(asStream(page).toList());
 
         while (items.size() < PAGE_SIZE && page.hasNextPage()) {
             page = page.nextPage();
-            items.addAll(asStream(page).collect(Collectors.toList()));
+            items.addAll(asStream(page).toList());
         }
         return new Pair<>(items, page);
     }
@@ -320,7 +320,7 @@ public class TableGridController {
             List<ScanFilter> filters = attributeFilterMap.entrySet().stream()
                     .filter(entry -> Objects.nonNull(entry.getValue().get()) && entry.getValue().get().trim().length() > 0)
                     .map(entry -> attributeValueToFilter(entry.getKey(), entry.getValue().get(), tableModel.getTableDef().getAttributeTypesMap().get(entry.getKey()), ScanFilter::new))
-                    .collect(Collectors.toList());
+                    .toList();
             if (!filters.isEmpty()) {
                 scanSpec.withScanFilters(filters.toArray(new ScanFilter[]{}));
             }
@@ -340,7 +340,7 @@ public class TableGridController {
                     .filter(entry -> !entry.getKey().equals(hash()) && !entry.getKey().equals(range()))
                     .filter(entry -> !StringUtils.isNullOrEmpty(entry.getValue().get()))
                     .map(entry -> attributeValueToFilter(entry.getKey(), entry.getValue().get(), tableModel.getTableDef().getAttributeTypesMap().get(entry.getKey()), QueryFilter::new))
-                    .collect(Collectors.toList());
+                    .toList();
             if (!filters.isEmpty()) {
                 querySpec.withQueryFilters(filters.toArray(new QueryFilter[]{}));
             }

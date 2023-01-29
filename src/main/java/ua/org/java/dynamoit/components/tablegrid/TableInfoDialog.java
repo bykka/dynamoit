@@ -17,6 +17,8 @@
 
 package ua.org.java.dynamoit.components.tablegrid;
 
+import com.amazonaws.services.dynamodbv2.model.GlobalSecondaryIndexDescription;
+import com.amazonaws.services.dynamodbv2.model.LocalSecondaryIndexDescription;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -28,6 +30,8 @@ import javafx.stage.Stage;
 import ua.org.java.dynamoit.utils.DX;
 
 import java.text.DateFormat;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -50,14 +54,26 @@ public class TableInfoDialog extends Dialog<Void> {
 
         getDialogPane().setContent(DX.create(TabPane::new, tabPane -> {
             tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
+
             tabPane.getTabs().add(DX.create(Tab::new, tab -> {
                 tab.setText("Overview");
                 tab.setContent(buildTableOverview());
             }));
-            tabPane.getTabs().add(DX.create(Tab::new, tab -> {
-                tab.setText("Global indexes");
-                tab.setContent(buildGlobalIndexes());
-            }));
+
+            if (this.tableModel.getOriginalTableDescription().getLocalSecondaryIndexes() != null) {
+                tabPane.getTabs().add(DX.create(Tab::new, tab -> {
+                    tab.setText("Local indexes");
+                    tab.setContent(buildLocalIndexes());
+                }));
+            }
+
+            if (this.tableModel.getOriginalTableDescription().getGlobalSecondaryIndexes() != null) {
+                tabPane.getTabs().add(DX.create(Tab::new, tab -> {
+                    tab.setText("Global indexes");
+                    tab.setContent(buildGlobalIndexes());
+                }));
+            }
+
         }));
     }
 
@@ -102,20 +118,77 @@ public class TableInfoDialog extends Dialog<Void> {
         });
     }
 
-    private Node buildGlobalIndexes() {
-        System.out.println(this.tableModel.getOriginalTableDescription().getGlobalSecondaryIndexes().size());
-
+    private Node buildLocalIndexes() {
         return DX.create(TableInfoDialog::buildEmptyGridPane, gridPane -> {
+            List<LocalSecondaryIndexDescription> indexes = this.tableModel.getOriginalTableDescription().getLocalSecondaryIndexes();
+            if (indexes != null) {
 
-            gridPane.getColumnConstraints().clear();
-            gridPane.getColumnConstraints().addAll(
-                DX.create(ColumnConstraints::new, (ColumnConstraints c) -> c.setHgrow(Priority.ALWAYS))
-            );
+                gridPane.getColumnConstraints().clear();
+                gridPane.getColumnConstraints().addAll(
+                        new ColumnConstraints(10), // padding for details
+                        new ColumnConstraints(140), // details label
+                        DX.create(ColumnConstraints::new, (ColumnConstraints c) -> c.setHgrow(Priority.ALWAYS)) // details value
+                );
 
-            this.tableModel.getOriginalTableDescription().getGlobalSecondaryIndexes().forEach(indexDescription -> {
-                gridPane.addColumn(0, DX.boldLabel(indexDescription.getIndexName()));
-                gridPane.addColumn(1, copyClipboardWidget(indexDescription::getIndexName));
-            });
+                AtomicInteger startRow = new AtomicInteger();
+                indexes.forEach(indexDescription -> {
+                    gridPane.add(DX.boldLabel(indexDescription.getIndexName()), 0, startRow.get(), 3, 1);
+                    gridPane.add(copyClipboardWidget(indexDescription::getIndexName), 3, startRow.get());
+
+                    startRow.incrementAndGet();
+
+                    indexDescription.getKeySchema().forEach(keySchemaElement -> {
+                        gridPane.add(DX.boldLabel(keySchemaElement.getKeyType() + ":"), 1, startRow.get());
+                        gridPane.add(new Label(keySchemaElement.getAttributeName()), 2, startRow.getAndIncrement());
+                    });
+
+                    gridPane.add(DX.boldLabel("Projection type:"), 1, startRow.get());
+                    gridPane.add(new Label(indexDescription.getProjection().getProjectionType()), 2, startRow.getAndIncrement());
+
+                    if (indexDescription.getProjection().getNonKeyAttributes() != null) {
+                        gridPane.add(DX.boldLabel("Projection attributes:"), 1, startRow.get());
+                        gridPane.add(new Label(String.join(",", indexDescription.getProjection().getNonKeyAttributes())), 2, startRow.getAndIncrement());
+                    }
+                });
+
+            }
+        });
+    }
+
+    private Node buildGlobalIndexes() {
+        return DX.create(TableInfoDialog::buildEmptyGridPane, gridPane -> {
+            List<GlobalSecondaryIndexDescription> globalSecondaryIndexes = this.tableModel.getOriginalTableDescription().getGlobalSecondaryIndexes();
+            if (globalSecondaryIndexes != null) {
+
+                gridPane.getColumnConstraints().clear();
+                gridPane.getColumnConstraints().addAll(
+                        new ColumnConstraints(10), // padding for details
+                        new ColumnConstraints(140), // details label
+                        DX.create(ColumnConstraints::new, (ColumnConstraints c) -> c.setHgrow(Priority.ALWAYS)) // details value
+                );
+
+                AtomicInteger startRow = new AtomicInteger();
+                globalSecondaryIndexes.forEach(indexDescription -> {
+                    gridPane.add(DX.boldLabel(indexDescription.getIndexName()), 0, startRow.get(), 3, 1);
+                    gridPane.add(copyClipboardWidget(indexDescription::getIndexName), 3, startRow.get());
+
+                    startRow.incrementAndGet();
+
+                    indexDescription.getKeySchema().forEach(keySchemaElement -> {
+                        gridPane.add(DX.boldLabel(keySchemaElement.getKeyType() + ":"), 1, startRow.get());
+                        gridPane.add(new Label(keySchemaElement.getAttributeName()), 2, startRow.getAndIncrement());
+                    });
+
+                    gridPane.add(DX.boldLabel("Projection type:"), 1, startRow.get());
+                    gridPane.add(new Label(indexDescription.getProjection().getProjectionType()), 2, startRow.getAndIncrement());
+
+                    if (indexDescription.getProjection().getNonKeyAttributes() != null) {
+                        gridPane.add(DX.boldLabel("Projection attributes:"), 1, startRow.get());
+                        gridPane.add(new Label(String.join(",", indexDescription.getProjection().getNonKeyAttributes())), 2, startRow.getAndIncrement());
+                    }
+                });
+
+            }
         });
     }
 
