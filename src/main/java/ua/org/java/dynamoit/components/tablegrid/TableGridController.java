@@ -23,9 +23,7 @@ import com.amazonaws.services.dynamodbv2.document.internal.PageBasedCollection;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
-import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
-import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
-import com.amazonaws.services.dynamodbv2.model.DescribeTableResult;
+import com.amazonaws.services.dynamodbv2.model.*;
 import com.amazonaws.util.StringUtils;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -39,6 +37,7 @@ import javafx.util.Pair;
 import org.reactfx.EventStream;
 import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.db.DynamoDBService;
+import ua.org.java.dynamoit.db.KeySchemaType;
 import ua.org.java.dynamoit.model.TableDef;
 
 import java.io.BufferedReader;
@@ -264,11 +263,42 @@ public class TableGridController {
     }
 
     private CompletableFuture<? extends ItemCollection<?>> executeQueryOrSearch() {
-        SimpleStringProperty hashValueProperty = tableModel.getAttributeFilterMap().get(hash());
-        if (hashValueProperty != null && !StringUtils.isNullOrEmpty(hashValueProperty.get())) {
+        // query table if hash attribute has filter
+        if (notBlankFilterValue(hash())) {
+            SimpleStringProperty hashValueProperty = tableModel.getAttributeFilterMap().get(hash());
             QueryFilter filter = attributeValueToFilter(hash(), hashValueProperty.get(), Type.STRING, QueryFilter::new);
+            // query if hash has eq operation only
             if (filter.getComparisonOperator() == ComparisonOperator.EQ) {
-                return queryItems(tableModel.getAttributeFilterMap());
+                QuerySpec querySpec = buildQuerySpec(hash(), range(), tableModel.getAttributeFilterMap());
+                return queryTableItems(querySpec);
+            }
+        } else if (tableModel.getOriginalTableDescription().getGlobalSecondaryIndexes() != null) {
+            // find global indexes with ALL properties projection
+            List<GlobalSecondaryIndexDescription> fullProjectionIndexes = tableModel.getOriginalTableDescription().getGlobalSecondaryIndexes().stream()
+                    .filter(__ -> __.getProjection().getProjectionType().equals("ALL")).toList();
+
+            // find the first index that has hash and range attributes in the filters map
+            Optional<GlobalSecondaryIndexDescription> globalIndexOptional = fullProjectionIndexes.stream()
+                    .filter(__ -> __.getKeySchema().stream()
+                            .allMatch(key -> notBlankFilterValue(key.getAttributeName()))
+                    ).findFirst();
+
+            // or try to find at least global index with hash in the filters map
+            globalIndexOptional = globalIndexOptional.or(() -> fullProjectionIndexes.stream()
+                    .filter(__ -> lookUpKeyName(__.getKeySchema(), KeySchemaType.HASH).map(this::notBlankFilterValue).orElse(false)).findFirst()
+            );
+
+            if (globalIndexOptional.isPresent()) {
+                GlobalSecondaryIndexDescription indexDescription = globalIndexOptional.get();
+
+                Index index = table.getIndex(indexDescription.getIndexName());
+                Optional<String> indexHash = lookUpKeyName(indexDescription.getKeySchema(), KeySchemaType.HASH);
+                Optional<String> indexRange = lookUpKeyName(indexDescription.getKeySchema(), KeySchemaType.RANGE);
+
+                if (indexHash.isPresent()) {
+                    QuerySpec querySpec = buildQuerySpec(indexHash.get(), indexRange.orElse(null), tableModel.getAttributeFilterMap());
+                    return queryIndexItems(querySpec, index);
+                }
             }
         }
         return scanItems(tableModel.getAttributeFilterMap());
@@ -329,25 +359,38 @@ public class TableGridController {
         });
     }
 
-    private CompletableFuture<ItemCollection<QueryOutcome>> queryItems(Map<String, SimpleStringProperty> attributeFilterMap) {
+    private QuerySpec buildQuerySpec(String hashName, String rangeName, Map<String, SimpleStringProperty> attributeFilterMap) {
+        QuerySpec querySpec = new QuerySpec();
+        querySpec.withHashKey(hashName, attributeFilterMap.get(hashName).get());
+        if (rangeName != null && !StringUtils.isNullOrEmpty(attributeFilterMap.get(rangeName).get())) {
+            querySpec.withRangeKeyCondition(new RangeKeyCondition(rangeName).eq(attributeFilterMap.get(rangeName).get()));
+        }
+        List<QueryFilter> filters = attributeFilterMap.entrySet().stream()
+                .filter(entry -> !entry.getKey().equals(hashName) && !entry.getKey().equals(rangeName))
+                .filter(entry -> !StringUtils.isNullOrEmpty(entry.getValue().get()))
+                .map(entry -> attributeValueToFilter(entry.getKey(), entry.getValue().get(), tableModel.getTableDef().getAttributeTypesMap().get(entry.getKey()), QueryFilter::new))
+                .toList();
+        if (!filters.isEmpty()) {
+            querySpec.withQueryFilters(filters.toArray(new QueryFilter[]{}));
+        }
+
+        return querySpec.withMaxPageSize(PAGE_SIZE);
+    }
+
+    private CompletableFuture<ItemCollection<QueryOutcome>> queryTableItems(QuerySpec querySpec) {
         return supplyAsync(() -> {
-            QuerySpec querySpec = new QuerySpec();
-            querySpec.withHashKey(hash(), attributeFilterMap.get(hash()).get());
-            if (range() != null && !StringUtils.isNullOrEmpty(attributeFilterMap.get(range()).get())) {
-                querySpec.withRangeKeyCondition(new RangeKeyCondition(range()).eq(attributeFilterMap.get(range()).get()));
-            }
-            List<QueryFilter> filters = attributeFilterMap.entrySet().stream()
-                    .filter(entry -> !entry.getKey().equals(hash()) && !entry.getKey().equals(range()))
-                    .filter(entry -> !StringUtils.isNullOrEmpty(entry.getValue().get()))
-                    .map(entry -> attributeValueToFilter(entry.getKey(), entry.getValue().get(), tableModel.getTableDef().getAttributeTypesMap().get(entry.getKey()), QueryFilter::new))
-                    .toList();
-            if (!filters.isEmpty()) {
-                querySpec.withQueryFilters(filters.toArray(new QueryFilter[]{}));
-            }
             LOG.fine(() -> String.format("Query %1s = %2s", table.getTableName(), logAsJson(querySpec)));
-            return table.query(querySpec.withMaxPageSize(PAGE_SIZE));
+            return table.query(querySpec);
         });
     }
+
+    private CompletableFuture<ItemCollection<QueryOutcome>> queryIndexItems(QuerySpec querySpec, Index index) {
+        return supplyAsync(() -> {
+            LOG.fine(() -> String.format("Query %1s = %2s", index.getIndexName(), logAsJson(querySpec)));
+            return index.query(querySpec);
+        });
+    }
+
 
     private CompletableFuture<Void> delete(List<Item> items) {
         return runAsync(() -> Observable.fromIterable(items)
@@ -371,14 +414,15 @@ public class TableGridController {
      * sort attributes before bindings
      */
     private void bindToModel(DescribeTableResult describeTable) {
-        tableModel.setOriginalTableDescription(describeTable.getTable());
+        TableDescription originalTableDescription = describeTable.getTable();
+        tableModel.setOriginalTableDescription(originalTableDescription);
 
         getHashKey(describeTable).ifPresent(tableModel.getTableDef()::setHashAttribute);
         getRangeKey(describeTable).ifPresent(tableModel.getTableDef()::setRangeAttribute);
 
         Map<String, String> attributes = new TreeMap<>(KEYS_FIRST(hash(), range()));
         attributes.putAll(
-                describeTable.getTable().getAttributeDefinitions().stream()
+                originalTableDescription.getAttributeDefinitions().stream()
                         .collect(Collectors.toMap(
                                 AttributeDefinition::getAttributeName,
                                 AttributeDefinition::getAttributeType))
@@ -386,7 +430,7 @@ public class TableGridController {
 
         attributes.forEach((name, type) -> tableModel.getTableDef().getAttributeTypesMap().put(name, fromDynamoDBType(type)));
 
-        tableModel.getTableDef().setTotalCount(describeTable.getTable().getItemCount());
+        tableModel.getTableDef().setTotalCount(originalTableDescription.getItemCount());
     }
 
     private void bindToModel(Pair<List<Item>, Page<Item, ?>> pair) {
@@ -406,6 +450,17 @@ public class TableGridController {
         if (context.propertyName() != null && context.propertyValue() != null) {
             tableModel.getAttributeFilterMap().computeIfAbsent(context.propertyName(), __ -> new SimpleStringProperty()).set(context.propertyValue());
         }
+    }
+
+    /**
+     * Check that filters map has not null or not empty value for the attribute
+     *
+     * @param attr attribute for checking
+     * @return true if attribute has some value
+     */
+    private boolean notBlankFilterValue(String attr) {
+        SimpleStringProperty property = tableModel.getAttributeFilterMap().get(attr);
+        return property != null && !StringUtils.isNullOrEmpty(property.get());
     }
 
     private String hash() {
