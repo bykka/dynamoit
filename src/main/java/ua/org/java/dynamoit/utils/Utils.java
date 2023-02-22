@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyEvent;
+import ua.org.java.dynamoit.db.KeySchemaType;
 
 import java.util.*;
 import java.util.function.Function;
@@ -59,12 +60,16 @@ public class Utils {
 
     public static Optional<String> getHashKey(DescribeTableResult describeTableResult) {
         TableDescription tableDescription = describeTableResult.getTable();
-        return tableDescription.getKeySchema().stream().filter(keySchemaElement -> keySchemaElement.getKeyType().equals("HASH")).map(KeySchemaElement::getAttributeName).findFirst();
+        return lookUpKeyName(tableDescription.getKeySchema(), KeySchemaType.HASH);
     }
 
     public static Optional<String> getRangeKey(DescribeTableResult describeTableResult) {
         TableDescription tableDescription = describeTableResult.getTable();
-        return tableDescription.getKeySchema().stream().filter(keySchemaElement -> keySchemaElement.getKeyType().equals("RANGE")).map(KeySchemaElement::getAttributeName).findFirst();
+        return lookUpKeyName(tableDescription.getKeySchema(), KeySchemaType.RANGE);
+    }
+
+    public static Optional<String> lookUpKeyName(List<KeySchemaElement> keySchemaElements, KeySchemaType keySchemaType) {
+        return keySchemaElements.stream().filter(keySchemaElement -> keySchemaElement.getKeyType().equals(keySchemaType.name())).map(KeySchemaElement::getAttributeName).findFirst();
     }
 
 
@@ -97,6 +102,7 @@ public class Utils {
         try {
             return OBJECT_MAPPER.writeValueAsString(value);
         } catch (JsonProcessingException ignored) {
+            System.out.println(ignored);
         }
         return String.valueOf(value);
     }

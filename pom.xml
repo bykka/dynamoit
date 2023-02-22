@@ -22,7 +22,7 @@
 
     <groupId>ua.org.java</groupId>
     <artifactId>DynamoIt</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
     <packaging>jar</packaging>
 
     <description>
@@ -36,8 +36,8 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <dagger.version>2.44.1</dagger.version>
-        <javafx.version>19</javafx.version>
-        <aws.sdk.version>1.12.341</aws.sdk.version>
+        <javafx.version>19.0.2.1</javafx.version>
+        <aws.sdk.version>1.12.405</aws.sdk.version>
         <main.class>ua.org.java.dynamoit.Launcher</main.class>
         <fatJar.dir>${project.build.directory}/fatJar/</fatJar.dir>
         <destination.dir>${project.build.directory}/${project.name}</destination.dir>
@@ -244,7 +244,7 @@
         <dependency>
             <groupId>org.fxmisc.richtext</groupId>
             <artifactId>richtextfx</artifactId>
-            <version>0.10.9</version>
+            <version>0.11.0</version>
         </dependency>
         <!-- rx java -->
         <dependency>
@@ -277,7 +277,7 @@
         <dependency>
             <groupId>org.easymock</groupId>
             <artifactId>easymock</artifactId>
-            <version>5.0.1</version>
+            <version>5.1.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
