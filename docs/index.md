@@ -25,6 +25,8 @@ Or configure a new remote or local profile manually using the "Create a new prof
  * Light / Dark themes support
  * Change region for the active profile
  * Local DynamoDB support
+ * Shows information about local and global indexes
+ * Automatically uses indexes with projection type ALL 
  
 ## Supported filters
 Examples are based on "hello world"
@@ -74,3 +76,6 @@ The compare dialog
 
 A new profile dialog
 ![a new profile dialog](./images/new_profile_dialog.png)
+
+Indexes information dialog
+![indexes info dialog](./images/global_index_info.png)
