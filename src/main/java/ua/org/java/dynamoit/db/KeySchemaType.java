@@ -15,17 +15,11 @@
  *     along with DynamoIt.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ua.org.java.dynamoit.widgets;
+package ua.org.java.dynamoit.db;
 
-import javafx.beans.binding.Bindings;
-import javafx.scene.control.ProgressBar;
-import ua.org.java.dynamoit.EventBus;
+public enum KeySchemaType {
 
-public class ActivityIndicator extends ProgressBar {
+    HASH,
+    RANGE
 
-    public ActivityIndicator(EventBus eventBus) {
-        setPrefHeight(12);
-        setPrefWidth(150);
-        visibleProperty().bind(Bindings.greaterThan(eventBus.activityCountProperty(), 0));
-    }
 }
