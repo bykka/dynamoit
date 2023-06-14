@@ -22,7 +22,7 @@
 
     <groupId>ua.org.java</groupId>
     <artifactId>DynamoIt</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <description>
@@ -35,9 +35,10 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-        <dagger.version>2.44.1</dagger.version>
-        <javafx.version>19</javafx.version>
-        <aws.sdk.version>1.12.341</aws.sdk.version>
+        <dagger.version>2.46.1</dagger.version>
+        <javafx.version>20.0.1</javafx.version>
+        <aws.sdk.version>1.12.481</aws.sdk.version>
+        <aws.sdk.version2>2.20.78</aws.sdk.version2>
         <main.class>ua.org.java.dynamoit.Launcher</main.class>
         <fatJar.dir>${project.build.directory}/fatJar/</fatJar.dir>
         <destination.dir>${project.build.directory}/${project.name}</destination.dir>
@@ -234,6 +235,16 @@
             <artifactId>aws-java-sdk-config</artifactId>
             <version>${aws.sdk.version}</version>
         </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>dynamodb-enhanced</artifactId>
+            <version>${aws.sdk.version2}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>config</artifactId>
+            <version>${aws.sdk.version2}</version>
+        </dependency>
         <!-- dagger -->
         <dependency>
             <groupId>com.google.dagger</groupId>
@@ -244,7 +255,7 @@
         <dependency>
             <groupId>org.fxmisc.richtext</groupId>
             <artifactId>richtextfx</artifactId>
-            <version>0.10.9</version>
+            <version>0.11.0</version>
         </dependency>
         <!-- rx java -->
         <dependency>
@@ -265,7 +276,7 @@
         <dependency>
             <groupId>io.github.mkpaz</groupId>
             <artifactId>atlantafx-base</artifactId>
-            <version>1.1.0</version>
+            <version>2.0.0</version>
         </dependency>
         <!-- testing -->
         <dependency>
@@ -277,7 +288,7 @@
         <dependency>
             <groupId>org.easymock</groupId>
             <artifactId>easymock</artifactId>
-            <version>5.0.1</version>
+            <version>5.1.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>

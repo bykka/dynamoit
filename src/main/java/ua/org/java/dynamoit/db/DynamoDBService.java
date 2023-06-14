@@ -27,12 +27,16 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.model.ListTablesResult;
+import software.amazon.awssdk.profiles.ProfileFileSupplier;
 import ua.org.java.dynamoit.model.profile.LocalProfileDetails;
 import ua.org.java.dynamoit.model.profile.PreconfiguredProfileDetails;
 import ua.org.java.dynamoit.model.profile.ProfileDetails;
 import ua.org.java.dynamoit.model.profile.RemoteProfileDetails;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -54,7 +58,15 @@ public class DynamoDBService {
                 .map(profile -> new PreconfiguredProfileDetails(cutProfilePrefix.apply(profile.getProfileName()), profile.getRegion()))
                 .collect(Collectors.toMap(ProfileDetails::getName, profile -> profile));
 
-        // by default it uses credentials config with contains profile and access keys
+        software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider provider = software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider
+                .builder()
+                .profileFile(ProfileFileSupplier.defaultSupplier())
+                .build();
+
+        var profs = software.amazon.awssdk.profiles.ProfileFile.defaultProfileFile().profiles();
+        System.out.println(profs);
+
+        // by default, it uses credentials config with contains profile and access keys
         return new ProfilesConfigFile().getAllBasicProfiles()
                 .values()
                 .stream()
