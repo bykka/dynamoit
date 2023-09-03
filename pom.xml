@@ -33,12 +33,12 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <dagger.version>2.46.1</dagger.version>
-        <javafx.version>20.0.1</javafx.version>
+        <javafx.version>20.0.2</javafx.version>
         <aws.sdk.version>1.12.481</aws.sdk.version>
-        <aws.sdk.version2>2.20.78</aws.sdk.version2>
+        <aws.sdk.version2>2.20.140</aws.sdk.version2>
         <main.class>ua.org.java.dynamoit.Launcher</main.class>
         <fatJar.dir>${project.build.directory}/fatJar/</fatJar.dir>
         <destination.dir>${project.build.directory}/${project.name}</destination.dir>
@@ -60,6 +60,9 @@
                             <version>${dagger.version}</version>
                         </path>
                     </annotationProcessorPaths>
+                    <source>19</source>
+                    <target>19</target>
+                    <compilerArgs>--enable-preview</compilerArgs>
                 </configuration>
             </plugin>
             <plugin>
@@ -255,7 +258,7 @@
         <dependency>
             <groupId>org.fxmisc.richtext</groupId>
             <artifactId>richtextfx</artifactId>
-            <version>0.11.0</version>
+            <version>0.11.1</version>
         </dependency>
         <!-- rx java -->
         <dependency>
@@ -266,7 +269,7 @@
         <dependency>
             <groupId>io.reactivex.rxjava2</groupId>
             <artifactId>rxjavafx</artifactId>
-            <version>2.11.0-RC16</version>
+            <version>2.11.0-RC36</version>
         </dependency>
         <dependency>
             <groupId>io.github.java-diff-utils</groupId>
@@ -276,7 +279,7 @@
         <dependency>
             <groupId>io.github.mkpaz</groupId>
             <artifactId>atlantafx-base</artifactId>
-            <version>2.0.0</version>
+            <version>2.0.1</version>
         </dependency>
         <!-- testing -->
         <dependency>

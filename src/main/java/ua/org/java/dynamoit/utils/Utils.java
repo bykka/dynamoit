@@ -17,12 +17,6 @@
 
 package ua.org.java.dynamoit.utils;
 
-import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.ItemUtils;
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.DescribeTableResult;
-import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
-import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -31,7 +25,11 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyEvent;
-import ua.org.java.dynamoit.db.KeySchemaType;
+import software.amazon.awssdk.enhanced.dynamodb.document.EnhancedDocument;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement;
+import software.amazon.awssdk.services.dynamodb.model.KeyType;
+import software.amazon.awssdk.services.dynamodb.model.TableDescription;
 
 import java.util.*;
 import java.util.function.Function;
@@ -48,28 +46,27 @@ public class Utils {
         return StreamSupport.stream(iterable.spliterator(), false);
     }
 
-    public static boolean isHashKey(String attributeName, DescribeTableResult describeTableResult) {
-        TableDescription tableDescription = describeTableResult.getTable();
-        return tableDescription.getKeySchema().stream().anyMatch(keySchemaElement -> keySchemaElement.getAttributeName().equals(attributeName) && keySchemaElement.getKeyType().equals("HASH"));
+    public static boolean isHashKey(String attributeName, TableDescription tableDescription) {
+        return tableDescription.keySchema().stream().anyMatch(keySchemaElement -> keySchemaElement.attributeName().equals(attributeName) && keySchemaElement.keyType().equals(KeyType.HASH));
     }
 
-    public static boolean isRangeKey(String attributeName, DescribeTableResult describeTableResult) {
-        TableDescription tableDescription = describeTableResult.getTable();
-        return tableDescription.getKeySchema().stream().anyMatch(keySchemaElement -> keySchemaElement.getAttributeName().equals(attributeName) && keySchemaElement.getKeyType().equals("RANGE"));
+    public static boolean isRangeKey(String attributeName, TableDescription tableDescription) {
+        return tableDescription.keySchema().stream().anyMatch(keySchemaElement -> keySchemaElement.attributeName().equals(attributeName) && keySchemaElement.keyType().equals(KeyType.RANGE));
     }
 
-    public static Optional<String> getHashKey(DescribeTableResult describeTableResult) {
-        TableDescription tableDescription = describeTableResult.getTable();
-        return lookUpKeyName(tableDescription.getKeySchema(), KeySchemaType.HASH);
+    public static Optional<String> getHashKey(TableDescription tableDescription) {
+        return lookUpKeyName(tableDescription.keySchema(), KeyType.HASH);
     }
 
-    public static Optional<String> getRangeKey(DescribeTableResult describeTableResult) {
-        TableDescription tableDescription = describeTableResult.getTable();
-        return lookUpKeyName(tableDescription.getKeySchema(), KeySchemaType.RANGE);
+    public static Optional<String> getRangeKey(TableDescription tableDescription) {
+        return lookUpKeyName(tableDescription.keySchema(), KeyType.RANGE);
     }
 
-    public static Optional<String> lookUpKeyName(List<KeySchemaElement> keySchemaElements, KeySchemaType keySchemaType) {
-        return keySchemaElements.stream().filter(keySchemaElement -> keySchemaElement.getKeyType().equals(keySchemaType.name())).map(KeySchemaElement::getAttributeName).findFirst();
+    public static Optional<String> lookUpKeyName(List<KeySchemaElement> keySchemaElements, KeyType keyType) {
+        return keySchemaElements.stream()
+                .filter(keySchemaElement -> keySchemaElement.keyType().equals(keyType))
+                .map(KeySchemaElement::attributeName)
+                .findFirst();
     }
 
 
@@ -152,19 +149,19 @@ public class Utils {
         });
     }
 
-    public static Item rawJsonToItem(String json) throws JsonProcessingException {
-        return ItemUtils.toItem(rawJsonToMap(json));
+    public static EnhancedDocument rawJsonToItem(String json) throws JsonProcessingException {
+        return EnhancedDocument.fromAttributeValueMap(rawJsonToMap(json));
     }
 
     public static String convertJsonDocument(String json, boolean toRaw) {
         try {
             if (toRaw) {
-                Item item = Item.fromJSON(json);
-                Map<String, AttributeValue> map = ItemUtils.toAttributeValues(item);
+                EnhancedDocument item = EnhancedDocument.fromJson(json);
+                Map<String, AttributeValue> map = item.toMap();
                 return PRETTY_PRINTER.writeValueAsString(map);
             } else {
-                Item item = rawJsonToItem(json);
-                return item.toJSONPretty();
+                EnhancedDocument item = rawJsonToItem(json);
+                return item.toJson();
             }
         } catch (Exception e) {
             e.printStackTrace();
