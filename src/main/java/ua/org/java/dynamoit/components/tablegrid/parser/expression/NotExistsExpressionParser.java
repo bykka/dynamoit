@@ -19,12 +19,16 @@ package ua.org.java.dynamoit.components.tablegrid.parser.expression;
 
 import java.util.regex.Pattern;
 
-public class BeginsWithExpressionParser extends BaseValueToExpressionParser {
+public class NotExistsExpressionParser extends BaseValueToExpressionParser {
 
-    private static final Pattern PATTERN = Pattern.compile("^\\^(.*)$");
+    private static final Pattern PATTERN = Pattern.compile("(^!\\$$)");
 
-    public BeginsWithExpressionParser(String attribute, String value) {
+    private final ExistsExpressionParser existsExpressionParser;
+
+    public NotExistsExpressionParser(String attribute, String value) {
         super(attribute, value);
+
+        existsExpressionParser = new ExistsExpressionParser(attribute, value);
     }
 
     @Override
@@ -34,6 +38,6 @@ public class BeginsWithExpressionParser extends BaseValueToExpressionParser {
 
     @Override
     protected String buildExpression(String attrName, String attrValue) {
-        return "begins_with(" + attrName + ", " + attrValue + ")";
+        return "NOT " + existsExpressionParser.buildExpression(attrName, attrValue);
     }
 }

@@ -38,7 +38,7 @@
         <dagger.version>2.46.1</dagger.version>
         <javafx.version>20.0.2</javafx.version>
         <aws.sdk.version>1.12.481</aws.sdk.version>
-        <aws.sdk.version2>2.20.140</aws.sdk.version2>
+        <aws.sdk.version2>2.23.14</aws.sdk.version2>
         <main.class>ua.org.java.dynamoit.Launcher</main.class>
         <fatJar.dir>${project.build.directory}/fatJar/</fatJar.dir>
         <destination.dir>${project.build.directory}/${project.name}</destination.dir>

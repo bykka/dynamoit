@@ -17,6 +17,7 @@
 
 package ua.org.java.dynamoit.components.tablegrid;
 
+import com.amazonaws.services.dynamodbv2.document.ScanFilter;
 import com.amazonaws.util.StringUtils;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -54,7 +55,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import static java.lang.StringTemplate.STR;
 import static java.util.concurrent.CompletableFuture.runAsync;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static ua.org.java.dynamoit.components.tablegrid.Attributes.*;
@@ -339,13 +339,18 @@ public class TableGridController {
 
     private CompletableFuture<SdkIterable<Page<EnhancedDocument>>> scanItems(Map<String, SimpleStringProperty> attributeFilterMap) {
         return supplyAsync(() -> {
-            ScanEnhancedRequest.Builder scanSpec = ScanEnhancedRequest.builder();
+            ScanEnhancedRequest.Builder scanSpec = ScanEnhancedRequest.builder().;
+
+            Expression.Builder builder = Expression.builder();
+            builder.expression();
+
             List<ScanFilter> filters = attributeFilterMap.entrySet().stream()
                     .filter(entry -> Objects.nonNull(entry.getValue().get()) && entry.getValue().get().trim().length() > 0)
                     .map(entry -> attributeValueToFilter(entry.getKey(), entry.getValue().get(), tableModel.getTableDef().getAttributeTypesMap().get(entry.getKey()), ScanFilter::new))
                     .toList();
+
             if (!filters.isEmpty()) {
-                scanSpec.withScanFilters(filters.toArray(new ScanFilter[]{}));
+                scanSpec.filterExpression(builder.build());
             }
             LOG.fine(() -> String.format("Scan %1s = %2s", table.tableName(), logAsJson(scanSpec)));
             return table.scan(scanSpec.limit(PAGE_SIZE).build());

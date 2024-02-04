@@ -19,11 +19,11 @@ package ua.org.java.dynamoit.components.tablegrid.parser.expression;
 
 import java.util.regex.Pattern;
 
-public class BeginsWithExpressionParser extends BaseValueToExpressionParser {
+public class EqualsExpressionParser extends BaseValueToExpressionParser {
 
-    private static final Pattern PATTERN = Pattern.compile("^\\^(.*)$");
+    private static final Pattern PATTERN = Pattern.compile("(.*)");
 
-    public BeginsWithExpressionParser(String attribute, String value) {
+    public EqualsExpressionParser(String attribute, String value) {
         super(attribute, value);
     }
 
@@ -34,6 +34,6 @@ public class BeginsWithExpressionParser extends BaseValueToExpressionParser {
 
     @Override
     protected String buildExpression(String attrName, String attrValue) {
-        return "begins_with(" + attrName + ", " + attrValue + ")";
+        return attrName + " = " + attrValue;
     }
 }

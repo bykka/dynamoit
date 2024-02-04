@@ -35,16 +35,21 @@
 package ua.org.java.dynamoit.components.tablegrid.parser.expression;
 
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
+import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.CRC32;
 
 /**
  * Matches regular expression and build a new dynamodb filter expression if yes
  */
 public abstract class BaseValueToExpressionParser implements ValueToExpressionParser {
+
+    private static final CRC32 CRC_32 = new CRC32();
 
     protected final String attribute;
     private final Matcher matcher;
@@ -56,7 +61,20 @@ public abstract class BaseValueToExpressionParser implements ValueToExpressionPa
 
     protected abstract Pattern regPattern();
 
-    protected abstract Function<String, Expression> termConverter();
+    protected abstract String buildExpression(String attrName, String attrValue);
+
+    protected static synchronized String hashAttribute(String attribute) {
+        CRC_32.update(attribute.getBytes());
+        return String.valueOf(CRC_32.getValue());
+    }
+
+    protected static String attributeName(String attribute) {
+        return "#attr_" + hashAttribute(attribute);
+    }
+
+    protected static String attributeValue(String attribute) {
+        return ":val_" + hashAttribute(attribute);
+    }
 
     @Override
     public boolean matches() {
@@ -65,9 +83,18 @@ public abstract class BaseValueToExpressionParser implements ValueToExpressionPa
 
     @Override
     public Optional<Expression> parse() {
-        String group = matcher.group(1);
-        if (!group.isBlank()) {
-            return Optional.of(termConverter().apply(group));
+        String term = matcher.group(1);
+        if (!term.isBlank()) {
+            String attrName = attributeName(attribute);
+            String attrValue = attributeValue(attribute);
+
+            Expression expression = Expression.builder()
+                    .expression(buildExpression(attrName, attrValue).get())
+                    .expressionNames(Map.of(attrName, attribute))
+                    .expressionValues(Map.of(attrValue, AttributeValue.builder().s(term).build()))
+                    .build();
+
+            return Optional.of(expression);
         }
         return Optional.empty();
     }
