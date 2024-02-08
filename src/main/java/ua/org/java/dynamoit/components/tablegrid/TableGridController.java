@@ -339,10 +339,10 @@ public class TableGridController {
 
     private CompletableFuture<SdkIterable<Page<EnhancedDocument>>> scanItems(Map<String, SimpleStringProperty> attributeFilterMap) {
         return supplyAsync(() -> {
-            ScanEnhancedRequest.Builder scanSpec = ScanEnhancedRequest.builder().;
+            ScanEnhancedRequest.Builder scanSpec = ScanEnhancedRequest.builder();
 
             Expression.Builder builder = Expression.builder();
-            builder.expression();
+//            builder.expression();
 
             List<ScanFilter> filters = attributeFilterMap.entrySet().stream()
                     .filter(entry -> Objects.nonNull(entry.getValue().get()) && entry.getValue().get().trim().length() > 0)

@@ -34,6 +34,6 @@ public class ExistsExpressionParser extends BaseValueToExpressionParser {
 
     @Override
     protected String buildExpression(String attrName, String attrValue) {
-        return attrName + " = " + attrValue;
+        return "attribute_exists(" + attrName + ")";
     }
 }

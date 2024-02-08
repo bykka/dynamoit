@@ -17,23 +17,23 @@
 
 package ua.org.java.dynamoit.components.tablegrid.parser.expression;
 
-import java.util.regex.Pattern;
+import org.junit.Test;
+import software.amazon.awssdk.enhanced.dynamodb.Expression;
 
-public class NotEqualsExpressionParser extends BaseValueToExpressionParser{
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
-    private static final Pattern PATTERN = Pattern.compile("^!=(.*)$");
+public class FilterExpressionBuilderTest {
 
-    public NotEqualsExpressionParser(String attribute, String value) {
-        super(attribute, value);
+    @Test
+    public void TestBeginWith(){
+        FilterExpressionBuilder expressionBuilder = new FilterExpressionBuilder();
+        expressionBuilder.addAttributeValue("greetings", "^hello");
+        Expression expression = expressionBuilder.build();
+        assertNotNull(expression);
+        assertEquals(expression.expression(), "begins_with()");
     }
 
-    @Override
-    protected Pattern regPattern() {
-        return PATTERN;
-    }
 
-    @Override
-    protected String buildExpression(String attrName, String attrValue) {
-        return attrName + " <> " + attrValue;
-    }
+
 }
