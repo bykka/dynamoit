@@ -17,9 +17,9 @@
 
 package ua.org.java.dynamoit.components.tablegrid;
 
-import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.internal.Filter;
 import javafx.util.Pair;
+import software.amazon.awssdk.enhanced.dynamodb.document.EnhancedDocument;
 import ua.org.java.dynamoit.components.tablegrid.parser.*;
 import ua.org.java.dynamoit.utils.Utils;
 
@@ -39,7 +39,7 @@ public final class Attributes {
     }
 
 
-    public static Map<String, Attributes.Type> defineAttributesTypes(List<Item> itemList) {
+    public static Map<String, Attributes.Type> defineAttributesTypes(List<EnhancedDocument> itemList) {
         Function<Object, Attributes.Type> mapper = value -> {
             if (value != null) {
                 if (value instanceof Boolean) {
@@ -54,7 +54,7 @@ public final class Attributes {
 
         return itemList.stream()
                 .flatMap(item ->
-                        Utils.asStream(item.attributes())
+                        Utils.asStream(item.toMap().entrySet())
                                 .map(entry -> new Pair<>(entry.getKey(), mapper.apply(entry.getValue()))))
                 .collect(Collectors.toMap(Pair::getKey, Pair::getValue, (attributeType, attributeType2) -> attributeType));
     }

@@ -18,6 +18,7 @@
 package ua.org.java.dynamoit.components.tablegrid;
 
 import com.amazonaws.services.dynamodbv2.document.ScanFilter;
+import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.util.StringUtils;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -36,6 +37,7 @@ import software.amazon.awssdk.enhanced.dynamodb.model.*;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
 import ua.org.java.dynamoit.EventBus;
+import ua.org.java.dynamoit.components.tablegrid.parser.expression.FilterExpressionBuilder;
 import ua.org.java.dynamoit.db.DynamoDBService;
 import ua.org.java.dynamoit.model.TableDef;
 
@@ -49,7 +51,6 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -68,6 +69,11 @@ public class TableGridController {
      * Maximum number of items in one page
      */
     private static final int PAGE_SIZE = 100;
+
+    /**
+     * Maximum number of items for one batch put request
+     */
+    private static final int BATCH_SIZE = 25;
 
     private final DynamoDbClient dbClient;
     private final DynamoDbTable<EnhancedDocument> table;
@@ -123,13 +129,13 @@ public class TableGridController {
     }
 
     public void onReachScrollEnd() {
-        if (tableModel.getCurrentPage().hasNextPage()) {
+        if (tableModel.getPageIterator().hasNext()) {
             eventBus.activity(
-                    supplyAsync(() -> tableModel.getCurrentPage().nextPage())
+                    supplyAsync(tableModel::getPageIterator)
                             .thenApply(TableGridController::iteratePage)
                             .thenAcceptAsync(pair -> {
                                 tableModel.getTableDef().getAttributeTypesMap().putAll(defineAttributesTypes(pair.getKey()));
-                                tableModel.setCurrentPage(pair.getValue());
+//                                tableModel.setPageIterator(pair.getValue());
                                 tableModel.getRows().addAll(pair.getKey());
                             }, uiExecutor)
             );
@@ -221,14 +227,15 @@ public class TableGridController {
                     try (BufferedReader reader = Files.newBufferedReader(file.toPath(), StandardCharsets.UTF_8)) {
                         JsonNode root = new ObjectMapper().readTree(reader);
                         Observable.fromIterable(root::elements)
-                                .map(jsonNode -> Item.fromJSON(jsonNode.toString()))
+                                .map(jsonNode -> EnhancedDocument.fromJson(jsonNode.toString()))
                                 .buffer(25)
                                 .map(list -> {
-                                    TableWriteItems addItems = new TableWriteItems(table.getTableName());
-                                    list.forEach(addItems::addItemToPut);
-                                    return addItems;
+                                    WriteBatch.Builder<EnhancedDocument> writeBatchBuilder = WriteBatch.builder(EnhancedDocument.class).mappedTableResource(table);
+                                    list.forEach(writeBatchBuilder::addPutItem);
+
+                                    return writeBatchBuilder.build();
                                 })
-                                .subscribe(documentClient::batchWriteItem);
+                                .subscribe(wb -> documentClient.batchWriteItem(r -> r.writeBatches(wb)));
                     } catch (Exception e) {
                         LOG.log(Level.SEVERE, e.getMessage(), e);
                         throw new RuntimeException(e);
@@ -240,25 +247,25 @@ public class TableGridController {
     }
 
     /**
-     * Iterate page to get around PAGE_SIZE number of items if exist
+     * Iterate pages to get around PAGE_SIZE number of items if exist
      *
-     * @param page current page
-     * @return list of items and next page
+     * @param pages iterator of pages
+     * @return list of items and next pages
      */
-    private static Pair<List<Item>, Page<Item, ?>> iteratePage(Page<Item, ?> page) {
-        List<Item> items = new ArrayList<>(PAGE_SIZE);
-        items.addAll(asStream(page).toList());
+    private static Pair<List<EnhancedDocument>, Iterator<Page<EnhancedDocument>>> iteratePage(Iterator<Page<EnhancedDocument>> pages) {
+        List<EnhancedDocument> items = new ArrayList<>(PAGE_SIZE);
+        items.addAll(pages.next().items());
 
-        while (items.size() < PAGE_SIZE && page.hasNextPage()) {
-            page = page.nextPage();
-            items.addAll(asStream(page).toList());
+        while (items.size() < PAGE_SIZE && pages.hasNext()) {
+            Page<EnhancedDocument> page = pages.next();
+            items.addAll(page.items());
         }
-        return new Pair<>(items, page);
+        return new Pair<>(items, pages);
     }
 
-    CompletableFuture<Pair<List<Item>, Page<Item, ?>>> queryPageItems() {
+    CompletableFuture<Pair<List<EnhancedDocument>, Iterator<Page<EnhancedDocument>>>> queryPageItems() {
         return executeQueryOrSearch()
-                .thenApply(PageBasedCollection::firstPage)
+                .thenApply(Iterable::iterator)
                 .thenApply(TableGridController::iteratePage);
     }
 
@@ -345,7 +352,7 @@ public class TableGridController {
 //            builder.expression();
 
             List<ScanFilter> filters = attributeFilterMap.entrySet().stream()
-                    .filter(entry -> Objects.nonNull(entry.getValue().get()) && entry.getValue().get().trim().length() > 0)
+                    .filter(entry -> Objects.nonNull(entry.getValue().get()) && !entry.getValue().get().trim().isEmpty())
                     .map(entry -> attributeValueToFilter(entry.getKey(), entry.getValue().get(), tableModel.getTableDef().getAttributeTypesMap().get(entry.getKey()), ScanFilter::new))
                     .toList();
 
@@ -371,35 +378,13 @@ public class TableGridController {
                 .filter(entry -> !StringUtils.isNullOrEmpty(entry.getValue().get()))
                 .toList();
 
-        AtomicInteger attributeIndex = new AtomicInteger(0);
+        FilterExpressionBuilder filterExpressionBuilder = new FilterExpressionBuilder();
 
-        Expression.Builder expressionBuilder = Expression.builder()
-                .expression(attributesWithoutKeys.stream()
-                        .map(__ -> attributeIndex.incrementAndGet())
-                        .map(i -> String.format("val%s = :val%s", i, i))
-                        .collect(Collectors.joining(" and ")));
-
-        attributeIndex.set(0);
-
-        expressionBuilder.expressionNames(attributesWithoutKeys.stream()
-                .collect(Collectors.toMap(__ -> "val" + attributeIndex.incrementAndGet(), Map.Entry::getKey))
-        );
-
-        attributeIndex.set(0);
-
-        expressionBuilder.expressionValues(attributesWithoutKeys.stream()
-                .collect(Collectors.toMap(__ -> ":val" + attributeIndex.incrementAndGet(), Map.Entry::getValue))
-        );
+        attributesWithoutKeys.forEach(entry -> filterExpressionBuilder.addAttributeValue(entry.getKey(), entry.getValue().getValue()));
 
         QueryEnhancedRequest.Builder querySpec = QueryEnhancedRequest.builder()
                 .queryConditional(QueryConditional.keyEqualTo(keyBuilder.build()))
-                .filterExpression(expressionBuilder.build());
-
-                // .map(entry -> attributeValueToFilter(entry.getKey(), entry.getValue().get(), tableModel.getTableDef().getAttributeTypesMap().get(entry.getKey()), QueryFilter::new))
-
-        if (!filters.isEmpty()) {
-            querySpec.withQueryFilters(filters.toArray(new QueryFilter[]{}));
-        }
+                .filterExpression(filterExpressionBuilder.build());
 
         return querySpec.limit(PAGE_SIZE).build();
     }
@@ -421,7 +406,7 @@ public class TableGridController {
 
     private CompletableFuture<Void> delete(List<EnhancedDocument> items) {
         return runAsync(() -> Observable.fromIterable(items)
-                .buffer(25)
+                .buffer(BATCH_SIZE)
                 .map(list -> BatchWriteItemEnhancedRequest.builder().writeBatches(
                         list.stream().map(item -> {
                             Key.Builder keyBuilder = Key.builder().partitionValue(item.toMap().get(hash()));
@@ -457,12 +442,12 @@ public class TableGridController {
         tableModel.getTableDef().setTotalCount(tableDescription.itemCount());
     }
 
-    private void bindToModel(Pair<List<EnhancedDocument>, Page<EnhancedDocument, ?>> pair) {
+    private void bindToModel(Pair<List<EnhancedDocument>, Iterator<Page<EnhancedDocument>>> pair) {
         Map<String, Type> attributesTypes = new TreeMap<>(KEYS_FIRST(hash(), range()));
         attributesTypes.putAll(defineAttributesTypes(pair.getKey()));
 
         tableModel.getTableDef().getAttributeTypesMap().putAll(attributesTypes);
-        tableModel.setCurrentPage(pair.getValue());
+        tableModel.setPageIterator(pair.getValue());
         tableModel.getRows().addAll(pair.getKey());
     }
 

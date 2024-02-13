@@ -17,17 +17,19 @@
 
 package ua.org.java.dynamoit.components.tablegrid;
 
-import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.Page;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.IntegerBinding;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
+import software.amazon.awssdk.enhanced.dynamodb.document.EnhancedDocument;
+import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.services.dynamodb.model.TableDescription;
 import ua.org.java.dynamoit.components.main.MainModel;
 import ua.org.java.dynamoit.model.TableDef;
+
+import java.util.Iterator;
 
 public class TableGridModel {
 
@@ -38,9 +40,9 @@ public class TableGridModel {
     private String tableName;
     private String profile;
 
-    private final ObservableList<Item> rows = FXCollections.observableArrayList();
+    private final ObservableList<EnhancedDocument> rows = FXCollections.observableArrayList();
     private final IntegerBinding rowsSize = Bindings.createIntegerBinding(rows::size, rows);
-    private Page<Item, ?> currentPage;
+    private Iterator<Page<EnhancedDocument>> pageIterator;
 
     private final ObservableMap<String, SimpleStringProperty> attributeFilterMap = FXCollections.observableHashMap();
 
@@ -76,7 +78,7 @@ public class TableGridModel {
         this.profile = profile;
     }
 
-    public ObservableList<Item> getRows() {
+    public ObservableList<EnhancedDocument> getRows() {
         return rows;
     }
 
@@ -92,12 +94,12 @@ public class TableGridModel {
         return attributeFilterMap;
     }
 
-    public Page<Item, ?> getCurrentPage() {
-        return currentPage;
+    public Iterator<Page<EnhancedDocument>> getPageIterator() {
+        return pageIterator;
     }
 
-    public void setCurrentPage(Page<Item, ?> currentPage) {
-        this.currentPage = currentPage;
+    public void setPageIterator(Iterator<Page<EnhancedDocument>> pageIterator) {
+        this.pageIterator = pageIterator;
     }
 
     public TableDescription getOriginalTableDescription() {

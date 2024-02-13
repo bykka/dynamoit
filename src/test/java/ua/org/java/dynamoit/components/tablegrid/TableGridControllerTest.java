@@ -91,6 +91,6 @@ public class TableGridControllerTest {
         verify(table, amazonDynamoDB, dynamoDB, dynamoDBService, page, controller);
 
         assertEquals(model.getRowsSize(), 2);
-        assertEquals(model.getCurrentPage(), page);
+        assertEquals(model.getPageIterator(), page);
     }
 }
