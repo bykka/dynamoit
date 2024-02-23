@@ -59,21 +59,37 @@ public class FilterExpressionBuilder {
 
     private Expression expression = Expression.builder().build();
 
-    public FilterExpressionBuilder addAttributeValue(String attribute, String value) {
-        String attrName = attributeName(attribute);
-        String attrValue = attributeValue(attribute);
+    public static boolean isEqualExpression(String value) {
+        if (value != null && !value.isBlank()) {
+            for (AttributeExpression attributeExpression : AttributeExpression.values()) {
+                Matcher matcher = attributeExpression.getPattern().matcher(value.trim());
+                if (matcher.matches()) {
+                    return attributeExpression == AttributeExpression.EQUALS;
+                }
+            }
 
-        for (AttributeExpression attributeExpression : AttributeExpression.values()) {
-            Matcher matcher = attributeExpression.getPattern().matcher(value.trim());
-            if (matcher.matches()) {
-                String term = matcher.group(1);
-                if (!term.isBlank()) {
-                    Expression exp = Expression.builder()
-                            .expression(attributeExpression.getAttributeValueToExpression().apply(attrName, attrValue))
-                            .expressionNames(Map.of(attrName, attribute))
-                            .expressionValues(Map.of(attrValue, AttributeValue.builder().s(term).build()))
-                            .build();
-                    expression = Expression.join(expression, exp, "AND");
+        }
+        return false;
+    }
+
+    public FilterExpressionBuilder addAttributeValue(String attribute, String value) {
+        if (value != null && !value.isBlank()) {
+
+            String attrName = attributeName(attribute);
+            String attrValue = attributeValue(attribute);
+
+            for (AttributeExpression attributeExpression : AttributeExpression.values()) {
+                Matcher matcher = attributeExpression.getPattern().matcher(value.trim());
+                if (matcher.matches()) {
+                    String term = matcher.group(1);
+                    if (!term.isBlank()) {
+                        Expression exp = Expression.builder()
+                                .expression(attributeExpression.getAttributeValueToExpression().apply(attrName, attrValue))
+                                .expressionNames(Map.of(attrName, attribute))
+                                .expressionValues(Map.of(attrValue, AttributeValue.builder().s(term).build()))
+                                .build();
+                        expression = Expression.join(expression, exp, " AND ");
+                    }
                 }
             }
         }

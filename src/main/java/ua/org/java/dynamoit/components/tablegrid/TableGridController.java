@@ -18,7 +18,6 @@
 package ua.org.java.dynamoit.components.tablegrid;
 
 import com.amazonaws.services.dynamodbv2.document.ScanFilter;
-import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.util.StringUtils;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -269,15 +268,15 @@ public class TableGridController {
                 .thenApply(TableGridController::iteratePage);
     }
 
+    // analyze what kind of request should be executed - query or scan
     private CompletableFuture<SdkIterable<Page<EnhancedDocument>>> executeQueryOrSearch() {
         // query table if hash attribute has filter
         if (notBlankFilterValue(hash())) {
             SimpleStringProperty hashValueProperty = tableModel.getAttributeFilterMap().get(hash());
-            QuerySpec filter = attributeValueToFilter(hash(), hashValueProperty.get(), Type.STRING, QuerySpec::new);
             // query if hash has eq operation only
-            if (filter.getComparisonOperator() == ComparisonOperator.EQ) {
-                QuerySpec querySpec = buildQuerySpec(hash(), range(), tableModel.getAttributeFilterMap());
-                return queryTableItems(querySpec);
+            if (FilterExpressionBuilder.isEqualExpression(hashValueProperty.get())) {
+                var queryRequest = buildQuerySpec(hash(), range(), tableModel.getAttributeFilterMap());
+                return queryTableItems(queryRequest);
             }
         } else if (tableModel.getOriginalTableDescription().globalSecondaryIndexes() != null) {
             // find global indexes with ALL properties projection
