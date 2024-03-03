@@ -285,9 +285,10 @@ public class TableGridView extends VBox {
                 column.setId(attrName);
                 column.setPrefWidth(200);
                 column.setCellValueFactory(param -> {
-                    String value = param.getValue().getJson(attrName);
+//                    String value = param.getValue().getJson(attrName);
+                    String value = toDisplayValue(param.getValue(), attrName);
 
-                    return new SimpleStringProperty(value != null ? value.toString() : "");
+                    return new SimpleStringProperty(value != null ? value : "");
                 });
                 column.setCellFactory(param -> {
                     TableCell<EnhancedDocument, String> cell = new TableCell<>();
@@ -377,7 +378,8 @@ public class TableGridView extends VBox {
         tableView.getSortOrder().clear();
         controller.onClearFilters();
     }
-    private void reloadData(){
+
+    private void reloadData() {
         tableView.getSortOrder().clear();
         controller.onRefreshData();
     }
@@ -444,6 +446,18 @@ public class TableGridView extends VBox {
 
     private Dialog<?> createTableInfoDialog() {
         return new TableInfoDialog(tableModel, controller::openUrl);
+    }
+
+    private static String toDisplayValue(EnhancedDocument doc, String property) {
+        if (doc.toMap().containsKey(property)) {
+            AttributeValue attributeValue = doc.toMap().get(property);
+            if (attributeValue.s() != null) {
+                return attributeValue.s();
+            } else {
+                return doc.getJson(property);
+            }
+        }
+        return "";
     }
 
 }

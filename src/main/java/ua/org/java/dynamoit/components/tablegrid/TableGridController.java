@@ -17,8 +17,6 @@
 
 package ua.org.java.dynamoit.components.tablegrid;
 
-import com.amazonaws.services.dynamodbv2.document.ScanFilter;
-import com.amazonaws.util.StringUtils;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -35,6 +33,7 @@ import software.amazon.awssdk.enhanced.dynamodb.document.EnhancedDocument;
 import software.amazon.awssdk.enhanced.dynamodb.model.*;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
+import software.amazon.awssdk.utils.StringUtils;
 import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.components.tablegrid.parser.expression.FilterExpressionBuilder;
 import ua.org.java.dynamoit.db.DynamoDBService;
@@ -347,16 +346,11 @@ public class TableGridController {
         return supplyAsync(() -> {
             ScanEnhancedRequest.Builder scanSpec = ScanEnhancedRequest.builder();
 
-            Expression.Builder builder = Expression.builder();
-//            builder.expression();
+            if (!attributeFilterMap.isEmpty()) {
+                FilterExpressionBuilder filterExpressionBuilder = new FilterExpressionBuilder();
+                attributeFilterMap.forEach((key, value) -> filterExpressionBuilder.addAttributeValue(key, value.getValue()));
 
-            List<ScanFilter> filters = attributeFilterMap.entrySet().stream()
-                    .filter(entry -> Objects.nonNull(entry.getValue().get()) && !entry.getValue().get().trim().isEmpty())
-                    .map(entry -> attributeValueToFilter(entry.getKey(), entry.getValue().get(), tableModel.getTableDef().getAttributeTypesMap().get(entry.getKey()), ScanFilter::new))
-                    .toList();
-
-            if (!filters.isEmpty()) {
-                scanSpec.filterExpression(builder.build());
+                scanSpec.filterExpression(filterExpressionBuilder.build());
             }
             LOG.fine(() -> String.format("Scan %1s = %2s", table.tableName(), logAsJson(scanSpec)));
             return table.scan(scanSpec.limit(PAGE_SIZE).build());
@@ -367,14 +361,14 @@ public class TableGridController {
         String hashValue = attributeFilterMap.get(hashName).get();
         Key.Builder keyBuilder = Key.builder().partitionValue(hashValue);
 
-        if (rangeName != null && !StringUtils.isNullOrEmpty(attributeFilterMap.get(rangeName).get())) {
+        if (rangeName != null && StringUtils.isNotBlank(attributeFilterMap.get(rangeName).get())) {
             String sortValue = attributeFilterMap.get(rangeName).get();
             keyBuilder.sortValue(sortValue);
         }
 
         var attributesWithoutKeys = attributeFilterMap.entrySet().stream()
                 .filter(entry -> !entry.getKey().equals(hashName) && !entry.getKey().equals(rangeName))
-                .filter(entry -> !StringUtils.isNullOrEmpty(entry.getValue().get()))
+                .filter(entry -> StringUtils.isNotBlank(entry.getValue().get()))
                 .toList();
 
         FilterExpressionBuilder filterExpressionBuilder = new FilterExpressionBuilder();
@@ -468,7 +462,7 @@ public class TableGridController {
      */
     private boolean notBlankFilterValue(String attr) {
         SimpleStringProperty property = tableModel.getAttributeFilterMap().get(attr);
-        return property != null && !StringUtils.isNullOrEmpty(property.get());
+        return property != null && StringUtils.isNotBlank(property.get());
     }
 
     private String hash() {

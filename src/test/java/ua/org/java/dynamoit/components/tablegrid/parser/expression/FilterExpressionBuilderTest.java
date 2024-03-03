@@ -26,12 +26,28 @@ import static org.junit.Assert.assertNotNull;
 public class FilterExpressionBuilderTest {
 
     @Test
-    public void TestBeginWith(){
+    public void TestBeginsWith(){
         FilterExpressionBuilder expressionBuilder = new FilterExpressionBuilder();
         expressionBuilder.addAttributeValue("greetings", "^hello");
         Expression expression = expressionBuilder.build();
         assertNotNull(expression);
         assertEquals(expression.expression(), "begins_with()");
+    }
+
+    public void TestContains(){
+        FilterExpressionBuilder expressionBuilder = new FilterExpressionBuilder();
+        expressionBuilder.addAttributeValue("greetings", "~hello");
+        Expression expression = expressionBuilder.build();
+        assertNotNull(expression);
+        assertEquals(expression.expression(), "contains()");
+    }
+
+    public void TestEquals(){
+        FilterExpressionBuilder expressionBuilder = new FilterExpressionBuilder();
+        expressionBuilder.addAttributeValue("greetings", "hello");
+        Expression expression = expressionBuilder.build();
+        assertNotNull(expression);
+        assertEquals(expression.expression(), "contains()");
     }
 
 

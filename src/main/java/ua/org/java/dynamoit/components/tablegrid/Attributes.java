@@ -17,17 +17,14 @@
 
 package ua.org.java.dynamoit.components.tablegrid;
 
-import com.amazonaws.services.dynamodbv2.document.internal.Filter;
 import javafx.util.Pair;
 import software.amazon.awssdk.enhanced.dynamodb.document.EnhancedDocument;
-import ua.org.java.dynamoit.components.tablegrid.parser.*;
 import ua.org.java.dynamoit.utils.Utils;
 
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public final class Attributes {
 
@@ -69,27 +66,27 @@ public final class Attributes {
         return Attributes.Type.STRING;
     }
 
-    public static <T extends Filter<T>> T attributeValueToFilter(String attribute, String value, Type type, Function<String, T> filterProvider) {
-        T filter = filterProvider.apply(attribute);
-
-        if (value == null || value.isBlank()) {
-            return filter;
-        }
-
-        Stream.of(
-                        new ContainsParser<>(value, filter),
-                        new BeginsWithParser<>(value, filter),
-                        new ExistsParser<>(value, filter),
-                        new NotEqualsParser<>(value, type, filter),
-                        new NotContainsParser<>(value, filter),
-                        new NotExistsParser<>(value, filter),
-                        new EqualsParser<>(value, type, filter) // last parser
-                )
-                .filter(BaseValueToFilterParser::matches)
-                .findFirst()
-                .map(BaseValueToFilterParser::parse);
-
-        return filter;
-    }
+//    public static <T extends Filter<T>> T attributeValueToFilter(String attribute, String value, Type type, Function<String, T> filterProvider) {
+//        T filter = filterProvider.apply(attribute);
+//
+//        if (value == null || value.isBlank()) {
+//            return filter;
+//        }
+//
+//        Stream.of(
+//                        new ContainsParser<>(value, filter),
+//                        new BeginsWithParser<>(value, filter),
+//                        new ExistsParser<>(value, filter),
+//                        new NotEqualsParser<>(value, type, filter),
+//                        new NotContainsParser<>(value, filter),
+//                        new NotExistsParser<>(value, filter),
+//                        new EqualsParser<>(value, type, filter) // last parser
+//                )
+//                .filter(BaseValueToFilterParser::matches)
+//                .findFirst()
+//                .map(BaseValueToFilterParser::parse);
+//
+//        return filter;
+//    }
 
 }
