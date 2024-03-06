@@ -17,27 +17,12 @@
 
 package ua.org.java.dynamoit.components.tablegrid.parser;
 
-import org.junit.Test;
-
 public class BeginsWithParserTest {
 
-    @Test
     public void testEmpty() {
 //        assertFalse(new BeginsWithParser<QueryFilter>("", null).matches());
 //        assertFalse(new BeginsWithParser<QueryFilter>(" ", null).matches());
 //        assertTrue(new BeginsWithParser<QueryFilter>("^", null).matches());
-    }
-
-    @Test
-    public void testValue() {
-//        QueryFilter filter = new QueryFilter("attr");
-//        BeginsWithParser<QueryFilter> parser = new BeginsWithParser<>("^hello", filter);
-//        assertTrue(parser.matches());
-//
-//        parser.parse();
-//
-//        assertEquals(ComparisonOperator.BEGINS_WITH, filter.getComparisonOperator());
-//        assertArrayEquals(new Object[]{"hello"}, filter.getValues());
     }
 
 }

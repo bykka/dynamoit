@@ -17,11 +17,8 @@
 
 package ua.org.java.dynamoit.components.tablegrid.parser;
 
-import org.junit.Test;
-
 public class NotEqualsParserTest {
 
-    @Test
     public void test() {
 //        assertFalse(new NotEqualsParser<QueryFilter>("", Attributes.Type.STRING, null).matches());
 //        assertFalse(new NotEqualsParser<QueryFilter>(" ", Attributes.Type.STRING, null).matches());
@@ -29,7 +26,6 @@ public class NotEqualsParserTest {
 //        assertTrue(new NotEqualsParser<QueryFilter>("!=", Attributes.Type.STRING, null).matches());
     }
 
-    @Test
     public void testValue(){
 //        QueryFilter filter = new QueryFilter("attr");
 //        NotEqualsParser<QueryFilter> parser = new NotEqualsParser<>("!=hello", Attributes.Type.STRING, filter);

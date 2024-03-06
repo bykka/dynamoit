@@ -17,39 +17,54 @@
 
 package ua.org.java.dynamoit.components.tablegrid.parser.expression;
 
-import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.*;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import java.util.stream.Stream;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class FilterExpressionBuilderTest {
 
-    @Test
-    public void TestBeginsWith(){
+    @ParameterizedTest
+    @MethodSource("singleValidExpressionArguments")
+    public void TestSingleExpression(String filter, String expressionValue) {
         FilterExpressionBuilder expressionBuilder = new FilterExpressionBuilder();
-        expressionBuilder.addAttributeValue("greetings", "^hello");
+        expressionBuilder.addAttributeValue("greetings", filter);
         Expression expression = expressionBuilder.build();
         assertNotNull(expression);
-        assertEquals(expression.expression(), "begins_with()");
+        assertEquals(expression.expression(), expressionValue);
+        assertEquals(expression.expressionNames().size(), 1);
+        assertEquals(expression.expressionNames().get("#attr_2073134938"), "greetings");
+        assertEquals(expression.expressionValues().size(), 1);
+        assertEquals(expression.expressionValues().get(":val_2073134938"), AttributeValue.builder().s("hello").build());
     }
 
-    public void TestContains(){
+    static Stream<Arguments> singleValidExpressionArguments() {
+        return Stream.of(
+                Arguments.arguments("^hello", "begins_with(#attr_2073134938, :val_2073134938)"),
+                Arguments.arguments("~hello", "contains(#attr_2073134938, :val_2073134938)"),
+                Arguments.arguments("!~hello", "NOT contains(#attr_2073134938, :val_2073134938)"),
+                Arguments.arguments("hello", "#attr_2073134938 = :val_2073134938"),
+                Arguments.arguments("!=hello", "#attr_2073134938 <> :val_2073134938")
+        );
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @EmptySource
+    @ValueSource(strings = {"  ", "^", "^ ", " ^ ", "~", "~ ", " ~ ", "!~", "!~ ", " !~ ", "!=", "!= ", " != "})
+    public void TestBlankValueExpression(String filter) {
         FilterExpressionBuilder expressionBuilder = new FilterExpressionBuilder();
-        expressionBuilder.addAttributeValue("greetings", "~hello");
+        expressionBuilder.addAttributeValue("greetings", filter);
         Expression expression = expressionBuilder.build();
         assertNotNull(expression);
-        assertEquals(expression.expression(), "contains()");
+        assertNull(expression.expression());
+        assertNull(expression.expressionNames());
+        assertNull(expression.expressionValues());
     }
-
-    public void TestEquals(){
-        FilterExpressionBuilder expressionBuilder = new FilterExpressionBuilder();
-        expressionBuilder.addAttributeValue("greetings", "hello");
-        Expression expression = expressionBuilder.build();
-        assertNotNull(expression);
-        assertEquals(expression.expression(), "contains()");
-    }
-
 
 
 }

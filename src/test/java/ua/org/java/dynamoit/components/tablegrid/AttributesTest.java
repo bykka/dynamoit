@@ -17,11 +17,8 @@
 
 package ua.org.java.dynamoit.components.tablegrid;
 
-import org.junit.Test;
-
 public class AttributesTest {
 
-    @Test
     public void testAttributeValueToFilter() {
 //        ScanFilter scanFilter = Attributes.attributeValueToFilter("name", "John", Attributes.Type.STRING, ScanFilter::new);
 //        assertEquals(ComparisonOperator.EQ, scanFilter.getComparisonOperator());

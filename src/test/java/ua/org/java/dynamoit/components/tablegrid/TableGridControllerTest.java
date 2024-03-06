@@ -18,16 +18,13 @@
 package ua.org.java.dynamoit.components.tablegrid;
 
 import javafx.application.HostServices;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 @PrepareForTest(HostServices.class)
-@RunWith(PowerMockRunner.class)
+//@RunWith(PowerMockRunner.class)
 public class TableGridControllerTest {
 
-    @Test
+//    @Test
     public void onRefreshData() {
 //        TableGridContext context = new TableGridContext(
 //                new PreconfiguredProfileDetails("profile1", "region1"),

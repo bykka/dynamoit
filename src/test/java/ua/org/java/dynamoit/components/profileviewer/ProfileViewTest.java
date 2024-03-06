@@ -20,7 +20,7 @@ package ua.org.java.dynamoit.components.profileviewer;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
 import javafx.collections.ObservableList;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ua.org.java.dynamoit.components.main.MainModel;
 import ua.org.java.dynamoit.model.TableDef;
 import ua.org.java.dynamoit.model.profile.PreconfiguredProfileDetails;
@@ -28,8 +28,9 @@ import ua.org.java.dynamoit.model.profile.PreconfiguredProfileDetails;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 public class ProfileViewTest {
 

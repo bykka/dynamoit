@@ -17,27 +17,12 @@
 
 package ua.org.java.dynamoit.components.tablegrid.parser;
 
-import org.junit.Test;
-
 public class ContainsParserTest {
 
-    @Test
     public void testBlank() {
 //        assertFalse(new ContainsParser<QueryFilter>("", null).matches());
 //        assertFalse(new ContainsParser<QueryFilter>(" ", null).matches());
 //        assertTrue(new ContainsParser<QueryFilter>("~", null).matches());
-    }
-
-    @Test
-    public void testValue() {
-//        QueryFilter filter = new QueryFilter("attr");
-//        ContainsParser<QueryFilter> parser = new ContainsParser<>("~hello", filter);
-//        assertTrue(parser.matches());
-//
-//        parser.parse();
-//
-//        assertEquals(ComparisonOperator.CONTAINS, filter.getComparisonOperator());
-//        assertArrayEquals(new Object[]{"hello"}, filter.getValues());
     }
 
 }

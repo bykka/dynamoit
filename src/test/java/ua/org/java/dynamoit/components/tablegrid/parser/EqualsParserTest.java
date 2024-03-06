@@ -17,11 +17,8 @@
 
 package ua.org.java.dynamoit.components.tablegrid.parser;
 
-import org.junit.Test;
-
 public class EqualsParserTest {
 
-    @Test
     public void test() {
 //        assertTrue(new EqualsParser<QueryFilter>("", Attributes.Type.STRING, null).matches());
 //        assertTrue(new EqualsParser<QueryFilter>(" ", Attributes.Type.STRING, null).matches());

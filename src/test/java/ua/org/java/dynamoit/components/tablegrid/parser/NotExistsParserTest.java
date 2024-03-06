@@ -17,11 +17,8 @@
 
 package ua.org.java.dynamoit.components.tablegrid.parser;
 
-import org.junit.Test;
-
 public class NotExistsParserTest {
 
-    @Test
     public void test() {
 //        assertFalse(new NotExistsParser<QueryFilter>("", null).matches());
 //        assertFalse(new NotExistsParser<QueryFilter>(" ", null).matches());

@@ -17,6 +17,7 @@
 
 package ua.org.java.dynamoit.components.tablegrid.parser.expression;
 
+import org.apache.commons.lang3.StringUtils;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
@@ -32,9 +33,9 @@ public class FilterExpressionBuilder {
 
         BEGINS_WITH(Pattern.compile("^\\^(.*)$"), (attrName, attrValue) -> "begins_with(" + attrName + ", " + attrValue + ")"),
         CONTAINS(Pattern.compile("^~(.*)$"), (attrName, attrValue) -> "contains(" + attrName + ", " + attrValue + ")"),
-        NOT_CONTAINS(Pattern.compile("(^\\$$)"), (attrName, attrValue) -> "NOT contains(" + attrName + ", " + attrValue + ")"),
-        EXISTS(Pattern.compile("(^\\$$)"), (attrName, attrValue) -> "attribute_exists(" + attrName + ")"),
-        NOT_EXISTS(Pattern.compile("(^!\\$$)"), (attrName, attrValue) -> "attribute_not_exists(" + attrName + ")"),
+        NOT_CONTAINS(Pattern.compile("^!~(.*)$"), (attrName, attrValue) -> "NOT contains(" + attrName + ", " + attrValue + ")"),
+        EXISTS(Pattern.compile("^\\$$"), (attrName, attrValue) -> "attribute_exists(" + attrName + ")"),
+        NOT_EXISTS(Pattern.compile("^!\\$$"), (attrName, attrValue) -> "attribute_not_exists(" + attrName + ")"),
         NOT_EQUALS(Pattern.compile("^!=(.*)$"), (attrName, attrValue) -> attrName + " <> " + attrValue),
         EQUALS(Pattern.compile("(.*)"), (attrName, attrValue) -> attrName + " = " + attrValue);
 
@@ -81,15 +82,28 @@ public class FilterExpressionBuilder {
             for (AttributeExpression attributeExpression : AttributeExpression.values()) {
                 Matcher matcher = attributeExpression.getPattern().matcher(value.trim());
                 if (matcher.matches()) {
-                    String term = matcher.group(1);
-                    if (!term.isBlank()) {
-                        Expression exp = Expression.builder()
-                                .expression(attributeExpression.getAttributeValueToExpression().apply(attrName, attrValue))
-                                .expressionNames(Map.of(attrName, attribute))
-                                .expressionValues(Map.of(attrValue, AttributeValue.builder().s(term).build()))
-                                .build();
-                        expression = Expression.join(expression, exp, " AND ");
+                    Expression.Builder expBuilder = Expression.builder();
+
+                    // the first group is whole value
+                    if(matcher.groupCount() == 1) {
+                        String term = matcher.group(1);
+                        if (!term.isBlank()) {
+                            expBuilder.expression(attributeExpression.getAttributeValueToExpression().apply(attrName, attrValue))
+                                    .expressionNames(Map.of(attrName, attribute))
+                                    .expressionValues(Map.of(attrValue, AttributeValue.builder().s(term).build())).build();
+                        }
+                    } else {
+                        expBuilder.expression(attributeExpression.getAttributeValueToExpression().apply(attrName, attrValue))
+                                .expressionNames(Map.of(attrName, attribute));
                     }
+
+                    if (StringUtils.isBlank(expression.expression())) {
+                        expression = expBuilder.build();
+                    } else {
+                        expression = Expression.join(expression, expBuilder.build(), " AND ");
+                    }
+
+                    break;
                 }
             }
         }
@@ -101,8 +115,9 @@ public class FilterExpressionBuilder {
     }
 
     private static synchronized String hashValue(String value) {
-        CRC_32.update(value.getBytes());
-        return String.valueOf(CRC_32.getValue());
+//        CRC_32.update(value.getBytes());
+//        return String.valueOf(CRC_32.getValue());
+        return String.valueOf(value.hashCode());
     }
 
     private static String attributeName(String attribute) {

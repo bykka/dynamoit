@@ -17,11 +17,8 @@
 
 package ua.org.java.dynamoit.components.tablegrid.parser;
 
-import org.junit.Test;
-
 public class NotContainsParserTest {
 
-    @Test
     public void testBlank() {
 //        assertFalse(new NotContainsParser<QueryFilter>("", null).matches());
 //        assertFalse(new NotContainsParser<QueryFilter>(" ", null).matches());
@@ -29,7 +26,6 @@ public class NotContainsParserTest {
 //        assertTrue(new NotContainsParser<QueryFilter>("!~", null).matches());
     }
 
-    @Test
     public void testValue() {
 //        QueryFilter filter = new QueryFilter("attr");
 //        NotContainsParser<QueryFilter> parser = new NotContainsParser<>("!~hello", filter);
