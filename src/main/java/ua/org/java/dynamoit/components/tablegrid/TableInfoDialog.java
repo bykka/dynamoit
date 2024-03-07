@@ -30,6 +30,7 @@ import software.amazon.awssdk.services.dynamodb.model.LocalSecondaryIndexDescrip
 import ua.org.java.dynamoit.utils.DX;
 
 import java.text.DateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -60,14 +61,14 @@ public class TableInfoDialog extends Dialog<Void> {
                 tab.setContent(buildTableOverview());
             }));
 
-            if (this.tableModel.getOriginalTableDescription().localSecondaryIndexes() != null) {
+            if (this.tableModel.getOriginalTableDescription().hasLocalSecondaryIndexes()) {
                 tabPane.getTabs().add(DX.create(Tab::new, tab -> {
                     tab.setText("Local indexes");
                     tab.setContent(buildLocalIndexes());
                 }));
             }
 
-            if (this.tableModel.getOriginalTableDescription().globalSecondaryIndexes() != null) {
+            if (this.tableModel.getOriginalTableDescription().hasGlobalSecondaryIndexes()) {
                 tabPane.getTabs().add(DX.create(Tab::new, tab -> {
                     tab.setText("Global indexes");
                     tab.setContent(buildGlobalIndexes());
@@ -98,7 +99,7 @@ public class TableInfoDialog extends Dialog<Void> {
                         link.setOnMouseClicked(event -> openUrl.accept(tableLink));
                     }),
                     new Label(tableModel.getOriginalTableDescription().tableArn()),
-                    new Label(DateFormat.getInstance().format(tableModel.getOriginalTableDescription().creationDateTime())),
+                    new Label(DateFormat.getInstance().format(Date.from(tableModel.getOriginalTableDescription().creationDateTime()))),
                     new Label(tableModel.getOriginalTableDescription().tableSizeBytes() + " bytes"),
                     new Label(tableModel.getProfileModel().getRegion())
             );
@@ -106,7 +107,7 @@ public class TableInfoDialog extends Dialog<Void> {
             gridPane.addColumn(2,
                     copyClipboardWidget(() -> tableModel.getOriginalTableDescription().tableName()),
                     copyClipboardWidget(() -> tableModel.getOriginalTableDescription().tableArn()),
-                    copyClipboardWidget(() -> DateFormat.getInstance().format(tableModel.getOriginalTableDescription().creationDateTime())),
+                    copyClipboardWidget(() -> DateFormat.getInstance().format(Date.from(tableModel.getOriginalTableDescription().creationDateTime()))),
                     copyClipboardWidget(() -> "" + tableModel.getOriginalTableDescription().tableSizeBytes()),
                     copyClipboardWidget(() -> tableModel.getProfileModel().getRegion())
             );

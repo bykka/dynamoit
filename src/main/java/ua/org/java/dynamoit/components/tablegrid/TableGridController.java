@@ -29,6 +29,7 @@ import javafx.util.Pair;
 import org.reactfx.EventStream;
 import software.amazon.awssdk.core.pagination.sync.SdkIterable;
 import software.amazon.awssdk.enhanced.dynamodb.*;
+import software.amazon.awssdk.enhanced.dynamodb.document.DocumentTableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.document.EnhancedDocument;
 import software.amazon.awssdk.enhanced.dynamodb.model.*;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -74,7 +75,7 @@ public class TableGridController {
     private static final int BATCH_SIZE = 25;
 
     private final DynamoDbClient dbClient;
-    private final DynamoDbTable<EnhancedDocument> table;
+    private DynamoDbTable<EnhancedDocument> table;
     private final TableGridContext context;
     private final TableGridModel tableModel;
     private final EventBus eventBus;
@@ -105,7 +106,6 @@ public class TableGridController {
 
         dbClient = dynamoDBService.getOrCreateDynamoDBClient(context.profileDetails());
         documentClient = dynamoDBService.getOrCreateDocumentClient(context.profileDetails());
-        table = documentClient.table(context.tableName(), TableSchema.documentSchemaBuilder().build());
     }
 
     public void init() {
@@ -449,6 +449,17 @@ public class TableGridController {
     }
 
     private void applyContext() {
+        DocumentTableSchema.Builder schemaBuilder = TableSchema.documentSchemaBuilder()
+                .addIndexPartitionKey(TableMetadata.primaryIndexName(), hash(), AttributeValueType.S);
+
+        if (range() != null) {
+            schemaBuilder.addIndexSortKey(TableMetadata.primaryIndexName(), range(), AttributeValueType.S);
+        }
+
+        schemaBuilder.attributeConverterProviders(AttributeConverterProvider.defaultProvider());
+
+        table = documentClient.table(context.tableName(), schemaBuilder.build());
+
         if (context.propertyName() != null && context.propertyValue() != null) {
             tableModel.getAttributeFilterMap().computeIfAbsent(context.propertyName(), __ -> new SimpleStringProperty()).set(context.propertyValue());
         }
