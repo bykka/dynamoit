@@ -49,6 +49,7 @@ import java.util.function.Supplier;
 import static atlantafx.base.theme.Styles.BUTTON_ICON;
 import static javafx.beans.binding.Bindings.*;
 import static ua.org.java.dynamoit.utils.Utils.copyToClipboard;
+import static ua.org.java.dynamoit.utils.Utils.uglyToPrettyJson;
 
 public class TableGridView extends VBox {
 
@@ -401,7 +402,7 @@ public class TableGridView extends VBox {
     }
 
     private void showItemDialog(String title, String json, BiConsumer<String, Boolean> onSaveConsumer, Function<EventStream<String>, EventStream<Boolean>> validator) {
-        ItemDialog dialog = new ItemDialog(title, json, validator);
+        ItemDialog dialog = new ItemDialog(title, uglyToPrettyJson(json), validator);
         themeManager.applyPseudoClasses(dialog.getDialogPane());
         dialog.showAndWait().ifPresent(result -> onSaveConsumer.accept(result, dialog.isEditAsRawJson()));
     }
@@ -411,7 +412,7 @@ public class TableGridView extends VBox {
             EnhancedDocument item1 = tableView.getSelectionModel().getSelectedItems().get(0);
             EnhancedDocument item2 = tableView.getSelectionModel().getSelectedItems().get(1);
 
-            CompareDialog dialog = new CompareDialog(item1.toJson(), item2.toJson());
+            CompareDialog dialog = new CompareDialog(uglyToPrettyJson(item1.toJson()), uglyToPrettyJson(item2.toJson()));
             dialog.showAndWait();
         }
     }

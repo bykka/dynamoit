@@ -176,4 +176,13 @@ public class Utils {
         clipboard.setContent(content);
     }
 
+    public static String uglyToPrettyJson(String json) {
+        try {
+            Object j = OBJECT_MAPPER.readValue(json, Object.class);
+            return PRETTY_PRINTER.writeValueAsString(j);
+        } catch (JsonProcessingException e) {
+            return json;
+        }
+    }
+
 }

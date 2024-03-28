@@ -352,8 +352,11 @@ public class TableGridController {
 
                 scanSpec.filterExpression(filterExpressionBuilder.build());
             }
-            LOG.fine(() -> String.format("Scan %1s = %2s", table.tableName(), logAsJson(scanSpec)));
-            return table.scan(scanSpec.limit(PAGE_SIZE).build());
+            ScanEnhancedRequest enhancedRequest = scanSpec.limit(PAGE_SIZE).build();
+
+            LOG.fine(() -> String.format("Scan %1s = %2s", table.tableName(), logAsJson(enhancedRequest)));
+
+            return table.scan(enhancedRequest);
         });
     }
 
