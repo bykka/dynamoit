@@ -171,7 +171,6 @@ public class MainView extends VBox {
         TableGridComponent tableComponent = controller.buildTableGridComponent(tableContext);
 
         TableGridView tableItemsView = tableComponent.view();
-        tableItemsView.setOnSearchInTable(this::createAndOpenTab);
 
         tabPane.getTabs().add(
                 DX.create(() -> new Tab(tableContext.tableName(), tableItemsView), tab -> {

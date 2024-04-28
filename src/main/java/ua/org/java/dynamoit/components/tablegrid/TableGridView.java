@@ -42,7 +42,6 @@ import java.io.File;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -62,8 +61,6 @@ public class TableGridView extends VBox {
     private final TableGridController controller;
     private Button clearFilterButton;
     private final TableView<EnhancedDocument> tableView = new TableView<>();
-
-    private Consumer<TableGridContext> onSearchInTable;
 
     private final Highlighter highlighter = new Highlighter();
 
@@ -439,10 +436,6 @@ public class TableGridView extends VBox {
                 }
             });
         }
-    }
-
-    public void setOnSearchInTable(Consumer<TableGridContext> onSearchInTable) {
-        this.onSearchInTable = onSearchInTable;
     }
 
     private Dialog<?> createTableInfoDialog() {
