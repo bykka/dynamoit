@@ -206,6 +206,17 @@
                 <destination.name>${project.name}.app</destination.name>
             </properties>
         </profile>
+        <profile>
+            <!-- For debugging ui layout with ScenicView-->
+            <id>scenic_view</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-swing</artifactId>
+                    <version>${javafx.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
     </profiles>
 
     <dependencies>
@@ -218,12 +229,6 @@
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-graphics</artifactId>
-            <version>${javafx.version}</version>
-        </dependency>
-        <!-- Just for ScenicView -->
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-swing</artifactId>
             <version>${javafx.version}</version>
         </dependency>
         <!-- aws sdk -->
@@ -318,8 +323,12 @@
             <version>2.0.9</version>
             <scope>test</scope>
         </dependency>
-
-
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>DynamoDBLocal</artifactId>
+            <version>2.4.0</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>
