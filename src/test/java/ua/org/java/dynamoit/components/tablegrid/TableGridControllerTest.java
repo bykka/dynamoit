@@ -18,47 +18,54 @@
 package ua.org.java.dynamoit.components.tablegrid;
 
 import javafx.application.HostServices;
-import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.junit.jupiter.api.Test;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import ua.org.java.dynamoit.EventBus;
+import ua.org.java.dynamoit.components.main.MainModel;
+import ua.org.java.dynamoit.db.DynamoDBService;
+import ua.org.java.dynamoit.model.profile.LocalProfileDetails;
 
-@PrepareForTest(HostServices.class)
+import java.util.concurrent.ForkJoinPool;
+
+import static org.mockito.Mockito.*;
+
+
+//@PrepareForTest(HostServices.class)
 //@RunWith(PowerMockRunner.class)
 public class TableGridControllerTest {
 
-//    @Test
+    @Test
     public void onRefreshData() {
-//        TableGridContext context = new TableGridContext(
-//                new PreconfiguredProfileDetails("profile1", "region1"),
-//                "table1"
-//        );
-//        MainModel mainModel = new MainModel();
-//        mainModel.addProfile(new PreconfiguredProfileDetails("profile1", "region1"));
-//        mainModel.addProfile(new PreconfiguredProfileDetails("profile2", "region2"));
+        LocalProfileDetails profileDetails = new LocalProfileDetails("profile1", "region1");
+        TableGridContext context = new TableGridContext(profileDetails, "table1");
+        MainModel mainModel = new MainModel();
+        mainModel.addProfile(profileDetails);
+
 //        TableDef tableDef = new TableDef("Table1");
 //        tableDef.setHashAttribute("hash_attr");
-//        TableGridModel model = new TableGridModel(mainModel.getAvailableProfiles().get("profile1"));
+        TableGridModel model = new TableGridModel(mainModel.getAvailableProfiles().get("profile1"));
 //        model.setTableDef(tableDef);
 //        model.getRows().add(new Item());
 //
 //        Table table = mock(Table.class);
-//        AmazonDynamoDB amazonDynamoDB = mock(AmazonDynamoDB.class);
-//        DynamoDB dynamoDB = mock(DynamoDB.class);
+        DynamoDbClient amazonDynamoDB = mock(DynamoDbClient.class);
+        DynamoDbEnhancedClient dynamoDB = mock(DynamoDbEnhancedClient.class);
+
 //        expect(dynamoDB.getTable(context.tableName())).andReturn(table);
-//        DynamoDBService dynamoDBService = mock(DynamoDBService.class);
-//        expect(dynamoDBService.getOrCreateDynamoDBClient(context.profileDetails())).andReturn(amazonDynamoDB);
-//        expect(dynamoDBService.getOrCreateDocumentClient(context.profileDetails())).andReturn(dynamoDB);
+        DynamoDBService dynamoDBService = mock(DynamoDBService.class);
+        when(dynamoDBService.getOrCreateDynamoDBClient(context.profileDetails())).thenReturn(amazonDynamoDB);
+        when(dynamoDBService.getOrCreateDocumentClient(context.profileDetails())).thenReturn(dynamoDB);
 //
 //        Page<Item, Object> page = mock(Page.class);
-//        HostServices hostServices = mock(HostServices.class);
+        HostServices hostServices = mock(HostServices.class);
 //
-//        EventBus eventBus = new EventBus(ForkJoinPool.commonPool());
+        EventBus eventBus = new EventBus(ForkJoinPool.commonPool());
 //
 //        replay(table, amazonDynamoDB, dynamoDB, dynamoDBService, page);
-//
-//        TableGridController controller = partialMockBuilder(TableGridController.class)
-//                .withConstructor(context, model, dynamoDBService, eventBus, ForkJoinPool.commonPool(), hostServices)
-//                .addMockedMethod("queryPageItems")
-//                .createMock();
-//
+//cc
+        TableGridController controller = new TableGridController(context, model, dynamoDBService, eventBus, ForkJoinPool.commonPool(), hostServices);
+
 //        expect(controller.queryPageItems()).andReturn(CompletableFuture.completedFuture(
 //                new Pair<>(List.of(new Item(), new Item()), page)
 //        ));

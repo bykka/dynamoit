@@ -360,7 +360,7 @@ public class TableGridController {
         });
     }
 
-    private QueryEnhancedRequest buildQuerySpec(String hashName, String rangeName, Map<String, SimpleStringProperty> attributeFilterMap) {
+    private static QueryEnhancedRequest buildQuerySpec(String hashName, String rangeName, Map<String, SimpleStringProperty> attributeFilterMap) {
         String hashValue = attributeFilterMap.get(hashName).get();
         Key.Builder keyBuilder = Key.builder().partitionValue(hashValue);
 
@@ -419,7 +419,7 @@ public class TableGridController {
     /**
      * sort attributes before bindings
      */
-    private void bindToModel(software.amazon.awssdk.services.dynamodb.model.TableDescription tableDescription) {
+    private void bindToModel(TableDescription tableDescription) {
         tableModel.setOriginalTableDescription(tableDescription);
 
         getHashKey(tableDescription).ifPresent(tableModel.getTableDef()::setHashAttribute);

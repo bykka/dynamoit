@@ -25,7 +25,9 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.zip.CRC32;
+
+import static ua.org.java.dynamoit.utils.Utils.attributeName;
+import static ua.org.java.dynamoit.utils.Utils.attributeValue;
 
 public class FilterExpressionBuilder {
 
@@ -55,8 +57,6 @@ public class FilterExpressionBuilder {
             return attributeValueToExpression;
         }
     }
-
-    private static final CRC32 CRC_32 = new CRC32();
 
     private Expression expression = Expression.builder().build();
 
@@ -113,20 +113,5 @@ public class FilterExpressionBuilder {
     public Expression build() {
         return expression;
     }
-
-    private static synchronized String hashValue(String value) {
-//        CRC_32.update(value.getBytes());
-//        return String.valueOf(CRC_32.getValue());
-        return String.valueOf(value.hashCode());
-    }
-
-    private static String attributeName(String attribute) {
-        return "#attr_" + hashValue(attribute);
-    }
-
-    private static String attributeValue(String attribute) {
-        return ":val_" + hashValue(attribute);
-    }
-
 
 }

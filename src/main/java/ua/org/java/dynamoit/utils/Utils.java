@@ -25,22 +25,30 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyEvent;
+import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.document.EnhancedDocument;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement;
 import software.amazon.awssdk.services.dynamodb.model.KeyType;
 import software.amazon.awssdk.services.dynamodb.model.TableDescription;
+import software.amazon.awssdk.utils.StringUtils;
+import ua.org.java.dynamoit.components.tablegrid.parser.expression.FilterExpressionBuilder;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import java.util.zip.CRC32;
 
 public class Utils {
 
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL);
     public static final ObjectWriter PRETTY_PRINTER = OBJECT_MAPPER.writerWithDefaultPrettyPrinter();
+
+    private static final CRC32 CRC_32 = new CRC32();
 
     public static <T> Stream<T> asStream(Iterable<T> iterable) {
         return StreamSupport.stream(iterable.spliterator(), false);
@@ -184,5 +192,56 @@ public class Utils {
             return json;
         }
     }
+
+    /**
+     * Builds a {@link QueryEnhancedRequest} with specified attributes for querying a DynamoDB table.
+     *
+     * @param hashName The name of the partition key attribute.
+     * @param rangeName The name of the sort key attribute. Can be null if the table doesn't use a sort key.
+     * @param attributeFilterMap A map containing attribute names and their corresponding filter values.
+     * @param numberOfDocuments The maximum number of documents to be returned by the query.
+     * @return A {@link QueryEnhancedRequest} object configured with the specified attributes and filter conditions.
+     *
+     * @throws IllegalArgumentException if the partition key value is not present in the attribute filter map.
+     */
+    public static QueryEnhancedRequest buildQuerySpec(String hashName, String rangeName, Map<String, String> attributeFilterMap, int numberOfDocuments) {
+        String hashValue = attributeFilterMap.get(hashName);
+        Key.Builder keyBuilder = Key.builder().partitionValue(hashValue);
+
+        if (rangeName != null && StringUtils.isNotBlank(attributeFilterMap.get(rangeName))) {
+            String sortValue = attributeFilterMap.get(rangeName);
+            keyBuilder.sortValue(sortValue);
+        }
+
+        var attributesWithoutKeys = attributeFilterMap.entrySet().stream()
+                .filter(entry -> !entry.getKey().equals(hashName) && !entry.getKey().equals(rangeName))
+                .filter(entry -> StringUtils.isNotBlank(entry.getValue()))
+                .toList();
+
+        FilterExpressionBuilder filterExpressionBuilder = new FilterExpressionBuilder();
+
+        attributesWithoutKeys.forEach(entry -> filterExpressionBuilder.addAttributeValue(entry.getKey(), entry.getValue()));
+
+        QueryEnhancedRequest.Builder querySpec = QueryEnhancedRequest.builder()
+                .queryConditional(QueryConditional.keyEqualTo(keyBuilder.build()))
+                .filterExpression(filterExpressionBuilder.build());
+
+        return querySpec.limit(numberOfDocuments).build();
+    }
+
+    private static synchronized String hashValue(String value) {
+//        CRC_32.update(value.getBytes());
+//        return String.valueOf(CRC_32.getValue());
+        return String.valueOf(value.hashCode());
+    }
+
+    public static String attributeName(String attribute) {
+        return "#attr_" + hashValue(attribute);
+    }
+
+    public static String attributeValue(String attribute) {
+        return ":val_" + hashValue(attribute);
+    }
+
 
 }
