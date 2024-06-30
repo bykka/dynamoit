@@ -18,6 +18,8 @@
 package ua.org.java.dynamoit.utils;
 
 import org.junit.jupiter.api.Test;
+import software.amazon.awssdk.core.protocol.MarshallingType;
+import software.amazon.awssdk.protocols.json.internal.marshall.*;
 
 import java.util.List;
 
@@ -48,21 +50,79 @@ public class UtilsTest {
 
     @Test
     public void testConvertJsonToDocument() {
-        String newLine = System.getProperty("line.separator");
+        String document1 = convertJsonDocument("""
+                {"name": "user"}
+                """, true);
 
-        String document1 = convertJsonDocument("{\"name\": \"user\"}", true);
-        assertEquals(String.join(newLine,
-                "{",
-                "  \"name\" : {",
-                "    \"s\" : \"user\"",
-                "  }",
-                "}"), document1);
+        System.out.println("document1");
+        System.out.println(document1);
 
-        String document2 = convertJsonDocument("{\"name\": {\"s\": \"user\"}}", false);
-        assertEquals(String.join(newLine,
-                "{",
-                "  \"name\" : \"user\"",
-                "}"), document2);
+        assertEquals("""
+                {
+                  "name" : {
+                    "S" : "user"
+                  }
+                }""", document1.replace("\r", ""));
+
+        String document2 = convertJsonDocument("""
+                {
+                    "name": {
+                        "S": "user"
+                    }
+                }
+                """, false);
+
+        assertEquals("""
+                {
+                    "name" : "user"
+                }
+                """, document2);
+
+
+        JsonMarshallerRegistry.builder()
+                .payloadMarshaller(MarshallingType.STRING, SimpleTypeJsonMarshaller.STRING)
+                .payloadMarshaller(MarshallingType.INTEGER, SimpleTypeJsonMarshaller.INTEGER)
+                .payloadMarshaller(MarshallingType.LONG, SimpleTypeJsonMarshaller.LONG)
+                .payloadMarshaller(MarshallingType.SHORT, SimpleTypeJsonMarshaller.SHORT)
+                .payloadMarshaller(MarshallingType.DOUBLE, SimpleTypeJsonMarshaller.DOUBLE)
+                .payloadMarshaller(MarshallingType.FLOAT, SimpleTypeJsonMarshaller.FLOAT)
+                .payloadMarshaller(MarshallingType.BIG_DECIMAL, SimpleTypeJsonMarshaller.BIG_DECIMAL)
+                .payloadMarshaller(MarshallingType.BOOLEAN, SimpleTypeJsonMarshaller.BOOLEAN)
+                .payloadMarshaller(MarshallingType.INSTANT, SimpleTypeJsonMarshaller.INSTANT)
+                .payloadMarshaller(MarshallingType.SDK_BYTES, SimpleTypeJsonMarshaller.SDK_BYTES)
+                .payloadMarshaller(MarshallingType.SDK_POJO, SimpleTypeJsonMarshaller.SDK_POJO)
+                .payloadMarshaller(MarshallingType.LIST, SimpleTypeJsonMarshaller.LIST)
+                .payloadMarshaller(MarshallingType.MAP, SimpleTypeJsonMarshaller.MAP)
+                .payloadMarshaller(MarshallingType.NULL, SimpleTypeJsonMarshaller.NULL)
+                .payloadMarshaller(MarshallingType.DOCUMENT, SimpleTypeJsonMarshaller.DOCUMENT)
+                .headerMarshaller(MarshallingType.STRING, HeaderMarshaller.STRING)
+                .headerMarshaller(MarshallingType.INTEGER, HeaderMarshaller.INTEGER)
+                .headerMarshaller(MarshallingType.LONG, HeaderMarshaller.LONG)
+                .headerMarshaller(MarshallingType.SHORT, HeaderMarshaller.SHORT)
+                .headerMarshaller(MarshallingType.DOUBLE, HeaderMarshaller.DOUBLE)
+                .headerMarshaller(MarshallingType.FLOAT, HeaderMarshaller.FLOAT)
+                .headerMarshaller(MarshallingType.BOOLEAN, HeaderMarshaller.BOOLEAN)
+                .headerMarshaller(MarshallingType.INSTANT, HeaderMarshaller.INSTANT)
+                .headerMarshaller(MarshallingType.LIST, HeaderMarshaller.LIST)
+                .headerMarshaller(MarshallingType.NULL, HeaderMarshaller.NULL)
+                .queryParamMarshaller(MarshallingType.STRING, QueryParamMarshaller.STRING)
+                .queryParamMarshaller(MarshallingType.INTEGER, QueryParamMarshaller.INTEGER)
+                .queryParamMarshaller(MarshallingType.LONG, QueryParamMarshaller.LONG)
+                .queryParamMarshaller(MarshallingType.SHORT, QueryParamMarshaller.SHORT)
+                .queryParamMarshaller(MarshallingType.DOUBLE, QueryParamMarshaller.DOUBLE)
+                .queryParamMarshaller(MarshallingType.FLOAT, QueryParamMarshaller.FLOAT)
+                .queryParamMarshaller(MarshallingType.BOOLEAN, QueryParamMarshaller.BOOLEAN)
+                .queryParamMarshaller(MarshallingType.INSTANT, QueryParamMarshaller.INSTANT)
+                .queryParamMarshaller(MarshallingType.LIST, QueryParamMarshaller.LIST)
+                .queryParamMarshaller(MarshallingType.MAP, QueryParamMarshaller.MAP)
+                .queryParamMarshaller(MarshallingType.NULL, QueryParamMarshaller.NULL)
+                .pathParamMarshaller(MarshallingType.STRING, SimpleTypePathMarshaller.STRING)
+                .pathParamMarshaller(MarshallingType.INTEGER, SimpleTypePathMarshaller.INTEGER)
+                .pathParamMarshaller(MarshallingType.LONG, SimpleTypePathMarshaller.LONG)
+                .pathParamMarshaller(MarshallingType.SHORT, SimpleTypePathMarshaller.SHORT)
+                .pathParamMarshaller(MarshallingType.NULL, SimpleTypePathMarshaller.NULL)
+                .greedyPathParamMarshaller(MarshallingType.STRING, SimpleTypePathMarshaller.GREEDY_STRING).greedyPathParamMarshaller(MarshallingType.NULL, SimpleTypePathMarshaller.NULL).build();
+
     }
 
 }

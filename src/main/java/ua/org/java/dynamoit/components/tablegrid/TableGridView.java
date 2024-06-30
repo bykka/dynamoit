@@ -184,7 +184,7 @@ public class TableGridView extends VBox {
                             int charsNumber = String.valueOf(tableModel.rowsSizeProperty().get()).length();
                             return PADDING + charsNumber * FONT_SIZE;
                         }, tableModel.rowsSizeProperty()));
-                        column.setResizable(false);
+                        column.setResizable(true);
                         column.setSortable(false);
                         column.getStyleClass().add("column-index");
                         column.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(tableModel.getRows().indexOf(param.getValue()) + 1));

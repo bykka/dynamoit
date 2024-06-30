@@ -29,13 +29,21 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.document.EnhancedDocument;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
+import software.amazon.awssdk.protocols.core.OperationInfo;
+import software.amazon.awssdk.protocols.json.SdkJsonGenerator;
+import software.amazon.awssdk.protocols.json.internal.marshall.JsonMarshallerContext;
+import software.amazon.awssdk.protocols.json.internal.marshall.JsonProtocolMarshaller;
+import software.amazon.awssdk.protocols.json.internal.marshall.JsonProtocolMarshallerBuilder;
+import software.amazon.awssdk.protocols.json.internal.marshall.SimpleTypeJsonMarshaller;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement;
 import software.amazon.awssdk.services.dynamodb.model.KeyType;
 import software.amazon.awssdk.services.dynamodb.model.TableDescription;
+import software.amazon.awssdk.thirdparty.jackson.core.JsonFactory;
 import software.amazon.awssdk.utils.StringUtils;
 import ua.org.java.dynamoit.components.tablegrid.parser.expression.FilterExpressionBuilder;
 
+import java.net.URI;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -166,7 +174,32 @@ public class Utils {
             if (toRaw) {
                 EnhancedDocument item = EnhancedDocument.fromJson(json);
                 Map<String, AttributeValue> map = item.toMap();
-                return PRETTY_PRINTER.writeValueAsString(map);
+
+                SdkJsonGenerator jsonGenerator = new SdkJsonGenerator(new JsonFactory(), "application/json");
+                var context = JsonMarshallerContext
+                        .builder()
+                        .jsonGenerator(jsonGenerator)
+                        .protocolHandler((JsonProtocolMarshaller) JsonProtocolMarshallerBuilder
+                                .create()
+                                .endpoint(new URI("https://fake.com"))
+                                .jsonGenerator(jsonGenerator)
+                                .sendExplicitNullForPayload(true)
+                                .operationInfo(OperationInfo.builder().build())
+                                .build())
+                        .build();
+
+                jsonGenerator.writeStartObject();
+
+                map.forEach((s, attributeValue) -> {
+                    SimpleTypeJsonMarshaller.SDK_POJO.marshall(attributeValue, context, s, null);
+                });
+
+                jsonGenerator.writeEndObject();
+
+                String rawJson = new String(jsonGenerator.getBytes());
+                Map<String, Object> toMap = OBJECT_MAPPER.readValue(rawJson, new TypeReference<>() {});
+
+                return PRETTY_PRINTER.writeValueAsString(toMap);
             } else {
                 EnhancedDocument item = rawJsonToItem(json);
                 return item.toJson();
