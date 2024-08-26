@@ -8,3 +8,5 @@ target
 .classpath
 .settings/
 .gradle
+.vscode
+.DS_Store
