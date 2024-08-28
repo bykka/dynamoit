@@ -16,8 +16,9 @@
   ~     along with DynamoIt.  If not, see <https://www.gnu.org/licenses/>.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>ua.org.java</groupId>
@@ -36,13 +37,13 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <dagger.version>2.46.1</dagger.version>
-        <javafx.version>22</javafx.version>
-        <aws.sdk.version2>2.25.18</aws.sdk.version2>
+        <javafx.version>22.0.2</javafx.version>
+        <aws.sdk.version2>2.27.12</aws.sdk.version2>
         <main.class>ua.org.java.dynamoit.Launcher</main.class>
         <fatJar.dir>${project.build.directory}/fatJar/</fatJar.dir>
         <destination.dir>${project.build.directory}/${project.name}</destination.dir>
         <destination.name>${project.name}</destination.name>
-        <icon/><!-- defined in the profile -->
+        <icon /><!-- defined in the profile -->
     </properties>
 
     <build>
@@ -85,7 +86,8 @@
                         </goals>
                         <configuration>
                             <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <transformer
+                                    implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
                                         <Specification-Title>${project.artifactId}</Specification-Title>
                                         <Specification-Version>${project.version}</Specification-Version>
@@ -96,7 +98,8 @@
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
-                            <outputFile>${project.build.directory}/fatJar/${project.build.finalName}.jar</outputFile>
+                            <outputFile>
+                                ${project.build.directory}/fatJar/${project.build.finalName}.jar</outputFile>
                             <dependencyReducedPomLocation>
                                 ${project.build.directory}/dependency-reduced-pom.xml
                             </dependencyReducedPomLocation>
@@ -144,7 +147,8 @@
                                         <argument>--vendor</argument>
                                         <argument>Pavlo Iatsiuk</argument>
                                         <argument>--icon</argument>
-                                        <argument>${project.basedir}/src/main/resources/icons/${icon}</argument>
+                                        <argument>
+                                            ${project.basedir}/src/main/resources/icons/${icon}</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
