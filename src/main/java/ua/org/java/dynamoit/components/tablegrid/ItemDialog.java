@@ -77,13 +77,13 @@ public class ItemDialog extends Dialog<String> {
         Observable<List<Pair<Integer, String>>> matches = JavaFxObservable.changesOf(this.searchField.textProperty())
                 .debounce(100, TimeUnit.MILLISECONDS)
                 .map(stringChange -> {
-                            AtomicInteger index = new AtomicInteger(0);
-                            return textArea.getText().lines()
-                                    .map(line -> new Pair<>(index.getAndIncrement(), line))
-                                    .filter(pair -> !pair.getValue().isBlank() && !stringChange.getNewVal().isBlank() && pair.getValue().contains(stringChange.getNewVal()))
-                                    .collect(Collectors.toList());
-                        }
-                )
+                    AtomicInteger index = new AtomicInteger(0);
+                    return textArea.getText().lines()
+                            .map(line -> new Pair<>(index.getAndIncrement(), line))
+                            .filter(pair -> !pair.getValue().isBlank() && !stringChange.getNewVal().isBlank()
+                                    && pair.getValue().contains(stringChange.getNewVal()))
+                            .collect(Collectors.toList());
+                })
                 .observeOn(JavaFxScheduler.platform());
 
         matches.subscribe(list -> {
@@ -116,55 +116,54 @@ public class ItemDialog extends Dialog<String> {
                                                     Utils.convertJsonDocument(textArea.getText(), newValue)
                                             );
                                         });
-                                    })
-                            )),
+                                    }))),
                             DX.toolBar(toolBar -> {
-                                        toolBar.visibleProperty().bind(showSearch);
-                                        toolBar.managedProperty().bind(showSearch);
-                                        return List.of(
-                                                DX.create(() -> this.searchField, textField -> {
-                                                    HBox.setHgrow(textField, Priority.ALWAYS);
-                                                    textField.setOnKeyPressed(event -> {
-                                                        hideToolbarOnEscPress(event);
-                                                        if (KeyCode.ENTER == event.getCode()) {
-                                                            scrollTo(findIterator.get().next().getKey());
-                                                        }
-                                                    });
-                                                }),
-                                                DX.create(Label::new, label -> {
-                                                    label.textProperty().bind(JavaFxObserver.toBinding(matches.map(list -> list.size() + " matches")));
-                                                }),
-                                                DX.create(Button::new, button -> {
-                                                    button.setGraphic(DX.icon("icons/arrow_up.png"));
-                                                    button.setDisable(true);
-                                                    button.setOnKeyPressed(this::hideToolbarOnEscPress);
-                                                    button.setOnAction(event -> scrollTo(findIterator.get().previous().getKey()));
-                                                    findIterator.addListener((observable, oldValue, newValue) -> {
-                                                        button.disableProperty().bind(Bindings.not(newValue.hasPreviousProperty()));
-                                                    });
-                                                }),
-                                                DX.create(Button::new, button -> {
-                                                    button.setGraphic(DX.icon("icons/arrow_down.png"));
-                                                    button.setDisable(true);
-                                                    button.setOnKeyPressed(this::hideToolbarOnEscPress);
-                                                    button.setOnAction(event -> scrollTo(findIterator.get().next().getKey()));
-                                                    findIterator.addListener((observable, oldValue, newValue) -> {
-                                                        button.disableProperty().bind(Bindings.not(newValue.hasNextProperty()));
-                                                    });
-                                                }),
-                                                DX.create(Button::new, button -> {
-                                                    button.setTooltip(new Tooltip("Hide toolbar"));
-                                                    button.setGraphic(DX.icon("icons/cross.png"));
-                                                    button.setOnKeyPressed(this::hideToolbarOnEscPress);
-                                                    button.setOnAction(event -> hideToolbar());
-                                                })
-                                        );
-                                    }
-                            ),
-                            DX.create(() -> new VirtualizedScrollPane<>(textArea), pane -> VBox.setVgrow(pane, Priority.ALWAYS))
-                    );
-                })
-        );
+                                toolBar.visibleProperty().bind(showSearch);
+                                toolBar.managedProperty().bind(showSearch);
+                                return List.of(
+                                        DX.create(() -> this.searchField, textField -> {
+                                            HBox.setHgrow(textField, Priority.ALWAYS);
+                                            textField.setOnKeyPressed(event -> {
+                                                hideToolbarOnEscPress(event);
+                                                if (KeyCode.ENTER == event.getCode()) {
+                                                    scrollTo(findIterator.get().next().getKey());
+                                                }
+                                            });
+                                        }),
+                                        DX.create(Label::new, label -> {
+                                            label.textProperty().bind(JavaFxObserver
+                                                    .toBinding(matches.map(list -> list.size() + " matches")));
+                                        }),
+                                        DX.create(Button::new, button -> {
+                                            button.setGraphic(DX.icon("icons/arrow_up.png"));
+                                            button.setDisable(true);
+                                            button.setOnKeyPressed(this::hideToolbarOnEscPress);
+                                            button.setOnAction(
+                                                    event -> scrollTo(findIterator.get().previous().getKey()));
+                                            findIterator.addListener((observable, oldValue, newValue) -> {
+                                                button.disableProperty()
+                                                        .bind(Bindings.not(newValue.hasPreviousProperty()));
+                                            });
+                                        }),
+                                        DX.create(Button::new, button -> {
+                                            button.setGraphic(DX.icon("icons/arrow_down.png"));
+                                            button.setDisable(true);
+                                            button.setOnKeyPressed(this::hideToolbarOnEscPress);
+                                            button.setOnAction(event -> scrollTo(findIterator.get().next().getKey()));
+                                            findIterator.addListener((observable, oldValue, newValue) -> {
+                                                button.disableProperty().bind(Bindings.not(newValue.hasNextProperty()));
+                                            });
+                                        }),
+                                        DX.create(Button::new, button -> {
+                                            button.setTooltip(new Tooltip("Hide toolbar"));
+                                            button.setGraphic(DX.icon("icons/cross.png"));
+                                            button.setOnKeyPressed(this::hideToolbarOnEscPress);
+                                            button.setOnAction(event -> hideToolbar());
+                                        }));
+                            }),
+                            DX.create(() -> new VirtualizedScrollPane<>(textArea),
+                                    pane -> VBox.setVgrow(pane, Priority.ALWAYS)));
+                }));
         ((Stage) this.getDialogPane().getScene().getWindow()).getIcons().add(new Image("icons/page.png"));
         ButtonType saveButton = new ButtonType("Save", ButtonBar.ButtonData.LEFT);
         this.getDialogPane().getButtonTypes().addAll(saveButton, ButtonType.CLOSE);
@@ -189,7 +188,7 @@ public class ItemDialog extends Dialog<String> {
 
         this.setOnShowing(event -> {
             validationSubscribe = validator.apply(textArea.multiPlainChanges()
-                            .map(__ -> textArea.getText()))
+                    .map(__ -> textArea.getText()))
                     .subscribe(valid -> saveButtonDisable.accept(!valid));
 
             textArea.replaceText(json);
@@ -245,7 +244,8 @@ public class ItemDialog extends Dialog<String> {
     private void scrollTo(int lineNumber) {
         Bounds bb = textArea.getLayoutBounds();
         int percent = (int) (bb.getHeight() / 3);
-        textArea.showParagraphRegion(lineNumber, new BoundingBox(bb.getMinX() + percent, 0, 0, bb.getHeight() - percent));
+        textArea.showParagraphRegion(lineNumber,
+                new BoundingBox(bb.getMinX() + percent, 0, 0, bb.getHeight() - percent));
         textArea.moveTo(lineNumber, 0);
     }
 

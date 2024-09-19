@@ -49,25 +49,27 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-import java.util.zip.CRC32;
 
 public class Utils {
 
-    public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
+            .setSerializationInclusion(JsonInclude.Include.NON_NULL);
     public static final ObjectWriter PRETTY_PRINTER = OBJECT_MAPPER.writerWithDefaultPrettyPrinter();
-
-    private static final CRC32 CRC_32 = new CRC32();
 
     public static <T> Stream<T> asStream(Iterable<T> iterable) {
         return StreamSupport.stream(iterable.spliterator(), false);
     }
 
     public static boolean isHashKey(String attributeName, TableDescription tableDescription) {
-        return tableDescription.keySchema().stream().anyMatch(keySchemaElement -> keySchemaElement.attributeName().equals(attributeName) && keySchemaElement.keyType().equals(KeyType.HASH));
+        return tableDescription.keySchema().stream()
+                .anyMatch(keySchemaElement -> keySchemaElement.attributeName().equals(attributeName)
+                        && keySchemaElement.keyType().equals(KeyType.HASH));
     }
 
     public static boolean isRangeKey(String attributeName, TableDescription tableDescription) {
-        return tableDescription.keySchema().stream().anyMatch(keySchemaElement -> keySchemaElement.attributeName().equals(attributeName) && keySchemaElement.keyType().equals(KeyType.RANGE));
+        return tableDescription.keySchema().stream()
+                .anyMatch(keySchemaElement -> keySchemaElement.attributeName().equals(attributeName)
+                        && keySchemaElement.keyType().equals(KeyType.RANGE));
     }
 
     public static Optional<String> getHashKey(TableDescription tableDescription) {
@@ -84,7 +86,6 @@ public class Utils {
                 .map(KeySchemaElement::attributeName)
                 .findFirst();
     }
-
 
     public static <T> Comparator<T> KEYS_FIRST(String hashKeyName, String rangeKeyName, Function<T, String> convert) {
         return (o1, o2) -> {
@@ -197,7 +198,8 @@ public class Utils {
                 jsonGenerator.writeEndObject();
 
                 String rawJson = new String(jsonGenerator.getBytes());
-                Map<String, Object> toMap = OBJECT_MAPPER.readValue(rawJson, new TypeReference<>() {});
+                Map<String, Object> toMap = OBJECT_MAPPER.readValue(rawJson, new TypeReference<>() {
+                });
 
                 return PRETTY_PRINTER.writeValueAsString(toMap);
             } else {
@@ -208,6 +210,60 @@ public class Utils {
             e.printStackTrace();
         }
         return json;
+    }
+
+    /**
+     * Convert raw dynamodb document to plain presentation
+     * from {"name": {"S": "Mr. Smith"}} to {"name": "Mr. Smith"}
+     *
+     * @param json raw json
+     * @return plain json
+     */
+    public static String jsonRawToPlain(String json) {
+        EnhancedDocument item;
+        try {
+            item = rawJsonToItem(json);
+            return item.toJson();
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        return json;
+    }
+
+    public static String jsonPlainToRaw(String json) {
+        try {
+            EnhancedDocument item = EnhancedDocument.fromJson(json);
+            Map<String, AttributeValue> map = item.toMap();
+
+            SdkJsonGenerator jsonGenerator = new SdkJsonGenerator(new JsonFactory(), "application/json");
+            var context = JsonMarshallerContext
+                    .builder()
+                    .jsonGenerator(jsonGenerator)
+                    .protocolHandler((JsonProtocolMarshaller) JsonProtocolMarshallerBuilder
+                            .create()
+                            .endpoint(new URI("https://fake.com"))
+                            .jsonGenerator(jsonGenerator)
+                            .sendExplicitNullForPayload(true)
+                            .operationInfo(OperationInfo.builder().build())
+                            .build())
+                    .build();
+
+            jsonGenerator.writeStartObject();
+
+            map.forEach((s, attributeValue) -> {
+                SimpleTypeJsonMarshaller.SDK_POJO.marshall(attributeValue, context, s, null);
+            });
+
+            jsonGenerator.writeEndObject();
+
+            String rawJson = new String(jsonGenerator.getBytes());
+            Map<String, Object> toMap = OBJECT_MAPPER.readValue(rawJson, new TypeReference<>() {
+            });
+
+            return PRETTY_PRINTER.writeValueAsString(toMap);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static void copyToClipboard(String value) {
@@ -227,17 +283,23 @@ public class Utils {
     }
 
     /**
-     * Builds a {@link QueryEnhancedRequest} with specified attributes for querying a DynamoDB table.
+     * Builds a {@link QueryEnhancedRequest} with specified attributes for querying
+     * a DynamoDB table.
      *
-     * @param hashName The name of the partition key attribute.
-     * @param rangeName The name of the sort key attribute. Can be null if the table doesn't use a sort key.
-     * @param attributeFilterMap A map containing attribute names and their corresponding filter values.
-     * @param numberOfDocuments The maximum number of documents to be returned by the query.
-     * @return A {@link QueryEnhancedRequest} object configured with the specified attributes and filter conditions.
-     *
-     * @throws IllegalArgumentException if the partition key value is not present in the attribute filter map.
+     * @param hashName           The name of the partition key attribute.
+     * @param rangeName          The name of the sort key attribute. Can be null if
+     *                           the table doesn't use a sort key.
+     * @param attributeFilterMap A map containing attribute names and their
+     *                           corresponding filter values.
+     * @param numberOfDocuments  The maximum number of documents to be returned by
+     *                           the query.
+     * @return A {@link QueryEnhancedRequest} object configured with the specified
+     * attributes and filter conditions.
+     * @throws IllegalArgumentException if the partition key value is not present in
+     *                                  the attribute filter map.
      */
-    public static QueryEnhancedRequest buildQuerySpec(String hashName, String rangeName, Map<String, String> attributeFilterMap, int numberOfDocuments) {
+    public static QueryEnhancedRequest buildQuerySpec(String hashName, String rangeName,
+                                                      Map<String, String> attributeFilterMap, int numberOfDocuments) {
         String hashValue = attributeFilterMap.get(hashName);
         Key.Builder keyBuilder = Key.builder().partitionValue(hashValue);
 
@@ -253,7 +315,8 @@ public class Utils {
 
         FilterExpressionBuilder filterExpressionBuilder = new FilterExpressionBuilder();
 
-        attributesWithoutKeys.forEach(entry -> filterExpressionBuilder.addAttributeValue(entry.getKey(), entry.getValue()));
+        attributesWithoutKeys
+                .forEach(entry -> filterExpressionBuilder.addAttributeValue(entry.getKey(), entry.getValue()));
 
         QueryEnhancedRequest.Builder querySpec = QueryEnhancedRequest.builder()
                 .queryConditional(QueryConditional.keyEqualTo(keyBuilder.build()))
@@ -263,8 +326,8 @@ public class Utils {
     }
 
     private static synchronized String hashValue(String value) {
-//        CRC_32.update(value.getBytes());
-//        return String.valueOf(CRC_32.getValue());
+        // CRC_32.update(value.getBytes());
+        // return String.valueOf(CRC_32.getValue());
         return String.valueOf(value.hashCode());
     }
 
@@ -275,6 +338,5 @@ public class Utils {
     public static String attributeValue(String attribute) {
         return ":val_" + hashValue(attribute);
     }
-
 
 }

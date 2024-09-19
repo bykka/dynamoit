@@ -17,14 +17,23 @@
 
 package ua.org.java.dynamoit.utils;
 
+import com.amazonaws.services.dynamodbv2.document.Item;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.core.protocol.MarshallingType;
+import software.amazon.awssdk.enhanced.dynamodb.document.EnhancedDocument;
+import software.amazon.awssdk.protocols.core.OperationInfo;
+import software.amazon.awssdk.protocols.json.SdkJsonGenerator;
 import software.amazon.awssdk.protocols.json.internal.marshall.*;
+import software.amazon.awssdk.protocols.json.internal.unmarshall.JsonUnmarshallerContext;
+import software.amazon.awssdk.protocols.json.internal.unmarshall.document.DocumentUnmarshaller;
+import software.amazon.awssdk.protocols.jsoncore.JsonNode;
+import software.amazon.awssdk.thirdparty.jackson.core.JsonFactory;
 
+import java.net.URI;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static ua.org.java.dynamoit.utils.Utils.convertJsonDocument;
+import static ua.org.java.dynamoit.utils.Utils.*;
 
 public class UtilsTest {
 
@@ -50,6 +59,8 @@ public class UtilsTest {
 
     @Test
     public void testConvertJsonToDocument() {
+
+        //language=json
         String document1 = convertJsonDocument("""
                 {"name": "user"}
                 """, true);
@@ -57,6 +68,7 @@ public class UtilsTest {
         System.out.println("document1");
         System.out.println(document1);
 
+        //language=json
         assertEquals("""
                 {
                   "name" : {
@@ -64,6 +76,7 @@ public class UtilsTest {
                   }
                 }""", document1.replace("\r", ""));
 
+        //language=json
         String document2 = convertJsonDocument("""
                 {
                     "name": {
@@ -72,6 +85,7 @@ public class UtilsTest {
                 }
                 """, false);
 
+        //language=json
         assertEquals("""
                 {
                     "name" : "user"
@@ -123,6 +137,60 @@ public class UtilsTest {
                 .pathParamMarshaller(MarshallingType.NULL, SimpleTypePathMarshaller.NULL)
                 .greedyPathParamMarshaller(MarshallingType.STRING, SimpleTypePathMarshaller.GREEDY_STRING).greedyPathParamMarshaller(MarshallingType.NULL, SimpleTypePathMarshaller.NULL).build();
 
+    }
+
+    @Test
+    public void testJsonRawToPlain() {
+        //language=json
+        var rawJson = """
+                {
+                  "name" : {
+                    "S" : "user"
+                  }
+                }""";
+
+        //language=json
+        var plainJson = """
+                {
+                    "name" : "user"
+                }
+                """;
+
+        var result = jsonRawToPlain(rawJson);
+
+//        assertEquals(plainJson, result);
+
+
+        var jsonNode = JsonNode.parser().parse(rawJson);
+        var doc = jsonNode.visit(new DocumentUnmarshaller());
+
+        System.out.println(doc.getClass().getName());
+    }
+
+    // com.amazonaws.services.dynamodbv2.model.transform.GetItemResultJsonUnmarshaller
+    @Test
+    public void testJsonPlainToRaw() {
+        //language=json
+        var rawJson = """
+                {
+                  "name" : {
+                    "S" : "user"
+                  }
+                }""";
+
+        //language=json
+        var plainJson = """
+                {
+                    "name" : "user"
+                }
+                """;
+
+        var item = Item.fromJSON(plainJson);
+        System.out.println(item.asMap());
+
+        var result = jsonPlainToRaw(plainJson);
+
+        assertEquals(rawJson, result);
     }
 
 }
