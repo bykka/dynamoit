@@ -27,6 +27,7 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyEvent;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.document.EnhancedDocument;
+import software.amazon.awssdk.enhanced.dynamodb.internal.converter.attribute.JsonNodeToAttributeValueMapConverter;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.protocols.core.OperationInfo;
@@ -35,6 +36,7 @@ import software.amazon.awssdk.protocols.json.internal.marshall.JsonMarshallerCon
 import software.amazon.awssdk.protocols.json.internal.marshall.JsonProtocolMarshaller;
 import software.amazon.awssdk.protocols.json.internal.marshall.JsonProtocolMarshallerBuilder;
 import software.amazon.awssdk.protocols.json.internal.marshall.SimpleTypeJsonMarshaller;
+import software.amazon.awssdk.protocols.jsoncore.JsonNode;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement;
 import software.amazon.awssdk.services.dynamodb.model.KeyType;
@@ -212,6 +214,22 @@ public class Utils {
         return json;
     }
 
+    static Map<String, AttributeValue> jsonRawParsing(String rawJson) {
+        JsonNode jsonNode = JsonNode.parser().parse(rawJson);
+        Map<String, AttributeValue> map = new HashMap<>();
+        jsonNode.asObject().forEach((fieldName, valueNode) -> {
+            var typeJsonNode = AttributeValue.builder().sdkFields().stream()
+                    .map(field -> valueNode.field(field.memberName()))
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .findFirst();
+
+            map.put(fieldName, valueNode.visit(JsonNodeToAttributeValueMapConverter.instance()));
+//            typeJsonNode.ifPresent(field -> map.put(fieldName, field.visit(JsonNodeToAttributeValueMapConverter.instance())));
+        });
+        return map;
+    }
+
     /**
      * Convert raw dynamodb document to plain presentation
      * from {"name": {"S": "Mr. Smith"}} to {"name": "Mr. Smith"}
@@ -220,14 +238,17 @@ public class Utils {
      * @return plain json
      */
     public static String jsonRawToPlain(String json) {
-        EnhancedDocument item;
+        EnhancedDocument document = EnhancedDocument.fromAttributeValueMap(jsonRawParsing(json));
+        var plainJson = document.toJson();
+
         try {
-            item = rawJsonToItem(json);
-            return item.toJson();
+            Map<String, Object> toMap = OBJECT_MAPPER.readValue(plainJson, new TypeReference<>() {
+            });
+            return PRETTY_PRINTER.writeValueAsString(toMap);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
-        return json;
+        return plainJson;
     }
 
     public static String jsonPlainToRaw(String json) {

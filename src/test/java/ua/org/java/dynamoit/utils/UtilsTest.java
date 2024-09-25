@@ -17,20 +17,19 @@
 
 package ua.org.java.dynamoit.utils;
 
-import com.amazonaws.services.dynamodbv2.document.Item;
 import org.junit.jupiter.api.Test;
-import software.amazon.awssdk.core.protocol.MarshallingType;
+import software.amazon.awssdk.core.SdkField;
 import software.amazon.awssdk.enhanced.dynamodb.document.EnhancedDocument;
-import software.amazon.awssdk.protocols.core.OperationInfo;
-import software.amazon.awssdk.protocols.json.SdkJsonGenerator;
-import software.amazon.awssdk.protocols.json.internal.marshall.*;
+import software.amazon.awssdk.protocols.json.internal.unmarshall.JsonUnmarshaller;
 import software.amazon.awssdk.protocols.json.internal.unmarshall.JsonUnmarshallerContext;
-import software.amazon.awssdk.protocols.json.internal.unmarshall.document.DocumentUnmarshaller;
 import software.amazon.awssdk.protocols.jsoncore.JsonNode;
-import software.amazon.awssdk.thirdparty.jackson.core.JsonFactory;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.utils.builder.Buildable;
 
-import java.net.URI;
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static ua.org.java.dynamoit.utils.Utils.*;
@@ -65,9 +64,6 @@ public class UtilsTest {
                 {"name": "user"}
                 """, true);
 
-        System.out.println("document1");
-        System.out.println(document1);
-
         //language=json
         assertEquals("""
                 {
@@ -91,56 +87,10 @@ public class UtilsTest {
                     "name" : "user"
                 }
                 """, document2);
-
-
-        JsonMarshallerRegistry.builder()
-                .payloadMarshaller(MarshallingType.STRING, SimpleTypeJsonMarshaller.STRING)
-                .payloadMarshaller(MarshallingType.INTEGER, SimpleTypeJsonMarshaller.INTEGER)
-                .payloadMarshaller(MarshallingType.LONG, SimpleTypeJsonMarshaller.LONG)
-                .payloadMarshaller(MarshallingType.SHORT, SimpleTypeJsonMarshaller.SHORT)
-                .payloadMarshaller(MarshallingType.DOUBLE, SimpleTypeJsonMarshaller.DOUBLE)
-                .payloadMarshaller(MarshallingType.FLOAT, SimpleTypeJsonMarshaller.FLOAT)
-                .payloadMarshaller(MarshallingType.BIG_DECIMAL, SimpleTypeJsonMarshaller.BIG_DECIMAL)
-                .payloadMarshaller(MarshallingType.BOOLEAN, SimpleTypeJsonMarshaller.BOOLEAN)
-                .payloadMarshaller(MarshallingType.INSTANT, SimpleTypeJsonMarshaller.INSTANT)
-                .payloadMarshaller(MarshallingType.SDK_BYTES, SimpleTypeJsonMarshaller.SDK_BYTES)
-                .payloadMarshaller(MarshallingType.SDK_POJO, SimpleTypeJsonMarshaller.SDK_POJO)
-                .payloadMarshaller(MarshallingType.LIST, SimpleTypeJsonMarshaller.LIST)
-                .payloadMarshaller(MarshallingType.MAP, SimpleTypeJsonMarshaller.MAP)
-                .payloadMarshaller(MarshallingType.NULL, SimpleTypeJsonMarshaller.NULL)
-                .payloadMarshaller(MarshallingType.DOCUMENT, SimpleTypeJsonMarshaller.DOCUMENT)
-                .headerMarshaller(MarshallingType.STRING, HeaderMarshaller.STRING)
-                .headerMarshaller(MarshallingType.INTEGER, HeaderMarshaller.INTEGER)
-                .headerMarshaller(MarshallingType.LONG, HeaderMarshaller.LONG)
-                .headerMarshaller(MarshallingType.SHORT, HeaderMarshaller.SHORT)
-                .headerMarshaller(MarshallingType.DOUBLE, HeaderMarshaller.DOUBLE)
-                .headerMarshaller(MarshallingType.FLOAT, HeaderMarshaller.FLOAT)
-                .headerMarshaller(MarshallingType.BOOLEAN, HeaderMarshaller.BOOLEAN)
-                .headerMarshaller(MarshallingType.INSTANT, HeaderMarshaller.INSTANT)
-                .headerMarshaller(MarshallingType.LIST, HeaderMarshaller.LIST)
-                .headerMarshaller(MarshallingType.NULL, HeaderMarshaller.NULL)
-                .queryParamMarshaller(MarshallingType.STRING, QueryParamMarshaller.STRING)
-                .queryParamMarshaller(MarshallingType.INTEGER, QueryParamMarshaller.INTEGER)
-                .queryParamMarshaller(MarshallingType.LONG, QueryParamMarshaller.LONG)
-                .queryParamMarshaller(MarshallingType.SHORT, QueryParamMarshaller.SHORT)
-                .queryParamMarshaller(MarshallingType.DOUBLE, QueryParamMarshaller.DOUBLE)
-                .queryParamMarshaller(MarshallingType.FLOAT, QueryParamMarshaller.FLOAT)
-                .queryParamMarshaller(MarshallingType.BOOLEAN, QueryParamMarshaller.BOOLEAN)
-                .queryParamMarshaller(MarshallingType.INSTANT, QueryParamMarshaller.INSTANT)
-                .queryParamMarshaller(MarshallingType.LIST, QueryParamMarshaller.LIST)
-                .queryParamMarshaller(MarshallingType.MAP, QueryParamMarshaller.MAP)
-                .queryParamMarshaller(MarshallingType.NULL, QueryParamMarshaller.NULL)
-                .pathParamMarshaller(MarshallingType.STRING, SimpleTypePathMarshaller.STRING)
-                .pathParamMarshaller(MarshallingType.INTEGER, SimpleTypePathMarshaller.INTEGER)
-                .pathParamMarshaller(MarshallingType.LONG, SimpleTypePathMarshaller.LONG)
-                .pathParamMarshaller(MarshallingType.SHORT, SimpleTypePathMarshaller.SHORT)
-                .pathParamMarshaller(MarshallingType.NULL, SimpleTypePathMarshaller.NULL)
-                .greedyPathParamMarshaller(MarshallingType.STRING, SimpleTypePathMarshaller.GREEDY_STRING).greedyPathParamMarshaller(MarshallingType.NULL, SimpleTypePathMarshaller.NULL).build();
-
     }
 
     @Test
-    public void testJsonRawToPlain() {
+    public void testJsonRawToPlain() throws UnsupportedEncodingException {
         //language=json
         var rawJson = """
                 {
@@ -152,22 +102,35 @@ public class UtilsTest {
         //language=json
         var plainJson = """
                 {
-                    "name" : "user"
-                }
-                """;
+                  "name" : "user"
+                }""";
 
         var result = jsonRawToPlain(rawJson);
-
-//        assertEquals(plainJson, result);
-
-
-        var jsonNode = JsonNode.parser().parse(rawJson);
-        var doc = jsonNode.visit(new DocumentUnmarshaller());
-
-        System.out.println(doc.getClass().getName());
+        assertEquals(plainJson, result);
     }
 
-    // com.amazonaws.services.dynamodbv2.model.transform.GetItemResultJsonUnmarshaller
+    private Map<String, ?> unmarshallMap(JsonUnmarshallerContext context, JsonNode jsonContent) {
+        if (jsonContent == null || jsonContent.isNull()) {
+            return null;
+        }
+        Map<String, Object> map = new HashMap<>();
+        jsonContent.asObject().forEach((fieldName, value) -> {
+            map.put(fieldName, unmarshall(context, value));
+        });
+        return map;
+    }
+
+    private AttributeValue unmarshall(JsonUnmarshallerContext context, JsonNode jsonContent) {
+        var attrVB = AttributeValue.builder();
+
+        for (SdkField<?> field : attrVB.sdkFields()) {
+            JsonNode jsonFieldContent = jsonContent.field(field.locationName()).orElse(null);
+            JsonUnmarshaller<Object> unmarshaller = context.getUnmarshaller(field.location(), field.marshallingType());
+            field.set(attrVB, unmarshaller.unmarshall(context, jsonFieldContent, (SdkField<Object>) field));
+        }
+        return (AttributeValue) ((Buildable) attrVB).build();
+    }
+
     @Test
     public void testJsonPlainToRaw() {
         //language=json
@@ -185,12 +148,47 @@ public class UtilsTest {
                 }
                 """;
 
-        var item = Item.fromJSON(plainJson);
-        System.out.println(item.asMap());
-
         var result = jsonPlainToRaw(plainJson);
 
         assertEquals(rawJson, result);
+    }
+
+    @Test
+    public void testJsonRawParsing() {
+        //language=json
+        var rawJson = """
+                {
+                  "name": {
+                    "S": "user"
+                  },
+                  "age": {
+                    "N": "20"
+                  },
+                  "tags": {
+                    "L": [
+                      {"S": "tag1"},
+                      {"S": "tag2"}
+                    ]
+                  },
+                  "meta": {
+                    "M": {
+                      "x-tags": {
+                        "L": [
+                          {"S": "x-tag1"},
+                          {"S": "x-tag2"}
+                        ]
+                      }
+                    }
+                  }
+                 }""";
+
+        var map = Utils.jsonRawParsing(rawJson);
+        System.out.println(map);
+
+        assertEquals(4, map.entrySet().size());
+        assertEquals("user", map.get("name").s());
+        assertEquals("20", map.get("age").n());
+        assertEquals(2, map.get("tags").l().size());
     }
 
 }
