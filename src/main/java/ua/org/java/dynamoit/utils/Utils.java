@@ -25,12 +25,15 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyEvent;
+import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.core.SdkField;
+import software.amazon.awssdk.core.protocol.MarshallingType;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.document.EnhancedDocument;
-import software.amazon.awssdk.enhanced.dynamodb.internal.converter.attribute.JsonNodeToAttributeValueMapConverter;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.protocols.core.OperationInfo;
+import software.amazon.awssdk.protocols.json.AwsJsonProtocolMetadata;
 import software.amazon.awssdk.protocols.json.SdkJsonGenerator;
 import software.amazon.awssdk.protocols.json.internal.marshall.JsonMarshallerContext;
 import software.amazon.awssdk.protocols.json.internal.marshall.JsonProtocolMarshaller;
@@ -46,6 +49,7 @@ import software.amazon.awssdk.utils.StringUtils;
 import ua.org.java.dynamoit.components.tablegrid.parser.expression.FilterExpressionBuilder;
 
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -214,20 +218,59 @@ public class Utils {
         return json;
     }
 
-    static Map<String, AttributeValue> jsonRawParsing(String rawJson) {
-        JsonNode jsonNode = JsonNode.parser().parse(rawJson);
-        Map<String, AttributeValue> map = new HashMap<>();
-        jsonNode.asObject().forEach((fieldName, valueNode) -> {
-            var typeJsonNode = AttributeValue.builder().sdkFields().stream()
-                    .map(field -> valueNode.field(field.memberName()))
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .findFirst();
+    static AttributeValue singlePropertyParser(JsonNode jsonNode) {
+        AttributeValue.Builder builder = AttributeValue.builder();
+        for (SdkField<?> sdkField: builder.sdkFields()) {
+            var fieldOptional = jsonNode.field(sdkField.locationName());
+            fieldOptional.flatMap(fieldValue -> {
+                if (sdkField.marshallingType() == MarshallingType.STRING) {
+                    return Optional.of(fieldValue.asString());
+                }
+                if (sdkField.marshallingType() == MarshallingType.BOOLEAN) {
+                    return Optional.of(fieldValue.asBoolean());
+                }
+                if (sdkField.marshallingType() == MarshallingType.SDK_BYTES) {
+                    return Optional.of(SdkBytes.fromString(fieldValue.asString(), StandardCharsets.UTF_8));
+                }
+                if (sdkField.marshallingType() == MarshallingType.NULL) {
+                    return Optional.of(fieldValue.isNull());
+                }
+                if (sdkField.marshallingType() == MarshallingType.MAP && fieldValue.isObject()) {
+                    return Optional.of(mapPropertyParser(fieldValue));
+                }
+                if (sdkField.marshallingType() == MarshallingType.LIST && fieldValue.isArray()) {
+                    Function<JsonNode, Object> valueConvertor = switch (sdkField.locationName()) {
+                        case "SS" -> JsonNode::asString;
+                        case "NS" -> JsonNode::asNumber;
+                        case "BS" -> json -> SdkBytes.fromUtf8String(json.asString());
+                        default -> Utils::singlePropertyParser;
+                    };
+                    return Optional.of(fieldValue.asArray().stream().map(valueConvertor).toList());
+                }
+                if (sdkField.marshallingType() == MarshallingType.LIST && fieldValue.isArray()) {
+                    return Optional.of(fieldValue.asArray().stream().map(Utils::singlePropertyParser).toList());
+                }
+                return Optional.empty();
+            }).ifPresent(value -> sdkField.set(builder, value));
+        }
 
-            map.put(fieldName, valueNode.visit(JsonNodeToAttributeValueMapConverter.instance()));
-//            typeJsonNode.ifPresent(field -> map.put(fieldName, field.visit(JsonNodeToAttributeValueMapConverter.instance())));
-        });
-        return map;
+        return builder.build();
+    }
+
+    static Map<String, AttributeValue> mapPropertyParser(JsonNode jsonNode) {
+        return jsonNode.asObject()
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> singlePropertyParser(entry.getValue())
+                ));
+    }
+
+    static Map<String, AttributeValue> jsonRawParsing(String rawJson) {
+        JsonNode jsonRoot = JsonNode.parser().parse(rawJson);
+
+        return mapPropertyParser(jsonRoot);
     }
 
     /**
@@ -262,6 +305,7 @@ public class Utils {
                     .jsonGenerator(jsonGenerator)
                     .protocolHandler((JsonProtocolMarshaller) JsonProtocolMarshallerBuilder
                             .create()
+                            .protocolMetadata(AwsJsonProtocolMetadata.builder().build())
                             .endpoint(new URI("https://fake.com"))
                             .jsonGenerator(jsonGenerator)
                             .sendExplicitNullForPayload(true)
