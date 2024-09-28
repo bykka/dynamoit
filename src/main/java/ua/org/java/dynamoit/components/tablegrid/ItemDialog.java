@@ -113,7 +113,7 @@ public class ItemDialog extends Dialog<String> {
                                         box.selectedProperty().bindBidirectional(editAsRawJson);
                                         box.selectedProperty().addListener((observable, oldValue, newValue) -> {
                                             textArea.replaceText(
-                                                    Utils.convertJsonDocument(textArea.getText(), newValue)
+                                                    newValue ? Utils.jsonPlainToRaw(textArea.getText()) : Utils.jsonRawToPlain(textArea.getText())
                                             );
                                         });
                                     }))),
