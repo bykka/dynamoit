@@ -17,11 +17,16 @@
 
 package ua.org.java.dynamoit.utils;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyEvent;
@@ -61,6 +66,10 @@ public class Utils {
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
             .setSerializationInclusion(JsonInclude.Include.NON_NULL);
     public static final ObjectWriter PRETTY_PRINTER = OBJECT_MAPPER.writerWithDefaultPrettyPrinter();
+    private static final ObjectMapper PROPERTIES_MAPPER = new ObjectMapper()
+            .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
+            .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
 
     public static <T> Stream<T> asStream(Iterable<T> iterable) {
         return StreamSupport.stream(iterable.spliterator(), false);
@@ -120,7 +129,7 @@ public class Utils {
 
     public static String logAsJson(Object value) {
         try {
-            return OBJECT_MAPPER.writeValueAsString(value);
+            return PROPERTIES_MAPPER.writeValueAsString(value);
         } catch (JsonProcessingException ignored) {
             System.out.println(ignored);
         }
@@ -391,9 +400,7 @@ public class Utils {
     }
 
     private static synchronized String hashValue(String value) {
-        // CRC_32.update(value.getBytes());
-        // return String.valueOf(CRC_32.getValue());
-        return String.valueOf(value.hashCode());
+        return String.valueOf(Math.abs(value.hashCode()));
     }
 
     public static String attributeName(String attribute) {
