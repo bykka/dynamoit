@@ -277,19 +277,15 @@ public class TableGridController {
                 var queryRequest = buildQuerySpec(hash(), range(), tableModel.getAttributeFilterMap());
                 return queryTableItems(queryRequest);
             }
-        } else if (tableModel.getOriginalTableDescription().globalSecondaryIndexes() != null) {
-            // find global indexes with ALL properties projection
-            List<GlobalSecondaryIndexDescription> fullProjectionIndexes = tableModel.getOriginalTableDescription().globalSecondaryIndexes().stream()
-                    .filter(__ -> __.projection().projectionType().equals(ProjectionType.ALL)).toList();
-
+        } else if (!tableModel.getFullProjectionIndexes().isEmpty()) {
             // find the first index that has hash and range attributes in the filters map
-            Optional<GlobalSecondaryIndexDescription> globalIndexOptional = fullProjectionIndexes.stream()
+            Optional<GlobalSecondaryIndexDescription> globalIndexOptional = tableModel.getFullProjectionIndexes().stream()
                     .filter(__ -> __.keySchema().stream()
                             .allMatch(key -> notBlankFilterValue(key.attributeName()))
                     ).findFirst();
 
             // or try to find at least global index with hash in the filters map
-            globalIndexOptional = globalIndexOptional.or(() -> fullProjectionIndexes.stream()
+            globalIndexOptional = globalIndexOptional.or(() -> tableModel.getFullProjectionIndexes().stream()
                     .filter(__ -> lookUpKeyName(__.keySchema(), KeyType.HASH).map(this::notBlankFilterValue).orElse(false)).findFirst()
             );
 
@@ -459,7 +455,15 @@ public class TableGridController {
             schemaBuilder.addIndexSortKey(TableMetadata.primaryIndexName(), range(), AttributeValueType.S);
         }
 
-        schemaBuilder.attributeConverterProviders(AttributeConverterProvider.defaultProvider());
+        tableModel.getFullProjectionIndexes().forEach(indexDescription -> {
+            indexDescription.keySchema().forEach(key -> {
+                if (key.keyType() == KeyType.HASH) {
+                    schemaBuilder.addIndexPartitionKey(indexDescription.indexName(), key.attributeName(), AttributeValueType.S);
+                } else if (key.keyType() == KeyType.RANGE) {
+                    schemaBuilder.addIndexSortKey(indexDescription.indexName(), key.attributeName(), AttributeValueType.S);
+                }
+            });
+        });
 
         table = documentClient.table(context.tableName(), schemaBuilder.build());
 

@@ -20,13 +20,10 @@ package ua.org.java.dynamoit.utils;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyEvent;
@@ -68,8 +65,7 @@ public class Utils {
     public static final ObjectWriter PRETTY_PRINTER = OBJECT_MAPPER.writerWithDefaultPrettyPrinter();
     private static final ObjectMapper PROPERTIES_MAPPER = new ObjectMapper()
             .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
-            .setSerializationInclusion(JsonInclude.Include.NON_NULL);
-
+            .setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
 
     public static <T> Stream<T> asStream(Iterable<T> iterable) {
         return StreamSupport.stream(iterable.spliterator(), false);
