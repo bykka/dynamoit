@@ -45,6 +45,7 @@ import org.fxmisc.richtext.Selection;
 import org.fxmisc.richtext.SelectionImpl;
 import org.reactfx.EventStream;
 import org.reactfx.Subscription;
+import software.amazon.awssdk.enhanced.dynamodb.document.EnhancedDocument;
 import ua.org.java.dynamoit.utils.DX;
 import ua.org.java.dynamoit.utils.ObservableListIterator;
 import ua.org.java.dynamoit.utils.Utils;
@@ -71,7 +72,7 @@ public class ItemDialog extends Dialog<String> {
     private final SimpleBooleanProperty editAsRawJson = new SimpleBooleanProperty(false);
     private final SimpleObjectProperty<ObservableListIterator<Pair<Integer, String>>> findIterator = new SimpleObjectProperty<>();
 
-    public ItemDialog(String title, String json, Function<EventStream<String>, EventStream<Boolean>> validator) {
+    public ItemDialog(String title, EnhancedDocument document, Function<EventStream<String>, EventStream<Boolean>> validator) {
         this.setTitle(title);
 
         Observable<List<Pair<Integer, String>>> matches = JavaFxObservable.changesOf(this.searchField.textProperty())
@@ -99,7 +100,7 @@ public class ItemDialog extends Dialog<String> {
         textArea.setPrefWidth(800);
         textArea.setPrefHeight(800);
         textArea.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
-            if (event.isControlDown() && event.getCode().equals(KeyCode.F)) {
+            if (event.isShortcutDown() && event.getCode().equals(KeyCode.F)) {
                 this.showToolbar();
             }
         });
@@ -191,7 +192,7 @@ public class ItemDialog extends Dialog<String> {
                     .map(__ -> textArea.getText()))
                     .subscribe(valid -> saveButtonDisable.accept(!valid));
 
-            textArea.replaceText(json);
+            textArea.replaceText(Utils.uglyToPrettyJson(document.toJson()));
             textArea.requestFocus();
             textArea.moveTo(0, 0);
         });

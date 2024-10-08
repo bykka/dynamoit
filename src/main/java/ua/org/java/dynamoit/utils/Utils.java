@@ -62,7 +62,10 @@ public class Utils {
 
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
             .setSerializationInclusion(JsonInclude.Include.NON_NULL);
-    public static final ObjectWriter PRETTY_PRINTER = OBJECT_MAPPER.writerWithDefaultPrettyPrinter();
+
+    public static final ObjectWriter PRETTY_PRINTER = OBJECT_MAPPER
+            .writerWithDefaultPrettyPrinter();
+
     private static final ObjectMapper PROPERTIES_MAPPER = new ObjectMapper()
             .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
             .setSerializationInclusion(JsonInclude.Include.NON_EMPTY);

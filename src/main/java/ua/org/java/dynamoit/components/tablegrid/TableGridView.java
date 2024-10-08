@@ -31,6 +31,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import org.reactfx.EventStream;
 import software.amazon.awssdk.enhanced.dynamodb.document.EnhancedDocument;
+import software.amazon.awssdk.enhanced.dynamodb.internal.document.DefaultEnhancedDocument;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import ua.org.java.dynamoit.components.tablegrid.highlight.Highlighter;
 import ua.org.java.dynamoit.components.thememanager.ThemeManager;
@@ -82,7 +83,7 @@ public class TableGridView extends VBox {
                             button.setTooltip(new Tooltip("Create a new document"));
                             button.setGraphic(DX.icon("icons/add.png"));
                             button.getStyleClass().addAll(BUTTON_ICON);
-                            button.setOnAction(event -> showCreateItemDialog(""));
+                            button.setOnAction(event -> showCreateItemDialog(DefaultEnhancedDocument.builder().build()));
                         }),
                         DX.create(Button::new, button -> {
                             button.setTooltip(new Tooltip("Delete selected rows"));
@@ -198,7 +199,7 @@ public class TableGridView extends VBox {
                         TableRow<EnhancedDocument> tableRow = new TableRow<>();
                         tableRow.setOnMouseClicked(event -> {
                             if (event.getClickCount() == 2 && tableRow.getItem() != null) {
-                                showEditItemDialog(tableRow.getItem().toJson());
+                                showEditItemDialog(tableRow.getItem());
                             }
                         });
                         return tableRow;
@@ -212,7 +213,7 @@ public class TableGridView extends VBox {
                                         showCompareDialog();
                                     }
                                 } else {
-                                    showEditItemDialog(tableView.getSelectionModel().getSelectedItem().toJson());
+                                    showEditItemDialog(tableView.getSelectionModel().getSelectedItem());
                                 }
                             }
                             if (KeyCode.DELETE == event.getCode()) {
@@ -316,7 +317,7 @@ public class TableGridView extends VBox {
 
     private void attachCellContextMenu(TableCell<EnhancedDocument, String> cell, String attrName) {
         cell.setOnContextMenuRequested(event -> {
-            if (cell.getText() != null && cell.getText().trim().length() != 0) {
+            if (cell.getText() != null && !cell.getText().trim().isEmpty()) {
                 String value = Utils.truncateWithDots(cell.textProperty().get());
                 DX.contextMenu(contextMenu -> List.of(
                         DX.create(MenuItem::new, menuCopy -> {
@@ -353,7 +354,7 @@ public class TableGridView extends VBox {
                             menuEdit.setGraphic(DX.icon("icons/page_edit.png"));
                             menuEdit.setOnAction(editEvent -> {
                                 if (editEvent.getTarget().equals(editEvent.getSource())) {
-                                    showEditItemDialog(cell.getTableRow().getItem().toJson());
+                                    showEditItemDialog(cell.getTableRow().getItem());
                                 }
                             });
                         }),
@@ -362,7 +363,7 @@ public class TableGridView extends VBox {
                             menuEdit.setGraphic(DX.icon("icons/page_add.png"));
                             menuEdit.setOnAction(editEvent -> {
                                 if (editEvent.getTarget().equals(editEvent.getSource())) {
-                                    showCreateItemDialog(cell.getTableRow().getItem().toJson());
+                                    showCreateItemDialog(cell.getTableRow().getItem());
                                 }
                             });
                         })
@@ -382,24 +383,24 @@ public class TableGridView extends VBox {
         controller.onRefreshData();
     }
 
-    private void showEditItemDialog(String json) {
-        showItemDialog(String.format("[%1s] Edit the document", tableModel.getTableName()), json, controller::onUpdateItem, controller::validateItem);
+    private void showEditItemDialog(EnhancedDocument document) {
+        showItemDialog(String.format("[%1s] Edit the document", tableModel.getTableName()), document, controller::onUpdateItem, controller::validateItem);
     }
 
-    private void showCreateItemDialog(String json) {
-        showItemDialog(String.format("[%1s] Create a new document", tableModel.getTableName()), json, controller::onCreateItem, controller::validateItem);
+    private void showCreateItemDialog(EnhancedDocument document) {
+        showItemDialog(String.format("[%1s] Create a new document", tableModel.getTableName()), document, controller::onCreateItem, controller::validateItem);
     }
 
     private void showPatchDialog() {
         if (!tableView.getSelectionModel().getSelectedItems().isEmpty()) {
-            showItemDialog(String.format("[%1s] Patch selected documents", tableModel.getTableName()), "{\n\n}",
+            showItemDialog(String.format("[%1s] Patch selected documents", tableModel.getTableName()), DefaultEnhancedDocument.builder().build(),
                     (json, isRaw) -> controller.onPatchItems(tableView.getSelectionModel().getSelectedItems(), json, isRaw),
                     stringEventStream -> controller.validateItem(stringEventStream, true));
         }
     }
 
-    private void showItemDialog(String title, String json, BiConsumer<String, Boolean> onSaveConsumer, Function<EventStream<String>, EventStream<Boolean>> validator) {
-        ItemDialog dialog = new ItemDialog(title, uglyToPrettyJson(json), validator);
+    private void showItemDialog(String title, EnhancedDocument document, BiConsumer<String, Boolean> onSaveConsumer, Function<EventStream<String>, EventStream<Boolean>> validator) {
+        ItemDialog dialog = new ItemDialog(title, document, validator);
         themeManager.applyPseudoClasses(dialog.getDialogPane());
         dialog.showAndWait().ifPresent(result -> onSaveConsumer.accept(result, dialog.isEditAsRawJson()));
     }
