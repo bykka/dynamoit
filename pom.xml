@@ -37,7 +37,7 @@
         <maven.compiler.target>21</maven.compiler.target>
         <dagger.version>2.46.1</dagger.version>
         <javafx.version>21.0.1</javafx.version>
-        <aws.sdk.version>1.12.634</aws.sdk.version>
+        <aws.sdk.version>1.12.721</aws.sdk.version>
         <main.class>ua.org.java.dynamoit.Launcher</main.class>
         <fatJar.dir>${project.build.directory}/fatJar/</fatJar.dir>
         <destination.dir>${project.build.directory}/${project.name}</destination.dir>
