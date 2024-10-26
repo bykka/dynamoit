@@ -74,7 +74,6 @@ public class DynamoDBService {
                     .region(Region.of(p.getRegion()))
                     .build();
             case LocalProfileDetails p -> DynamoDbClient.builder()
-                    //.endpointProvider(DynamoDbEndpointProvider.defaultProvider())
                     .endpointOverride(URI.create(p.getEndPoint()))
                     .build();
             case RemoteProfileDetails p -> DynamoDbClient.builder()

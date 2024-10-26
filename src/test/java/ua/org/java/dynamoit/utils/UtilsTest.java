@@ -37,7 +37,8 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
-import static ua.org.java.dynamoit.utils.Utils.*;
+import static ua.org.java.dynamoit.utils.Utils.jsonPlainToRaw;
+import static ua.org.java.dynamoit.utils.Utils.jsonRawToPlain;
 
 public class UtilsTest {
 
