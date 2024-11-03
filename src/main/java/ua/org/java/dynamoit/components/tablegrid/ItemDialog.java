@@ -71,6 +71,7 @@ public class ItemDialog extends Dialog<String> {
     private final SimpleBooleanProperty showSearch = new SimpleBooleanProperty(false);
     private final SimpleBooleanProperty editAsRawJson = new SimpleBooleanProperty(false);
     private final SimpleObjectProperty<ObservableListIterator<Pair<Integer, String>>> findIterator = new SimpleObjectProperty<>();
+    private boolean hasModifications = false;
 
     public ItemDialog(String title, EnhancedDocument document, Function<EventStream<String>, EventStream<Boolean>> validator) {
         this.setTitle(title);
@@ -114,7 +115,9 @@ public class ItemDialog extends Dialog<String> {
                                         box.selectedProperty().bindBidirectional(editAsRawJson);
                                         box.selectedProperty().addListener((observable, oldValue, newValue) -> {
                                             textArea.replaceText(
-                                                    newValue ? Utils.jsonPlainToRaw(textArea.getText()) : Utils.jsonRawToPlain(textArea.getText())
+                                                    newValue ?
+                                                            (hasModifications ? Utils.jsonPlainToRaw(textArea.getText()) : Utils.attributeValueMapToJson(document.toMap())) :
+                                                            Utils.jsonRawToPlain(textArea.getText())
                                             );
                                         });
                                     }))),
@@ -195,6 +198,7 @@ public class ItemDialog extends Dialog<String> {
             textArea.replaceText(Utils.uglyToPrettyJson(document.toJson()));
             textArea.requestFocus();
             textArea.moveTo(0, 0);
+            textArea.textProperty().addListener((observable, oldValue, newValue) -> hasModifications = true);
         });
 
         this.setOnCloseRequest(event -> {

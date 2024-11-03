@@ -184,48 +184,6 @@ public class Utils {
         return EnhancedDocument.fromAttributeValueMap(rawJsonToMap(json));
     }
 
-    public static String convertJsonDocument(String json, boolean toRaw) {
-        try {
-            if (toRaw) {
-                EnhancedDocument item = EnhancedDocument.fromJson(json);
-                Map<String, AttributeValue> map = item.toMap();
-
-                SdkJsonGenerator jsonGenerator = new SdkJsonGenerator(new JsonFactory(), "application/json");
-                var context = JsonMarshallerContext
-                        .builder()
-                        .jsonGenerator(jsonGenerator)
-                        .protocolHandler((JsonProtocolMarshaller) JsonProtocolMarshallerBuilder
-                                .create()
-                                .endpoint(new URI("https://fake.com"))
-                                .jsonGenerator(jsonGenerator)
-                                .sendExplicitNullForPayload(true)
-                                .operationInfo(OperationInfo.builder().build())
-                                .build())
-                        .build();
-
-                jsonGenerator.writeStartObject();
-
-                map.forEach((s, attributeValue) -> {
-                    SimpleTypeJsonMarshaller.SDK_POJO.marshall(attributeValue, context, s, null);
-                });
-
-                jsonGenerator.writeEndObject();
-
-                String rawJson = new String(jsonGenerator.getBytes());
-                Map<String, Object> toMap = OBJECT_MAPPER.readValue(rawJson, new TypeReference<>() {
-                });
-
-                return PRETTY_PRINTER.writeValueAsString(toMap);
-            } else {
-                EnhancedDocument item = rawJsonToItem(json);
-                return item.toJson();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return json;
-    }
-
     static AttributeValue singlePropertyParser(JsonNode jsonNode) {
         AttributeValue.Builder builder = AttributeValue.builder();
         for (SdkField<?> sdkField: builder.sdkFields()) {
@@ -303,10 +261,14 @@ public class Utils {
     }
 
     public static String jsonPlainToRaw(String json) {
-        try {
-            EnhancedDocument item = EnhancedDocument.fromJson(json);
-            Map<String, AttributeValue> map = item.toMap();
+        EnhancedDocument item = EnhancedDocument.fromJson(json);
+        Map<String, AttributeValue> map = item.toMap();
 
+        return attributeValueMapToJson(map);
+    }
+
+    public static String attributeValueMapToJson(Map<String, AttributeValue> map) {
+        try {
             SdkJsonGenerator jsonGenerator = new SdkJsonGenerator(new JsonFactory(), "application/json");
             var context = JsonMarshallerContext
                     .builder()
