@@ -100,7 +100,7 @@ public class FilterExpressionBuilder {
                     if (StringUtils.isBlank(expression.expression())) {
                         expression = expBuilder.build();
                     } else {
-                        expression = Expression.join(expression, expBuilder.build(), " AND ");
+                        expression = Expression.join(Expression.AND, expression, expBuilder.build());
                     }
 
                     break;

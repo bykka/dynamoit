@@ -63,6 +63,7 @@ public class BuildQuerySpecTest {
         assertEquals(2, request.filterExpression().expressionNames().size());
         assertEquals(2, request.filterExpression().expressionValues().size());
 
+        assertNotNull(request.filterExpression());
         assertEquals("attribute1", request.filterExpression().expressionNames().get(attributeName("attribute1")));
         assertEquals("attribute2", request.filterExpression().expressionNames().get(attributeName("attribute2")));
         assertEquals("value1", request.filterExpression().expressionValues().get(attributeValue("attribute1")).s());
@@ -70,39 +71,53 @@ public class BuildQuerySpecTest {
         assertEquals(String.format("(%1$s = %2$s) AND (%3$s = %4$s)", attributeName("attribute1"), attributeValue("attribute1"), attributeName("attribute2"), attributeValue("attribute2")), request.filterExpression().expression());
     }
 
-//    @Test
-//    public void testBuildQuerySpecWithoutRangeKey() {
-//        QueryEnhancedRequest request = QuerySpecBuilder.buildQuerySpec("hashKey", null, attributeFilterMap, 5);
-//
-//        assertNotNull(request);
-//        assertEquals(5, request.limit());
-//
-//        Key key = request.queryConditional().keyEqualTo();
-//        assertEquals("hashValue", key.partitionValue().s());
-//        assertNull(key.sortValue());
-//
-//        assertNotNull(request.filterExpression());
-//        assertTrue(request.filterExpression().expressionValues().containsKey(":attribute1"));
-//        assertTrue(request.filterExpression().expressionValues().containsKey(":attribute2"));
-//    }
-//
-//    @Test
-//    public void testBuildQuerySpecWithEmptyFilterMap() {
-//        Map<String, String> emptyFilterMap = new HashMap<>();
-//        emptyFilterMap.put("hashKey", "hashValue");
-//
-//        QueryEnhancedRequest request = QuerySpecBuilder.buildQuerySpec("hashKey", "rangeKey", emptyFilterMap, 3);
-//
-//        assertNotNull(request);
-//        assertEquals(3, request.limit());
-//
-//        Key key = request.queryConditional().keyEqualTo();
-//        assertEquals("hashValue", key.partitionValue().s());
-//        assertNull(key.sortValue());
-//
-//        assertNull(request.filterExpression());
-//    }
-//
+    @Test
+    public void testBuildQuerySpecWithoutRangeKey() {
+        QueryEnhancedRequest request = Utils.buildQuerySpec("hashKey", null, attributeFilterMap, 5);
+
+        assertNotNull(request);
+        assertEquals(5, request.limit());
+
+        QueryConditional queryConditional = request.queryConditional();
+        assertInstanceOf(EqualToConditional.class, queryConditional);
+        assertEquals(new EqualToConditional(Key.builder()
+                .partitionValue("hashValue")
+                .build()), queryConditional);
+
+        assertNotNull(request.filterExpression());
+        assertEquals("rangeKey", request.filterExpression().expressionNames().get(attributeName("rangeKey")));
+        assertEquals("attribute1", request.filterExpression().expressionNames().get(attributeName("attribute1")));
+        assertEquals("attribute2", request.filterExpression().expressionNames().get(attributeName("attribute2")));
+        assertEquals("rangeValue", request.filterExpression().expressionValues().get(attributeValue("rangeKey")).s());
+        assertEquals("value1", request.filterExpression().expressionValues().get(attributeValue("attribute1")).s());
+        assertEquals("value2", request.filterExpression().expressionValues().get(attributeValue("attribute2")).s());
+        assertEquals(String.format("((%1$s = %2$s) AND (%3$s = %4$s)) AND (%5$s = %6$s)",
+                attributeName("rangeKey"), attributeValue("rangeKey"),
+                attributeName("attribute1"), attributeValue("attribute1"),
+                attributeName("attribute2"), attributeValue("attribute2")),
+                request.filterExpression().expression());
+    }
+
+    @Test
+    public void testBuildQuerySpecWithEmptyFilterMap() {
+        Map<String, String> emptyFilterMap = new HashMap<>();
+        emptyFilterMap.put("hashKey", "hashValue");
+
+        QueryEnhancedRequest request = Utils.buildQuerySpec("hashKey", "rangeKey", emptyFilterMap, 3);
+
+        assertNotNull(request);
+        assertEquals(3, request.limit());
+
+        QueryConditional queryConditional = request.queryConditional();
+        assertInstanceOf(EqualToConditional.class, queryConditional);
+        assertEquals(new EqualToConditional(Key.builder()
+                .partitionValue("hashValue")
+                .build()), queryConditional);
+
+        assertNotNull(request.filterExpression());
+        assertNull(request.filterExpression().expression());
+    }
+
 //    @Test
 //    public void testBuildQuerySpecWithMissingPartitionKey() {
 //        Map<String, String> invalidFilterMap = new HashMap<>();
