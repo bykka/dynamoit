@@ -399,15 +399,20 @@ public class TableGridController {
     private CompletableFuture<Void> delete(List<EnhancedDocument> items) {
         return runAsync(() -> Observable.fromIterable(items)
                 .buffer(BATCH_SIZE)
-                .map(list -> BatchWriteItemEnhancedRequest.builder().writeBatches(
-                        list.stream().map(item -> {
-                            Key.Builder keyBuilder = Key.builder().partitionValue(item.toMap().get(hash()));
-                            if (range() != null) {
-                                keyBuilder.sortValue(item.toMap().get(range()));
-                            }
-                            return WriteBatch.builder(EnhancedDocument.class).addDeleteItem(keyBuilder.build()).build();
-                        }).toList()
-                ).build())
+                .map(list -> {
+                    WriteBatch.Builder<EnhancedDocument> builder = WriteBatch.builder(EnhancedDocument.class).mappedTableResource(table);
+
+                    return BatchWriteItemEnhancedRequest.builder().writeBatches(
+
+                            list.stream().map(item -> {
+                                Key.Builder keyBuilder = Key.builder().partitionValue(item.toMap().get(hash()));
+                                if (range() != null) {
+                                    keyBuilder.sortValue(item.toMap().get(range()));
+                                }
+                                return builder.addDeleteItem(keyBuilder.build()).build();
+                            }).toList()
+                    ).build();
+                })
                 .subscribe(documentClient::batchWriteItem)
         );
     }
