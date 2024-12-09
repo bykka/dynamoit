@@ -24,7 +24,7 @@ import javafx.application.HostServices;
 import javafx.scene.layout.Region;
 import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.components.thememanager.ThemeManager;
-import ua.org.java.dynamoit.db.DynamoDBService;
+import ua.org.java.dynamoit.services.DynamoDbService;
 import ua.org.java.dynamoit.utils.FXExecutor;
 import ua.org.java.dynamoit.widgets.ActivityIndicator;
 
@@ -62,7 +62,7 @@ public class MainModule {
     }
 
     @Provides
-    public static MainController controller(DynamoDBService dynamoDBService, MainModel model, EventBus eventBus, HostServices hostServices, ThemeManager themeManager) {
+    public static MainController controller(DynamoDbService dynamoDBService, MainModel model, EventBus eventBus, HostServices hostServices, ThemeManager themeManager) {
         return new MainController(dynamoDBService, model, eventBus, hostServices, themeManager);
     }
 

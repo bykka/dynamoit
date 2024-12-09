@@ -23,7 +23,7 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.components.main.MainModel;
-import ua.org.java.dynamoit.db.DynamoDBService;
+import ua.org.java.dynamoit.services.DynamoDbService;
 import ua.org.java.dynamoit.model.profile.LocalProfileDetails;
 
 import java.util.concurrent.ForkJoinPool;
@@ -53,7 +53,7 @@ public class TableGridControllerTest {
         DynamoDbEnhancedClient dynamoDB = mock(DynamoDbEnhancedClient.class);
 
 //        expect(dynamoDB.getTable(context.tableName())).andReturn(table);
-        DynamoDBService dynamoDBService = mock(DynamoDBService.class);
+        DynamoDbService dynamoDBService = mock(DynamoDbService.class);
         when(dynamoDBService.getOrCreateDynamoDBClient(context.profileDetails())).thenReturn(amazonDynamoDB);
         when(dynamoDBService.getOrCreateDocumentClient(context.profileDetails())).thenReturn(dynamoDB);
 //

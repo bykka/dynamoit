@@ -32,13 +32,13 @@ import software.amazon.awssdk.enhanced.dynamodb.*;
 import software.amazon.awssdk.enhanced.dynamodb.document.DocumentTableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.document.EnhancedDocument;
 import software.amazon.awssdk.enhanced.dynamodb.model.*;
-import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
 import software.amazon.awssdk.utils.StringUtils;
 import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.components.tablegrid.parser.expression.FilterExpressionBuilder;
-import ua.org.java.dynamoit.db.DynamoDBService;
+import ua.org.java.dynamoit.services.DynamoDbService;
 import ua.org.java.dynamoit.model.TableDef;
+import ua.org.java.dynamoit.services.DynamoDbTableService;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -74,10 +74,10 @@ public class TableGridController {
      */
     private static final int BATCH_SIZE = 25;
 
-    private final DynamoDbClient dbClient;
     private DynamoDbTable<EnhancedDocument> table;
     private final TableGridContext context;
     private final TableGridModel tableModel;
+    private final DynamoDbTableService dynamoDbTableService;
     private final EventBus eventBus;
     private final Executor uiExecutor;
     private final HostServices hostServices;
@@ -85,13 +85,15 @@ public class TableGridController {
 
     public TableGridController(TableGridContext context,
                                TableGridModel tableModel,
-                               DynamoDBService dynamoDBService,
+                               DynamoDbService dynamoDBService,
+                               DynamoDbTableService dynamoDbTableService,
                                EventBus eventBus,
                                Executor uiExecutor,
                                HostServices hostServices
     ) {
         this.context = context;
         this.tableModel = tableModel;
+        this.dynamoDbTableService = dynamoDbTableService;
         this.eventBus = eventBus;
         this.uiExecutor = uiExecutor;
         this.hostServices = hostServices;
@@ -104,7 +106,6 @@ public class TableGridController {
         tableModel.setTableName(context.tableName());
         tableModel.setProfile(context.tableName());
 
-        dbClient = dynamoDBService.getOrCreateDynamoDBClient(context.profileDetails());
         documentClient = dynamoDBService.getOrCreateDocumentClient(context.profileDetails());
     }
 
@@ -112,7 +113,7 @@ public class TableGridController {
         eventBus.activity(
                 supplyAsync(() -> {
                     if (tableModel.getOriginalTableDescription() == null) {
-                        return supplyAsync(() -> dbClient.describeTable(DescribeTableRequest.builder().tableName(context.tableName()).build()).table())
+                        return supplyAsync(dynamoDbTableService::describeTable)
                                 .thenAcceptAsync(this::bindToModel, uiExecutor);
                     } else {
                         bindToModel(tableModel.getTableDef());

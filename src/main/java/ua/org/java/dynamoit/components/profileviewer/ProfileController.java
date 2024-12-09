@@ -20,7 +20,7 @@ package ua.org.java.dynamoit.components.profileviewer;
 import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.components.main.MainModel;
 import ua.org.java.dynamoit.components.tablegrid.TableGridContext;
-import ua.org.java.dynamoit.db.DynamoDBService;
+import ua.org.java.dynamoit.services.DynamoDbService;
 import ua.org.java.dynamoit.model.TableDef;
 import ua.org.java.dynamoit.utils.FXExecutor;
 
@@ -29,12 +29,12 @@ import java.util.stream.Collectors;
 
 public class ProfileController {
 
-    private final DynamoDBService dynamoDBService;
+    private final DynamoDbService dynamoDBService;
     private final MainModel.ProfileModel model;
     private final EventBus eventBus;
 
     @Inject
-    public ProfileController(MainModel.ProfileModel model, DynamoDBService dynamoDBService, EventBus eventBus) {
+    public ProfileController(MainModel.ProfileModel model, DynamoDbService dynamoDBService, EventBus eventBus) {
         this.dynamoDBService = dynamoDBService;
         this.model = model;
         this.eventBus = eventBus;

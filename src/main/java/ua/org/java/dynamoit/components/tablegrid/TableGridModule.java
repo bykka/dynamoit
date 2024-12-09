@@ -23,7 +23,7 @@ import javafx.application.HostServices;
 import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.components.main.MainModel;
 import ua.org.java.dynamoit.components.thememanager.ThemeManager;
-import ua.org.java.dynamoit.db.DynamoDBService;
+import ua.org.java.dynamoit.services.DynamoDbService;
 import ua.org.java.dynamoit.utils.FXExecutor;
 
 import javax.inject.Singleton;
@@ -43,7 +43,7 @@ public class TableGridModule {
     }
 
     @Provides
-    public TableGridController controller(TableGridContext tableContext, TableGridModel tableModel, DynamoDBService dynamoDBService, EventBus eventBus, HostServices hostServices) {
+    public TableGridController controller(TableGridContext tableContext, TableGridModel tableModel, DynamoDbService dynamoDBService, EventBus eventBus, HostServices hostServices) {
         TableGridController controller = new TableGridController(
                 tableContext,
                 tableModel,

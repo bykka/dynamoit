@@ -19,6 +19,8 @@ package ua.org.java.dynamoit.db;
 
 import dagger.Module;
 import dagger.Provides;
+import ua.org.java.dynamoit.services.DynamoDbService;
+import ua.org.java.dynamoit.services.DynamoDbClientRegistry;
 
 import javax.inject.Singleton;
 
@@ -27,8 +29,13 @@ public class DynamoDBModule {
 
     @Provides
     @Singleton
-    public static DynamoDBService dynamoDBService() {
-        return new DynamoDBService();
+    public static DynamoDbService dynamoDBService(DynamoDbClientRegistry registry) {
+        return new DynamoDbService(registry);
+    }
+
+    @Provides
+    public static DynamoDbClientRegistry dynamoDbClientRegistry() {
+        return new DynamoDbClientRegistry();
     }
 
 }
