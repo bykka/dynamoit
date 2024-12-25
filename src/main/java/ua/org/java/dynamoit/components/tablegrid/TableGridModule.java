@@ -24,6 +24,7 @@ import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.components.main.MainModel;
 import ua.org.java.dynamoit.components.thememanager.ThemeManager;
 import ua.org.java.dynamoit.services.DynamoDbService;
+import ua.org.java.dynamoit.services.DynamoDbTableService;
 import ua.org.java.dynamoit.utils.FXExecutor;
 
 import javax.inject.Singleton;
@@ -48,6 +49,7 @@ public class TableGridModule {
                 tableContext,
                 tableModel,
                 dynamoDBService,
+                null,
                 eventBus,
                 FXExecutor.getInstance(),
                 hostServices

@@ -18,7 +18,6 @@
 package ua.org.java.dynamoit.services;
 
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.DescribeTableRequest;
 import ua.org.java.dynamoit.model.profile.ProfileDetails;
 
 import java.util.ArrayList;

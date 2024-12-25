@@ -150,7 +150,7 @@ public class Utils {
     }
 
     public static List<Integer> skipSequences(List<Integer> dataList) {
-        return groupBySeq(dataList).stream().map(list -> list.get(0)).collect(Collectors.toList());
+        return groupBySeq(dataList).stream().map(List::getFirst).collect(Collectors.toList());
     }
 
     public static List<List<Integer>> groupBySeq(List<Integer> dataList) {
@@ -159,8 +159,8 @@ public class Utils {
                     if (acc.isEmpty()) {
                         acc.add(new ArrayList<>());
                     }
-                    List<Integer> lastGroup = acc.get(acc.size() - 1);
-                    if (lastGroup.isEmpty() || val - lastGroup.get(lastGroup.size() - 1) == 1) {
+                    List<Integer> lastGroup = acc.getLast();
+                    if (lastGroup.isEmpty() || val - lastGroup.getLast() == 1) {
                         lastGroup.add(val);
                     } else {
                         ArrayList<Integer> newGroup = new ArrayList<>();

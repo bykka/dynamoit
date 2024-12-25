@@ -81,7 +81,7 @@ public class TableGridController {
     private final EventBus eventBus;
     private final Executor uiExecutor;
     private final HostServices hostServices;
-    private final DynamoDbEnhancedClient documentClient;
+    private final DynamoDbEnhancedClient documentClient = DynamoDbEnhancedClient.create();
 
     public TableGridController(TableGridContext context,
                                TableGridModel tableModel,
@@ -106,7 +106,7 @@ public class TableGridController {
         tableModel.setTableName(context.tableName());
         tableModel.setProfile(context.tableName());
 
-        documentClient = dynamoDBService.getOrCreateDocumentClient(context.profileDetails());
+//        documentClient = dynamoDBService.getOrCreateDocumentClient(context.profileDetails());
     }
 
     public void init() {
