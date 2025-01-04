@@ -23,12 +23,12 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.components.main.MainModel;
-import ua.org.java.dynamoit.services.DynamoDbService;
 import ua.org.java.dynamoit.model.profile.LocalProfileDetails;
+import ua.org.java.dynamoit.services.DynamoDbTableService;
 
 import java.util.concurrent.ForkJoinPool;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
 
 
 //@PrepareForTest(HostServices.class)
@@ -53,9 +53,9 @@ public class TableGridControllerTest {
         DynamoDbEnhancedClient dynamoDB = mock(DynamoDbEnhancedClient.class);
 
 //        expect(dynamoDB.getTable(context.tableName())).andReturn(table);
-        DynamoDbService dynamoDBService = mock(DynamoDbService.class);
-        when(dynamoDBService.getOrCreateDynamoDBClient(context.profileDetails())).thenReturn(amazonDynamoDB);
-        when(dynamoDBService.getOrCreateDocumentClient(context.profileDetails())).thenReturn(dynamoDB);
+        DynamoDbTableService dynamoDbTableService = mock(DynamoDbTableService.class);
+//        when(dynamoDBService.getOrCreateDynamoDBClient(context.profileDetails())).thenReturn(amazonDynamoDB);
+//        when(dynamoDBService.getOrCreateDocumentClient(context.profileDetails())).thenReturn(dynamoDB);
 //
 //        Page<Item, Object> page = mock(Page.class);
         HostServices hostServices = mock(HostServices.class);
@@ -64,7 +64,7 @@ public class TableGridControllerTest {
 //
 //        replay(table, amazonDynamoDB, dynamoDB, dynamoDBService, page);
 //cc
-        TableGridController controller = new TableGridController(context, model, dynamoDBService, eventBus, ForkJoinPool.commonPool(), hostServices);
+        TableGridController controller = new TableGridController(context, model, dynamoDbTableService, eventBus, ForkJoinPool.commonPool(), hostServices, dynamoDB);
 
 //        expect(controller.queryPageItems()).andReturn(CompletableFuture.completedFuture(
 //                new Pair<>(List.of(new Item(), new Item()), page)

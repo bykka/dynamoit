@@ -22,7 +22,6 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.reactivex.Observable;
 import javafx.application.HostServices;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.util.Pair;
@@ -31,12 +30,14 @@ import software.amazon.awssdk.core.pagination.sync.SdkIterable;
 import software.amazon.awssdk.enhanced.dynamodb.*;
 import software.amazon.awssdk.enhanced.dynamodb.document.DocumentTableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.document.EnhancedDocument;
-import software.amazon.awssdk.enhanced.dynamodb.model.*;
+import software.amazon.awssdk.enhanced.dynamodb.model.Page;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.model.*;
 import software.amazon.awssdk.utils.StringUtils;
 import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.components.tablegrid.parser.expression.FilterExpressionBuilder;
-import ua.org.java.dynamoit.services.DynamoDbService;
 import ua.org.java.dynamoit.model.TableDef;
 import ua.org.java.dynamoit.services.DynamoDbTableService;
 
@@ -54,6 +55,7 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import static java.util.concurrent.CompletableFuture.runAsync;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
@@ -81,15 +83,15 @@ public class TableGridController {
     private final EventBus eventBus;
     private final Executor uiExecutor;
     private final HostServices hostServices;
-    private final DynamoDbEnhancedClient documentClient = DynamoDbEnhancedClient.create();
+    private final DynamoDbEnhancedClient documentClient;
 
     public TableGridController(TableGridContext context,
                                TableGridModel tableModel,
-                               DynamoDbService dynamoDBService,
                                DynamoDbTableService dynamoDbTableService,
                                EventBus eventBus,
                                Executor uiExecutor,
-                               HostServices hostServices
+                               HostServices hostServices,
+                               DynamoDbEnhancedClient documentClient
     ) {
         this.context = context;
         this.tableModel = tableModel;
@@ -97,6 +99,7 @@ public class TableGridController {
         this.eventBus = eventBus;
         this.uiExecutor = uiExecutor;
         this.hostServices = hostServices;
+        this.documentClient = documentClient;
 
         tableModel.getProfileModel().getAvailableTables().stream()
                 .filter(tableDef -> tableDef.getName().equals(context.tableName()))
@@ -105,15 +108,13 @@ public class TableGridController {
 
         tableModel.setTableName(context.tableName());
         tableModel.setProfile(context.tableName());
-
-//        documentClient = dynamoDBService.getOrCreateDocumentClient(context.profileDetails());
     }
 
     public void init() {
         eventBus.activity(
                 supplyAsync(() -> {
                     if (tableModel.getOriginalTableDescription() == null) {
-                        return supplyAsync(dynamoDbTableService::describeTable)
+                        return supplyAsync(dynamoDbTableService::getTableDescription)
                                 .thenAcceptAsync(this::bindToModel, uiExecutor);
                     } else {
                         bindToModel(tableModel.getTableDef());
@@ -134,7 +135,6 @@ public class TableGridController {
                             .thenApply(TableGridController::iteratePage)
                             .thenAcceptAsync(pair -> {
                                 tableModel.getTableDef().getAttributeTypesMap().putAll(defineAttributesTypes(pair.getKey()));
-//                                tableModel.setPageIterator(pair.getValue());
                                 tableModel.getRows().addAll(pair.getKey());
                             }, uiExecutor)
             );
@@ -225,16 +225,12 @@ public class TableGridController {
                 runAsync(() -> {
                     try (BufferedReader reader = Files.newBufferedReader(file.toPath(), StandardCharsets.UTF_8)) {
                         JsonNode root = new ObjectMapper().readTree(reader);
-                        Observable.fromIterable(root::elements)
-                                .map(jsonNode -> EnhancedDocument.fromJson(jsonNode.toString()))
-                                .buffer(25)
-                                .map(list -> {
-                                    WriteBatch.Builder<EnhancedDocument> writeBatchBuilder = WriteBatch.builder(EnhancedDocument.class).mappedTableResource(table);
-                                    list.forEach(writeBatchBuilder::addPutItem);
+                        List<EnhancedDocument> documents = StreamSupport.stream(Spliterators.spliteratorUnknownSize(root.elements(), Spliterator.ORDERED), false)
+                                .map(JsonNode::toString)
+                                .map(EnhancedDocument::fromJson)
+                                .toList();
 
-                                    return writeBatchBuilder.build();
-                                })
-                                .subscribe(wb -> documentClient.batchWriteItem(r -> r.writeBatches(wb)));
+                        dynamoDbTableService.save(documents);
                     } catch (Exception e) {
                         LOG.log(Level.SEVERE, e.getMessage(), e);
                         throw new RuntimeException(e);
@@ -398,24 +394,7 @@ public class TableGridController {
 
 
     private CompletableFuture<Void> delete(List<EnhancedDocument> items) {
-        return runAsync(() -> Observable.fromIterable(items)
-                .buffer(BATCH_SIZE)
-                .map(list -> {
-                    WriteBatch.Builder<EnhancedDocument> builder = WriteBatch.builder(EnhancedDocument.class).mappedTableResource(table);
-
-                    return BatchWriteItemEnhancedRequest.builder().writeBatches(
-
-                            list.stream().map(item -> {
-                                Key.Builder keyBuilder = Key.builder().partitionValue(item.toMap().get(hash()));
-                                if (range() != null) {
-                                    keyBuilder.sortValue(item.toMap().get(range()));
-                                }
-                                return builder.addDeleteItem(keyBuilder.build()).build();
-                            }).toList()
-                    ).build();
-                })
-                .subscribe(documentClient::batchWriteItem)
-        );
+        return runAsync(() -> dynamoDbTableService.delete(items));
     }
 
     /**

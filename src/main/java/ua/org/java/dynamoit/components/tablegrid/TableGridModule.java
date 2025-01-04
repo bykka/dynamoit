@@ -20,10 +20,12 @@ package ua.org.java.dynamoit.components.tablegrid;
 import dagger.Module;
 import dagger.Provides;
 import javafx.application.HostServices;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.components.main.MainModel;
 import ua.org.java.dynamoit.components.thememanager.ThemeManager;
-import ua.org.java.dynamoit.services.DynamoDbService;
+import ua.org.java.dynamoit.model.profile.ProfileDetails;
+import ua.org.java.dynamoit.services.DynamoDbClientRegistry;
 import ua.org.java.dynamoit.services.DynamoDbTableService;
 import ua.org.java.dynamoit.utils.FXExecutor;
 
@@ -44,15 +46,24 @@ public class TableGridModule {
     }
 
     @Provides
-    public TableGridController controller(TableGridContext tableContext, TableGridModel tableModel, DynamoDbService dynamoDBService, EventBus eventBus, HostServices hostServices) {
+    public TableGridController controller(
+            TableGridContext tableContext,
+            TableGridModel tableModel,
+            DynamoDbClientRegistry dbClientRegistry,
+            EventBus eventBus,
+            HostServices hostServices
+    ) {
+        ProfileDetails profileDetails = tableModel.getProfileModel().getProfileDetails();
+
+        DynamoDbEnhancedClient enhancedClient = dbClientRegistry.getOrCreateDocumentClient(profileDetails);
         TableGridController controller = new TableGridController(
                 tableContext,
                 tableModel,
-                dynamoDBService,
-                null,
+                DynamoDbTableService.getOrCreate(profileDetails, tableContext.tableName(), dbClientRegistry),
                 eventBus,
                 FXExecutor.getInstance(),
-                hostServices
+                hostServices,
+                enhancedClient
         );
         controller.init();
         return controller;
