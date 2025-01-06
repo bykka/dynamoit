@@ -30,6 +30,7 @@ import ua.org.java.dynamoit.services.DynamoDbTableService;
 import ua.org.java.dynamoit.utils.FXExecutor;
 
 import javax.inject.Singleton;
+import java.util.concurrent.Executor;
 
 @Module
 public class TableGridModule {
@@ -61,12 +62,16 @@ public class TableGridModule {
                 tableModel,
                 DynamoDbTableService.getOrCreate(profileDetails, tableContext.tableName(), dbClientRegistry),
                 eventBus,
-                FXExecutor.getInstance(),
+                getUIExecutor(),
                 hostServices,
                 enhancedClient
         );
         controller.init();
         return controller;
+    }
+
+    protected Executor getUIExecutor(){
+        return FXExecutor.getInstance();
     }
 
 }

@@ -19,52 +19,55 @@ package ua.org.java.dynamoit.components.tablegrid;
 
 import javafx.application.HostServices;
 import org.junit.jupiter.api.Test;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
-import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import ua.org.java.dynamoit.DynamoDBTest;
 import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.components.main.MainModel;
+import ua.org.java.dynamoit.model.TableDef;
 import ua.org.java.dynamoit.model.profile.LocalProfileDetails;
-import ua.org.java.dynamoit.services.DynamoDbTableService;
+import ua.org.java.dynamoit.services.DynamoDbClientRegistry;
+import ua.org.java.dynamoit.services.DynamoDbService;
 
+import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
+import java.util.stream.Collectors;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 
 
 //@PrepareForTest(HostServices.class)
 //@RunWith(PowerMockRunner.class)
-public class TableGridControllerTest {
+public class TableGridControllerTest extends DynamoDBTest {
 
     @Test
     public void onRefreshData() {
-        LocalProfileDetails profileDetails = new LocalProfileDetails("profile1", "region1");
-        TableGridContext context = new TableGridContext(profileDetails, "table1");
+        LocalProfileDetails profileDetails = new LocalProfileDetails("local", "http://localhost:8000");
+
         MainModel mainModel = new MainModel();
         mainModel.addProfile(profileDetails);
 
-//        TableDef tableDef = new TableDef("Table1");
-//        tableDef.setHashAttribute("hash_attr");
-        TableGridModel model = new TableGridModel(mainModel.getAvailableProfiles().get("profile1"));
-//        model.setTableDef(tableDef);
-//        model.getRows().add(new Item());
-//
-//        Table table = mock(Table.class);
-        DynamoDbClient amazonDynamoDB = mock(DynamoDbClient.class);
-        DynamoDbEnhancedClient dynamoDB = mock(DynamoDbEnhancedClient.class);
+        DynamoDbClientRegistry dynamoDbClientRegistry = new DynamoDbClientRegistry();
+        DynamoDbService dynamoDbService = new DynamoDbService(dynamoDbClientRegistry);
 
-//        expect(dynamoDB.getTable(context.tableName())).andReturn(table);
-        DynamoDbTableService dynamoDbTableService = mock(DynamoDbTableService.class);
-//        when(dynamoDBService.getOrCreateDynamoDBClient(context.profileDetails())).thenReturn(amazonDynamoDB);
-//        when(dynamoDBService.getOrCreateDocumentClient(context.profileDetails())).thenReturn(dynamoDB);
-//
-//        Page<Item, Object> page = mock(Page.class);
+        dynamoDbService.getListOfTables(profileDetails)
+                .thenApply(tables -> tables.stream().map(TableDef::new).collect(Collectors.toList()))
+                .thenAcceptAsync(tables -> mainModel.getAvailableProfiles().get("local").getAvailableTables().setAll(tables))
+                .join();
+
+        TableGridModel model = new TableGridModel(mainModel.getAvailableProfiles().get("local"));
+
+
+        TableGridContext context = new TableGridContext(profileDetails, "Users");
+
         HostServices hostServices = mock(HostServices.class);
-//
         EventBus eventBus = new EventBus(ForkJoinPool.commonPool());
-//
-//        replay(table, amazonDynamoDB, dynamoDB, dynamoDBService, page);
-//cc
-        TableGridController controller = new TableGridController(context, model, dynamoDbTableService, eventBus, ForkJoinPool.commonPool(), hostServices, dynamoDB);
+
+        TableGridController controller = new TableGridModule() {
+            @Override
+            protected Executor getUIExecutor() {
+                return ForkJoinPool.commonPool();
+            }
+        }.controller(context, model, dynamoDbClientRegistry, eventBus, hostServices);
 
 //        expect(controller.queryPageItems()).andReturn(CompletableFuture.completedFuture(
 //                new Pair<>(List.of(new Item(), new Item()), page)
@@ -72,11 +75,11 @@ public class TableGridControllerTest {
 //
 //        replay(controller);
 //
-//        controller.onRefreshData().join();
+        controller.onRefreshData().join();
 //
 //        verify(table, amazonDynamoDB, dynamoDB, dynamoDBService, page, controller);
 //
-//        assertEquals(model.getRowsSize(), 2);
+        assertEquals(2, model.getRowsSize());
 //        assertEquals(model.getPageIterator(), page);
     }
 }
