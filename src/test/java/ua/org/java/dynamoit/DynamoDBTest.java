@@ -5,6 +5,7 @@ import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import software.amazon.awssdk.enhanced.dynamodb.document.EnhancedDocument;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
 
@@ -19,7 +20,7 @@ public abstract class DynamoDBTest {
         server = ServerRunner.createServerFromCommandLineArgs(new String[]{"-inMemory"});
         server.start();
 
-        try (DynamoDbClient dbClient = DynamoDbClient.builder().endpointOverride(URI.create("http://localhost:8000")).build()) {
+        try (DynamoDbClient dbClient = DynamoDbClient.builder().region(Region.EU_CENTRAL_1).endpointOverride(URI.create("http://localhost:8000")).build()) {
             dbClient.createTable(CreateTableRequest.builder()
                     .tableName("Users")
                     .attributeDefinitions(
