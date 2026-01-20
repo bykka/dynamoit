@@ -30,7 +30,7 @@ jobs:
         run: mvn clean package -Ppackage
 
       - name: Upload Linux
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v6
         with:
           name: DynamoIt-linux
           path: target/DynamoIt.tar.gz
@@ -59,7 +59,7 @@ jobs:
         run: mvn clean package -Ppackage
 
       - name: Upload Windows
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v6
         with:
           name: DynamoIt-windows
           path: target/DynamoIt.tar.gz
@@ -88,7 +88,7 @@ jobs:
         run: mvn clean package -Ppackage
 
       - name: Upload MacOS
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v6
         with:
           name: DynamoIt-macos
           path: target/DynamoIt.tar.gz
