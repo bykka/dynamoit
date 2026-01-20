@@ -26,8 +26,12 @@ import ua.org.java.dynamoit.widgets.ExceptionDialog;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class EventBus {
+
+    private static final Logger logger = Logger.getLogger(EventBus.class.getName());
 
     private final SimpleIntegerProperty activityCount = new SimpleIntegerProperty();
     private final PublishSubject<TableGridContext> selectedTable = PublishSubject.create();
@@ -66,7 +70,7 @@ public class EventBus {
         return completableFuture.whenComplete((o, throwable) -> {
             stopActivity();
             if (throwable != null) {
-                throwable.printStackTrace();
+                logger.log(Level.SEVERE, "Activity fail", throwable);
                 CompletableFuture.runAsync(() -> new ExceptionDialog(errorMessage, errorDescription, throwable).show(), uiExecutor);
             }
         });

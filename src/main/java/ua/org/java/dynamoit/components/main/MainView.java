@@ -145,14 +145,13 @@ public class MainView extends VBox {
                     );
                 });
 
-        JavaFxObservable.changesOf(profileToggleGroup.selectedToggleProperty())
-                .subscribe(toggleChange -> {
-                    if (toggleChange.getOldVal() != null) {
+        profileToggleGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
+                    if (oldValue != null) {
                         dividerPosition = splitPane.getDividerPositions()[0];
                         this.splitPane.getItems().remove(0);
                     }
-                    if (toggleChange.getNewVal() != null) {
-                        String profileName = toggleChange.getNewVal().getUserData().toString();
+                    if (newValue != null) {
+                        String profileName = newValue.getUserData().toString();
 
                         ProfileView profileView = profileViews.computeIfAbsent(profileName, s -> {
                             ProfileComponent profileComponent = controller.buildProfileComponent(profileName);
@@ -171,7 +170,6 @@ public class MainView extends VBox {
         TableGridComponent tableComponent = controller.buildTableGridComponent(tableContext);
 
         TableGridView tableItemsView = tableComponent.view();
-        tableItemsView.setOnSearchInTable(this::createAndOpenTab);
 
         tabPane.getTabs().add(
                 DX.create(() -> new Tab(tableContext.tableName(), tableItemsView), tab -> {

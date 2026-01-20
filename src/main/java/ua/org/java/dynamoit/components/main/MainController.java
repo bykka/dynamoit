@@ -25,8 +25,9 @@ import ua.org.java.dynamoit.components.tablegrid.DaggerTableGridComponent;
 import ua.org.java.dynamoit.components.tablegrid.TableGridComponent;
 import ua.org.java.dynamoit.components.tablegrid.TableGridContext;
 import ua.org.java.dynamoit.components.thememanager.ThemeManager;
-import ua.org.java.dynamoit.db.DynamoDBService;
+import ua.org.java.dynamoit.services.DynamoDbService;
 import ua.org.java.dynamoit.model.profile.ProfileDetails;
+import ua.org.java.dynamoit.services.ProfileService;
 import ua.org.java.dynamoit.utils.FXExecutor;
 
 import java.util.concurrent.CompletableFuture;
@@ -40,7 +41,7 @@ public class MainController {
     private final ThemeManager themeManager;
     private Consumer<TableGridContext> selectedTableConsumer;
 
-    public MainController(DynamoDBService dynamoDBService, MainModel model, EventBus eventBus, HostServices hostServices, ThemeManager themeManager) {
+    public MainController(DynamoDbService dynamoDBService, MainModel model, EventBus eventBus, HostServices hostServices, ThemeManager themeManager) {
         this.model = model;
         this.eventBus = eventBus;
         this.hostServices = hostServices;
@@ -48,7 +49,7 @@ public class MainController {
 
         eventBus.activity(
                 CompletableFuture
-                        .supplyAsync(dynamoDBService::getAvailableProfiles)
+                        .supplyAsync(ProfileService::getDefaultProfiles)
                         .thenAcceptAsync(profiles -> profiles.forEach(model::addProfile), FXExecutor.getInstance()),
                 "AWS configuration settings has not been discovered",
                 "Please check that your aws cli is properly configured https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html"

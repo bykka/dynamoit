@@ -17,12 +17,29 @@
 
 package ua.org.java.dynamoit.utils;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.core.SdkField;
+import software.amazon.awssdk.protocols.json.internal.unmarshall.JsonUnmarshaller;
+import software.amazon.awssdk.protocols.json.internal.unmarshall.JsonUnmarshallerContext;
+import software.amazon.awssdk.protocols.jsoncore.JsonNode;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.utils.builder.Buildable;
 
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
 
-import static org.junit.Assert.assertEquals;
-import static ua.org.java.dynamoit.utils.Utils.convertJsonDocument;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
+import static ua.org.java.dynamoit.utils.Utils.jsonPlainToRaw;
+import static ua.org.java.dynamoit.utils.Utils.jsonRawToPlain;
 
 public class UtilsTest {
 
@@ -47,22 +64,161 @@ public class UtilsTest {
     }
 
     @Test
-    public void testConvertJsonToDocument() {
-        String newLine = System.getProperty("line.separator");
+    public void testJsonRawToPlain() throws UnsupportedEncodingException {
+        //language=json
+        var rawJson = """
+                {
+                  "name" : {
+                    "S" : "user"
+                  }
+                }""";
 
-        String document1 = convertJsonDocument("{\"name\": \"user\"}", true);
-        assertEquals(String.join(newLine,
-                "{",
-                "  \"name\" : {",
-                "    \"s\" : \"user\"",
-                "  }",
-                "}"), document1);
+        //language=json
+        var plainJson = """
+                {
+                  "name" : "user"
+                }""";
 
-        String document2 = convertJsonDocument("{\"name\": {\"s\": \"user\"}}", false);
-        assertEquals(String.join(newLine,
-                "{",
-                "  \"name\" : \"user\"",
-                "}"), document2);
+        var result = jsonRawToPlain(rawJson);
+        assertEquals(plainJson, result);
+    }
+
+    private Map<String, ?> unmarshallMap(JsonUnmarshallerContext context, JsonNode jsonContent) {
+        if (jsonContent == null || jsonContent.isNull()) {
+            return null;
+        }
+        Map<String, Object> map = new HashMap<>();
+        jsonContent.asObject().forEach((fieldName, value) -> {
+            map.put(fieldName, unmarshall(context, value));
+        });
+        return map;
+    }
+
+    private AttributeValue unmarshall(JsonUnmarshallerContext context, JsonNode jsonContent) {
+        var attrVB = AttributeValue.builder();
+
+        for (SdkField<?> field : attrVB.sdkFields()) {
+            JsonNode jsonFieldContent = jsonContent.field(field.locationName()).orElse(null);
+            JsonUnmarshaller<Object> unmarshaller = context.getUnmarshaller(field.location(), field.marshallingType());
+            field.set(attrVB, unmarshaller.unmarshall(context, jsonFieldContent, (SdkField<Object>) field));
+        }
+        return (AttributeValue) ((Buildable) attrVB).build();
+    }
+
+    @Test
+    public void testJsonPlainToRaw() {
+        //language=json
+        var rawJson = """
+                {
+                  "name" : {
+                    "S" : "user"
+                  }
+                }""";
+
+        //language=json
+        var plainJson = """
+                {
+                    "name" : "user"
+                }
+                """;
+
+        var result = jsonPlainToRaw(plainJson);
+
+        assertEquals(rawJson, result);
+    }
+
+    @ParameterizedTest
+    @MethodSource("jsonOfSingleProperty")
+    void singlePropertyParser(String rawJson, AttributeValue expectedValue) {
+        JsonNode jsonNode = JsonNode.parser().parse(rawJson);
+        AttributeValue result = Utils.singlePropertyParser(jsonNode);
+        assertEquals(expectedValue, result);
+    }
+
+    // data types according to the documentation
+    // https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.LowLevelAPI.html#Programming.LowLevelAPI.DataTypeDescriptors
+    private static Stream<Arguments> jsonOfSingleProperty() {
+        return Stream.of(
+                arguments("""
+                        {"S": "user"}
+                        """, AttributeValue.fromS("user")),
+                arguments("""
+                        {"N": "1.2"}
+                        """, AttributeValue.fromN("1.2")),
+                arguments("""
+                        {"B": "hello"}
+                        """, AttributeValue.fromB(SdkBytes.fromUtf8String("hello"))),
+                arguments("""
+                        {"BOOL": true}
+                        """, AttributeValue.fromBool(true)),
+                arguments("""
+                        {"NULL": true}
+                        """, AttributeValue.fromNul(true)),
+                arguments("""
+                        {
+                            "M": {
+                                "content-type": { "S": "application/json" }
+                            }
+                        }
+                        """, AttributeValue.fromM(Map.of("content-type", AttributeValue.fromS("application/json")))),
+                arguments("""
+                        {
+                            "L": [ { "S": "user" } ]
+                        }
+                        """, AttributeValue.fromL(List.of(AttributeValue.fromS("user")))),
+                arguments("""
+                        {
+                            "SS": [ "user" ]
+                        }
+                        """, AttributeValue.fromSs(List.of("user"))),
+                arguments("""
+                        {
+                            "BS": [ "user" ]
+                        }
+                        """, AttributeValue.fromBs(List.of(SdkBytes.fromUtf8String("user"))))
+                );
+    }
+
+
+    @Test
+    public void testJsonRawParsing() {
+        //language=json
+        var rawJson = """
+                {
+                  "name": {
+                    "S": "user"
+                  },
+                  "age": {
+                    "N": "20"
+                  },
+                  "valid": {
+                    "BOOL": true
+                  },
+                  "tags": {
+                    "L": [
+                      {"S": "tag1"},
+                      {"S": "tag2"}
+                    ]
+                  },
+                  "meta": {
+                    "M": {
+                      "x-tags": {
+                        "L": [
+                          {"S": "x-tag1"},
+                          {"S": "x-tag2"}
+                        ]
+                      }
+                    }
+                  }
+                 }""";
+
+        var map = Utils.jsonRawParsing(rawJson);
+        System.out.println(map);
+
+        assertEquals(5, map.entrySet().size());
+        assertEquals("user", map.get("name").s());
+        assertEquals("20", map.get("age").n());
+        assertEquals(2, map.get("tags").l().size());
     }
 
 }

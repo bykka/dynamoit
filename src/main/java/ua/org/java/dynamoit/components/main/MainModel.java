@@ -49,7 +49,7 @@ public class MainModel {
         private final SimpleStringProperty filter = new SimpleStringProperty("");
         private final FilteredList<TableDef> filteredTables = availableTables.filtered(Objects::nonNull);
         private final ObservableList<String> savedFilters = FXCollections.observableArrayList();
-        private final SimpleStringProperty region = new SimpleStringProperty();
+        private final SimpleStringProperty region = new SimpleStringProperty("");
         private HighlightColors color;
         private final ProfileDetails profileDetails;
 

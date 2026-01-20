@@ -9,4 +9,6 @@ target
 .settings/
 .gradle
 .vscode
+
+# other
 .DS_Store

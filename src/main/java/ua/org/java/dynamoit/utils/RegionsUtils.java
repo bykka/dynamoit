@@ -17,17 +17,16 @@
 
 package ua.org.java.dynamoit.utils;
 
-import com.amazonaws.regions.Regions;
+import software.amazon.awssdk.regions.Region;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 public class RegionsUtils {
 
-    public static final List<String> ALL_REGIONS = Stream.of(Regions.values())
-            .map(Regions::getName)
+    public static final List<String> ALL_REGIONS = Region.regions().stream()
+            .map(Object::toString)
             .sorted()
             .toList();
 
-    public static final String DEFAULT_REGION = Regions.DEFAULT_REGION.getName();
+    public static final String DEFAULT_REGION = Region.US_WEST_2.toString();
 }
