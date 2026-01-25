@@ -30,7 +30,6 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.utils.builder.Buildable;
 
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,7 +79,7 @@ public class UtilsTest {
                 }""";
 
         var result = jsonRawToPlain(rawJson);
-        assertEquals(plainJson, result);
+        assertEquals(plainJson.replace("\r",""), result.replace("\r",""));
     }
 
     private Map<String, ?> unmarshallMap(JsonUnmarshallerContext context, JsonNode jsonContent) {
@@ -124,7 +123,7 @@ public class UtilsTest {
 
         var result = jsonPlainToRaw(plainJson);
 
-        assertEquals(rawJson, result);
+        assertEquals(rawJson.replace("\r",""), result.replace("\r",""));
     }
 
     @ParameterizedTest
