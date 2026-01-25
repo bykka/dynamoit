@@ -22,8 +22,6 @@ import ua.org.java.dynamoit.DynamoDBTest;
 import ua.org.java.dynamoit.EventBus;
 import ua.org.java.dynamoit.components.main.MainModel;
 import ua.org.java.dynamoit.model.TableDef;
-import ua.org.java.dynamoit.model.profile.LocalProfileDetails;
-import ua.org.java.dynamoit.services.DynamoDbClientRegistry;
 import ua.org.java.dynamoit.services.DynamoDbService;
 
 import java.util.concurrent.Executor;
@@ -36,15 +34,12 @@ public class TableGridControllerTest extends DynamoDBTest {
 
     @Test
     public void onRefreshData() {
-        LocalProfileDetails profileDetails = new LocalProfileDetails("local", "http://localhost:8000");
-
         MainModel mainModel = new MainModel();
-        mainModel.addProfile(profileDetails);
+        mainModel.addProfile(localProfileDetails);
 
-        DynamoDbClientRegistry dynamoDbClientRegistry = new DynamoDbClientRegistry();
         DynamoDbService dynamoDbService = new DynamoDbService(dynamoDbClientRegistry);
 
-        dynamoDbService.getListOfTables(profileDetails)
+        dynamoDbService.getListOfTables(localProfileDetails)
                 .thenApply(tables -> tables.stream().map(TableDef::new).collect(Collectors.toList()))
                 .thenAcceptAsync(tables -> mainModel.getAvailableProfiles().get("local").getAvailableTables().setAll(tables))
                 .join();
@@ -52,7 +47,7 @@ public class TableGridControllerTest extends DynamoDBTest {
         TableGridModel model = new TableGridModel(mainModel.getAvailableProfiles().get("local"));
 
 
-        TableGridContext context = new TableGridContext(profileDetails, "Users");
+        TableGridContext context = new TableGridContext(localProfileDetails, "Users");
 
         EventBus eventBus = new EventBus(ForkJoinPool.commonPool());
 

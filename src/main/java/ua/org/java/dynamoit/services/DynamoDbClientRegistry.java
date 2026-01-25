@@ -48,6 +48,8 @@ public class DynamoDbClientRegistry {
                     .build();
             case LocalProfileDetails p -> DynamoDbClient.builder()
                     .endpointOverride(URI.create(p.getEndPoint()))
+                    .region(Region.EU_CENTRAL_1)
+                    .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create("fakeAccessKey", "fakeSecretKey")))
                     .build();
             case RemoteProfileDetails p -> DynamoDbClient.builder()
                     .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(p.getAccessKeyId(), p.getSecretKey())))

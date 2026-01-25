@@ -5,22 +5,25 @@ import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import software.amazon.awssdk.enhanced.dynamodb.document.EnhancedDocument;
-import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
-
-import java.net.URI;
+import ua.org.java.dynamoit.model.profile.LocalProfileDetails;
+import ua.org.java.dynamoit.services.DynamoDbClientRegistry;
 
 public abstract class DynamoDBTest {
 
     protected static DynamoDBProxyServer server;
+    protected static LocalProfileDetails localProfileDetails = new LocalProfileDetails("local", "http://localhost:8000");
+    protected static DynamoDbClientRegistry dynamoDbClientRegistry;
 
     @BeforeAll
     public static void beforeAll() throws Exception {
         server = ServerRunner.createServerFromCommandLineArgs(new String[]{"-inMemory"});
         server.start();
 
-        try (DynamoDbClient dbClient = DynamoDbClient.builder().region(Region.EU_CENTRAL_1).endpointOverride(URI.create("http://localhost:8000")).build()) {
+        dynamoDbClientRegistry = new DynamoDbClientRegistry();
+        DynamoDbClient dbClient = dynamoDbClientRegistry.getOrCreateDynamoDBClient(localProfileDetails);
+
             dbClient.createTable(CreateTableRequest.builder()
                     .tableName("Users")
                     .attributeDefinitions(
@@ -57,7 +60,6 @@ public abstract class DynamoDBTest {
                                     """).toMap())
                     .build());
         }
-    }
 
     @AfterAll
     public static void afterAll() throws Exception {
