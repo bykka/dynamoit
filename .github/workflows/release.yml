@@ -105,7 +105,7 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v7
         with:
-          name: artifacts
+          path: artifacts
 
       - name: Prepare assets
         run: |
