@@ -96,65 +96,34 @@ jobs:
   build-release:
     runs-on: ubuntu-latest
     needs: [build-linux-package, build-windows-package, build-macos-package]
+    permissions:
+      contents: write
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download all artifacts
+        uses: actions/download-artifact@v7
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          name: artifacts
+
+      - name: Prepare assets
+        run: |
+          mkdir release-dist
+          mv artifacts/DynamoIt-linux/DynamoIt.tar.gz release-dist/DynamoIt-linux.tar.gz
+          mv artifacts/DynamoIt-windows/DynamoIt.tar.gz release-dist/DynamoIt-windows.tar.gz
+          mv artifacts/DynamoIt-macos/DynamoIt.tar.gz release-dist/DynamoIt-macos.tar.gz
+
+      - name: Create Release and Upload Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
           draft: true
           prerelease: false
-
-      - name: Download Linux artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: DynamoIt-linux
-
-      - name: Upload Release Asset for Linux
-        uses: actions/upload-release-asset@v1
+          files: |
+            release-dist/DynamoIt-linux.tar.gz
+            release-dist/DynamoIt-windows.tar.gz
+            release-dist/DynamoIt-macos.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./DynamoIt.tar.gz
-          asset_name: DynamoIt-linux.tar.gz
-          asset_content_type: application/gzip
-
-      - name: Download windows artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: DynamoIt-windows
-
-      - name: Display structure of downloaded files
-        run: ls -R
-
-      - name: Upload Release Asset for Windows
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./DynamoIt.tar.gz
-          asset_name: DynamoIt-windows.tar.gz
-          asset_content_type: application/gzip
-
-      - name: Download macos artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: DynamoIt-macos
-
-      - name: Upload Release Asset for Macos
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./DynamoIt.tar.gz
-          asset_name: DynamoIt-macos.tar.gz
-          asset_content_type: application/gzip
